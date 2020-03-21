@@ -1,4 +1,4 @@
-package com.funnywolf.hollowkit
+package com.funnywolf.hollowkit.recyclerview
 
 
 import androidx.recyclerview.widget.RecyclerView

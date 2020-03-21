@@ -1,4 +1,4 @@
-package com.funnywolf.hollowkit
+package com.funnywolf.hollowkit.recyclerview
 
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING
@@ -10,10 +10,10 @@ import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING
  * @since 2020/2/16
  */
 class RecyclerViewLoadMore(
-    val threstholdPixel: Int,
-    val loadMore: ()->Unit
+    private val thresholdPixel: Int,
+    private val loadMore: ()->Unit
 ): RecyclerView.OnScrollListener() {
-    private val interval = 100L
+    var interval = 100L
     private var lastTime = 0L
 
     fun setup(recyclerView: RecyclerView?) {
@@ -38,7 +38,7 @@ class RecyclerViewLoadMore(
         lastTime = System.currentTimeMillis()
         val rest = (v.computeVerticalScrollRange()
                 - v.computeVerticalScrollExtent()- v.computeVerticalScrollOffset())
-        if (rest in 1..threstholdPixel || !v.canScrollVertically(1)) {
+        if (rest in 1..thresholdPixel || !v.canScrollVertically(1)) {
             loadMore.invoke()
         }
     }
