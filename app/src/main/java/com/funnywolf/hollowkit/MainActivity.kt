@@ -1,12 +1,10 @@
 package com.funnywolf.hollowkit
 
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
+import com.bytedance.scene.Scene
+import com.bytedance.scene.ui.SceneActivity
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : SceneActivity() {
+    override fun supportRestore(): Boolean = true
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-    }
+    override fun getHomeSceneClass(): Class<out Scene> = MainScene::class.java
 }

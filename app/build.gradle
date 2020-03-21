@@ -26,6 +26,7 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    api project(path: ':hollowkit')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${versions.kotlin}"
     implementation "androidx.appcompat:appcompat:${versions.appcompat}"
@@ -33,6 +34,7 @@ dependencies {
 
     implementation "androidx.recyclerview:recyclerview:${versions.recyclerview}"
     implementation "androidx.constraintlayout:constraintlayout:${versions.constraintlayout}"
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:${versions.swiperefreshlayout}"
 
     implementation "io.reactivex.rxjava2:rxjava:${versions.rxjava}"
     implementation "com.bytedance.scene:scene:${versions.scene}"
