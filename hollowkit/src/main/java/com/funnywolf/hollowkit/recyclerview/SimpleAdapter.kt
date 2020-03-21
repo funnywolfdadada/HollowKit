@@ -22,7 +22,7 @@ import kotlin.collections.HashMap
 open class SimpleAdapter(list: List<Any>): RecyclerView.Adapter<SimpleHolder<Any>>() {
 
     private val infoByDataClass = HashMap<Class<Any>, MutableList<HolderInfo<Any>>>()
-    private val infoByType = SparseArray<HolderInfo<Any>>()
+    private val infoByType = SparseArray<HolderInfo<Any>?>()
 
     private val listeners = ArrayList<HolderListener<Any>>()
 
@@ -58,6 +58,14 @@ open class SimpleAdapter(list: List<Any>): RecyclerView.Adapter<SimpleHolder<Any
         return this
     }
 
+    fun getInfoByPosition(position: Int): HolderInfo<Any>? {
+        val data = list[position]
+        val dataClass = data.javaClass
+        return (infoByDataClass[dataClass]
+            ?: infoByDataClass.entries.find { it.key.isAssignableFrom(dataClass) }?.value)
+            ?.find { it.isSupport(data) }
+    }
+
     fun addHolderListener(listener: HolderListener<Any>): SimpleAdapter {
         listeners.add(listener)
         return this
@@ -66,10 +74,9 @@ open class SimpleAdapter(list: List<Any>): RecyclerView.Adapter<SimpleHolder<Any
     override fun getItemCount(): Int = list.size
 
     override fun getItemViewType(position: Int): Int {
-        val data = list[position]
-        return getSupportedInfo(data.javaClass)?.viewType
+        return getInfoByPosition(position)?.viewType
             ?: getItemViewTypeError?.invoke(this, position)
-            ?: throw IllegalArgumentException("Unsupported data ${data.javaClass}: $data")
+            ?: throw IllegalArgumentException("Unsupported data: ${list[position]}")
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SimpleHolder<Any> = try {
@@ -88,17 +95,10 @@ open class SimpleAdapter(list: List<Any>): RecyclerView.Adapter<SimpleHolder<Any
 
     override fun onBindViewHolder(holder: SimpleHolder<Any>, position: Int) = try {
         holder.onBind(list[position])
-        infoByType[holder.itemViewType].onBind(holder, list[position])
+        infoByType[holder.itemViewType]?.onBind(holder, list[position])
         listeners.forEach { it.onBind(holder, list[position]) }
     } catch (e: Exception) {
         onBindError?.invoke(this, e, holder, position) ?: throw e
-    }
-
-    private fun getSupportedInfo(data: Any): HolderInfo<Any>? {
-        val dataClass = data.javaClass
-        return (infoByDataClass[dataClass]
-            ?: infoByDataClass.entries.find { it.key.isAssignableFrom(dataClass) }?.value)
-            ?.find { it.isSupport(data) }
     }
 
 }
@@ -116,17 +116,23 @@ interface HolderListener<T: Any> {
 }
 
 open class SimpleHolder<T: Any>(v: View) : RecyclerView.ViewHolder(v) {
+    /**
+     * 缓存 findViewById
+     */
+    private val viewArray = SparseArray<View?>()
 
     /**
      * holder 的当前数据
      */
-    protected var data: T? = null
+    var data: T? = null
 
     @CallSuper
     open fun onBind(data: T) {
         this.data = data
     }
 
+    fun find(id: Int): View? = viewArray[id] ?: itemView.findViewById<View>(id)?.also { viewArray.put(id, it) }
+    inline fun <reified V: View> v(id: Int): V? = find(id) as? V
 }
 
 open class HolderInfo<T: Any> (
@@ -143,7 +149,12 @@ open class HolderInfo<T: Any> (
     /**
      * 自定义的 SimpleHolder 类型
      */
-    val holderClass: Class<out SimpleHolder<T>>? = null
+    val holderClass: Class<out SimpleHolder<T>>? = null,
+
+    /**
+     * 是否支持该数据，不设置就默认支持
+     */
+    val isSupport: ((T)->Boolean)? = null
 ): HolderListener<T> {
 
     /**
@@ -154,6 +165,6 @@ open class HolderInfo<T: Any> (
     /**
      * 当同一类型数据对应多种 SimpleHolder 时，需要在这里确定是否支持
      */
-    open fun isSupport(data: T): Boolean = true
+    fun isSupport(data: T): Boolean = isSupport?.invoke(data) ?: true
 
 }
