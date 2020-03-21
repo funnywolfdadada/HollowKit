@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="10dp"
+    >
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:textSize="18sp"
+        android:textColor="#F000"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:layout_gravity="start"
+        tools:text="即将上映"
+        />
+
+    <TextView
+        android:id="@+id/tv_info"
+        android:textColor="#F000"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|end"
+        android:layout_marginEnd="20dp"
+        tools:text="即将上映"
+        />
+
+    <ImageView
+        android:src="@drawable/ic_arrow_right"
+        android:tint="#F000"
+        android:layout_width="10dp"
+        android:layout_height="10dp"
+        android:layout_gravity="center_vertical|end"
+        android:layout_marginEnd="10dp"
+        />
+
+</FrameLayout>
