@@ -24,18 +24,26 @@ open class SimpleAdapter(list: List<Any>): RecyclerView.Adapter<SimpleHolder<Any
     private val infoByDataClass = HashMap<Class<Any>, MutableList<HolderInfo<Any>>>()
     private val infoByType = SparseArray<HolderInfo<Any>?>()
 
-    private val listeners = ArrayList<HolderListener<Any>>()
-
     /**
      * getItemViewType 遇到不支持的数据类型时的出错处理，不设置会抛出异常
      */
-    var getItemViewTypeError: ((SimpleAdapter, Int)->Int)? = null
+    var onGetViewTypeError: ((SimpleAdapter, Int)->Int)? = null
+
+    /**
+     * 监听 onCreateViewHolder
+     */
+    val onCreateListeners = ArrayList<OnCreateHolder<Any>>(2)
 
     /**
      * onCreateViewHolder 的出错处理，可以返回自定义的 SimpleHolder 来显示错误信息
      * 不设置或者返回 null 会重新抛出异常
      */
     var onCreateError: ((SimpleAdapter, Exception, ViewGroup, Int)->SimpleHolder<Any>?)? = null
+
+    /**
+     * 监听 onBindViewHolder
+     */
+    val onBindListeners = ArrayList<OnBindHolder<Any>>(2)
 
     /**
      * onBindViewHolder 的出错处理，不设置或者返回 null 会重新抛出异常
@@ -61,21 +69,18 @@ open class SimpleAdapter(list: List<Any>): RecyclerView.Adapter<SimpleHolder<Any
     fun getInfoByPosition(position: Int): HolderInfo<Any>? {
         val data = list[position]
         val dataClass = data.javaClass
+        // 先根据数据类型快速查找
         return (infoByDataClass[dataClass]
+            // 没找到就遍历查找父类有没有支持
             ?: infoByDataClass.entries.find { it.key.isAssignableFrom(dataClass) }?.value)
             ?.find { it.isSupport(data) }
-    }
-
-    fun addHolderListener(listener: HolderListener<Any>): SimpleAdapter {
-        listeners.add(listener)
-        return this
     }
 
     override fun getItemCount(): Int = list.size
 
     override fun getItemViewType(position: Int): Int {
         return getInfoByPosition(position)?.viewType
-            ?: getItemViewTypeError?.invoke(this, position)
+            ?: onGetViewTypeError?.invoke(this, position)
             ?: throw IllegalArgumentException("Unsupported data: ${list[position]}")
     }
 
@@ -86,8 +91,8 @@ open class SimpleAdapter(list: List<Any>): RecyclerView.Adapter<SimpleHolder<Any
             .getConstructor(View::class.java)
             // SimpleHolder 泛型上界是 Any，因此这里强转是安全的
             .newInstance(view) as SimpleHolder<Any>
-        info.onCreate(holder)
-        listeners.forEach { it.onCreate(holder) }
+        info.onCreate?.invoke(holder)
+        onCreateListeners.forEach { it.invoke(holder) }
         holder
     } catch (e: Exception) {
         onCreateError?.invoke(this, e, parent, viewType) ?: throw e
@@ -95,25 +100,17 @@ open class SimpleAdapter(list: List<Any>): RecyclerView.Adapter<SimpleHolder<Any
 
     override fun onBindViewHolder(holder: SimpleHolder<Any>, position: Int) = try {
         holder.onBind(list[position])
-        infoByType[holder.itemViewType]?.onBind(holder, list[position])
-        listeners.forEach { it.onBind(holder, list[position]) }
+        infoByType[holder.itemViewType]?.onBind?.invoke(holder, list[position])
+        onBindListeners.forEach { it.invoke(holder, list[position]) }
     } catch (e: Exception) {
         onBindError?.invoke(this, e, holder, position) ?: throw e
     }
 
 }
 
-interface HolderListener<T: Any> {
+typealias OnCreateHolder<T> = (SimpleHolder<T>)->Unit
 
-    fun onCreate(holder: SimpleHolder<T>) {
-        // for children
-    }
-
-    fun onBind(holder: SimpleHolder<T>, data: T) {
-        // for children
-    }
-
-}
+typealias OnBindHolder<T> = (SimpleHolder<T>, T)->Unit
 
 open class SimpleHolder<T: Any>(v: View) : RecyclerView.ViewHolder(v) {
     /**
@@ -135,7 +132,7 @@ open class SimpleHolder<T: Any>(v: View) : RecyclerView.ViewHolder(v) {
     inline fun <reified V: View> v(id: Int): V? = find(id) as? V
 }
 
-open class HolderInfo<T: Any> (
+data class HolderInfo<T: Any> (
     /**
      * 所支持的数据类型
      */
@@ -152,19 +149,22 @@ open class HolderInfo<T: Any> (
     val holderClass: Class<out SimpleHolder<T>>? = null,
 
     /**
-     * 是否支持该数据，不设置就默认支持
+     * 是否支持该数据，用于同一数据类型的区分，不设置就默认支持
      */
-    val isSupport: ((T)->Boolean)? = null
-): HolderListener<T> {
+    val isSupport: ((T)->Boolean) = { true },
 
     /**
      * 就是 Adapter 用的那个 viewType，这里暴露出来方便做缓存优化
      */
-    open val viewType: Int = Objects.hash(dataClass, layoutRes, holderClass)
+    val viewType: Int = Objects.hash(dataClass, layoutRes, holderClass),
 
     /**
-     * 当同一类型数据对应多种 SimpleHolder 时，需要在这里确定是否支持
+     * 该 viewType 类型的 ViewHolder 在 onCreateViewHolder 时的回调
      */
-    fun isSupport(data: T): Boolean = isSupport?.invoke(data) ?: true
+    val onCreate: OnCreateHolder<T>? = null,
 
-}
+    /**
+     * 该 viewType 类型的 ViewHolder 在 onBindViewHolder 时的回调
+     */
+    val onBind: OnBindHolder<T>? = null
+)
