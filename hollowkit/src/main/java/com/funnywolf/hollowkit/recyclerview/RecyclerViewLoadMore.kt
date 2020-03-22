@@ -35,10 +35,12 @@ class RecyclerViewLoadMore(
         if (System.currentTimeMillis() - lastTime < interval) {
             return
         }
-        lastTime = System.currentTimeMillis()
         val rest = (v.computeVerticalScrollRange()
-                - v.computeVerticalScrollExtent()- v.computeVerticalScrollOffset())
+                - v.computeVerticalScrollExtent()
+                - v.computeVerticalScrollOffset())
+        // rest 等于 0 可能是到底部或者异常情况，需要额外判断
         if (rest in 1..thresholdPixel || !v.canScrollVertically(1)) {
+            lastTime = System.currentTimeMillis()
             loadMore.invoke()
         }
     }
