@@ -37,6 +37,7 @@ dependencies {
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:${versions.swiperefreshlayout}"
 
     implementation "io.reactivex.rxjava2:rxjava:${versions.rxjava}"
+    implementation "io.reactivex.rxjava2:rxandroid:${versions.rxandroid}"
     implementation "com.bytedance.scene:scene:${versions.scene}"
     implementation "com.bytedance.scene:scene-ui:${versions.scene}"
     implementation "com.bytedance.scene:scene-shared-element-animation:${versions.scene}"

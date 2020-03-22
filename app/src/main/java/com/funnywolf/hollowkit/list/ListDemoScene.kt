@@ -1,21 +1,30 @@
 package com.funnywolf.hollowkit.list
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.annotation.DrawableRes
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bytedance.scene.Scene
 import com.bytedance.scene.ktx.viewModels
 import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.recyclerview.*
+import com.funnywolf.hollowkit.update
+import com.funnywolf.hollowkit.utils.toast
 import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
 
 /**
@@ -27,7 +36,16 @@ import java.util.concurrent.TimeUnit
 class ListDemoScene: Scene() {
 
     private val viewModel: ListViewModel by viewModels()
-    private var recyclerView: RecyclerView? = null
+    private var refresh: SwipeRefreshLayout? = null
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+
+        viewModel.stateLiveData.observe(this, Observer {
+            refresh?.isRefreshing = it == LIST_STATE_REFRESHING
+        })
+        viewModel.refresh()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -40,10 +58,11 @@ class ListDemoScene: Scene() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        recyclerView = findViewById<RecyclerView>(R.id.recycler)?.also {
+        findViewById<RecyclerView>(R.id.recycler)?.also {
             val adapter = initAdapter()
             viewModel.liveList.bind(adapter)
             it.adapter = adapter
+
             val layoutManager = GridLayoutManager(it.context, 3)
             layoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                 override fun getSpanSize(position: Int): Int {
@@ -55,40 +74,86 @@ class ListDemoScene: Scene() {
                 }
             }
             it.layoutManager = layoutManager
-        }
 
+            RecyclerViewLoadMore(500) {
+                viewModel.loadMore()
+            }.setup(it)
+        }
+        refresh = findViewById(R.id.refresh)
+        refresh?.setOnRefreshListener {
+            viewModel.refresh()
+        }
     }
 
     private fun initAdapter() = SimpleAdapter(viewModel.liveList.get())
         .addHolderInfo(
-            object: HolderInfo<TitleLine>(TitleLine::class.java, R.layout.holder_title_line) {
-                override fun onCreate(holder: SimpleHolder<TitleLine>) {
-                    super.onCreate(holder)
-                    holder.itemView.setOnClickListener {
+            HolderInfo(
+                LoadingMore::class.java,
+                R.layout.holder_loading_more
+            )
+        )
+        .addHolderInfo(
+            HolderInfo(
+                TitleLine::class.java,
+                R.layout.holder_title_line,
+                onCreate = { holder ->
+                    holder.itemView.setOnClickListener { v ->
                         val toast = holder.data?.toast ?: return@setOnClickListener
-                        Toast.makeText(it.context, toast, Toast.LENGTH_SHORT).show()
+                        v.context.toast(toast)
                     }
-                }
-
-                override fun onBind(holder: SimpleHolder<TitleLine>, data: TitleLine) {
-                    super.onBind(holder, data)
+                },
+                onBind = { holder, data ->
                     holder.v<TextView>(R.id.tv_title)?.text = data.title
                     holder.v<TextView>(R.id.tv_info)?.text = data.info
                 }
+            )
+        )
+        .addHolderInfo(
+            HolderInfo(
+                Movie::class.java,
+                R.layout.holder_online_movie,
+                OnlineMovieViewHolder::class.java,
+                isSupport = { it.isOnline }
+            )
+        )
+        .addHolderInfo(
+            HolderInfo(
+                Movie::class.java,
+                R.layout.holder_upcomming_movie,
+                UpcomingMovieViewHolder::class.java,
+                isSupport = { !it.isOnline }
+            )
+        )
+        .addHolderInfo(
+            HolderInfo(
+                Recommend::class.java,
+                R.layout.holder_recommend_movie,
+                RecommendMovieViewHolder::class.java,
+                onCreate = { holder ->
+                    holder.itemView.setOnClickListener { v ->
+                        v.context.toast(holder.data?.title)
+                    }
+                }
+            )
+        )
+        .apply {
+            onCreateListeners.add {
+                Log.d(TAG, "onCreate $it")
             }
-        )
-        .addHolderInfo(
-            HolderInfo(Movie::class.java, R.layout.holder_online_movie,
-                OnlineMovieViewHolder::class.java) { it.isOnline }
-        )
-        .addHolderInfo(
-            HolderInfo(Movie::class.java, R.layout.holder_upcomming_movie,
-                UpcomingMovieViewHolder::class.java) { !it.isOnline }
-        )
-        .addHolderInfo(
-            HolderInfo(Recommend::class.java, R.layout.holder_recommend_movie,
-                RecommendMovieViewHolder::class.java)
-        )
+            onGetViewTypeError = { adapter, position ->
+                sceneContext?.toast("不支持的数据: ${adapter.list[position]}")
+                0
+            }
+            onCreateError = { _, _, parent, viewType ->
+                val v = LayoutInflater.from(parent.context).inflate(R.layout.holder_error, parent, false)
+                val holder = SimpleHolder<Any>(v)
+                holder.v<TextView>(R.id.tv_info)?.text = "不支持的 viewType: $viewType"
+                holder
+            }
+            onBindListeners.add { holder, data ->
+                Log.d(TAG, "onBind $holder, $data")
+            }
+        }
 
 }
 
@@ -96,6 +161,12 @@ class OnlineMovieViewHolder(v: View): SimpleHolder<Movie>(v) {
     private val ivPoster = v<ImageView>(R.id.iv_picture)!!
     private val tvName = v<TextView>(R.id.tv_name)!!
     private val tvDesc = v<TextView>(R.id.tv_desc)!!
+
+    init {
+        itemView.setOnClickListener {
+            it.context.toast(data?.name)
+        }
+    }
 
     override fun onBind(data: Movie) {
         super.onBind(data)
@@ -111,6 +182,12 @@ class UpcomingMovieViewHolder(v: View): SimpleHolder<Movie>(v) {
     private val ivPoster = v<ImageView>(R.id.iv_picture)!!
     private val tvName = v<TextView>(R.id.tv_name)!!
     private val tvDesc = v<TextView>(R.id.tv_desc)!!
+
+    init {
+        itemView.setOnClickListener {
+            it.context.toast(data?.name)
+        }
+    }
 
     override fun onBind(data: Movie) {
         super.onBind(data)
@@ -137,17 +214,69 @@ class RecommendMovieViewHolder(v: View): SimpleHolder<Recommend>(v) {
 
 }
 
+const val LIST_STATE_IDLE = 0
+const val LIST_STATE_REFRESHING = 1
+const val LIST_STATE_LOADING_MORE = 2
+
 class ListViewModel: ViewModel() {
     val liveList = LiveList<Any>()
 
-    init {
-        liveList.clearAddAll(ListRepository.list)
+    private var listState = LIST_STATE_IDLE
+    private val _stateLiveData = MutableLiveData<Int>()
+    val stateLiveData: LiveData<Int> = _stateLiveData
+
+    private var refreshDispose: Disposable? = null
+    private var loadMoreDispose: Disposable? = null
+
+    private val loadingMoreItem = LoadingMore()
+
+    fun refresh() {
+        updateState(LIST_STATE_REFRESHING)
+        // 先关闭加载更多
+        loadMoreDispose?.dispose()
+        loadMoreDispose = null
+        liveList.remove(loadingMoreItem)
+        // 关闭正在刷新
+        refreshDispose?.dispose()
+        refreshDispose = ListRepository.getList()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+                liveList.clearAddAll(it)
+                updateState(LIST_STATE_IDLE)
+            }, {
+                updateState(LIST_STATE_IDLE)
+            })
+    }
+
+    fun loadMore() {
+        // 正在刷新或者正在加载，不处理
+        if (listState != LIST_STATE_IDLE) { return }
+
+        updateState(LIST_STATE_LOADING_MORE)
+        liveList.add(loadingMoreItem)
+
+        loadMoreDispose?.dispose()
+        loadMoreDispose = ListRepository.getList()
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+                liveList.remove(loadingMoreItem)
+                updateState(LIST_STATE_IDLE)
+                liveList.addAll(it)
+            }, {
+                liveList.remove(loadingMoreItem)
+                updateState(LIST_STATE_IDLE)
+            })
+    }
+
+    private fun updateState(state: Int) {
+        listState = state
+        _stateLiveData.update(state)
     }
 }
 
 object ListRepository {
 
-    val list = listOf(
+    private val list = listOf(
         TitleLine("热门电影", "全部 996", "敬请期待"),
         Movie("小妇人", "豆瓣评分 8.1", R.drawable.poster_little_women, true),
         Movie("1917", "豆瓣评分 8.5", R.drawable.poster_1917, true),
@@ -179,11 +308,13 @@ object ListRepository {
             "迪士尼《花木兰》全新中字预告",
             "Christina Aguilera 时隔22年再次献唱《花木兰》主题曲，《忠勇真Loyal Brave True》超好听！",
             R.drawable.poster_mulan
-        )
-
+        ),
+        "我是一个字符串"
     )
 
-    fun getList() = Observable.just(list).delay(2000, TimeUnit.MILLISECONDS)
+    fun getList(): Observable<List<Any>> = Observable.just(list)
+        .delay(1000, TimeUnit.MILLISECONDS)
+        .subscribeOn(Schedulers.io())
 
 }
 
@@ -205,3 +336,7 @@ data class Recommend (
     val desc: String,
     @DrawableRes val picture: Int
 )
+
+class LoadingMore
+
+const val TAG = "ListDemo"
