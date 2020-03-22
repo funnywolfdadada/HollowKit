@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING
 /**
  * Utility for invoke [loadMore] when [RecyclerView] reach the bottom.
  *
- * @author funnywolf
+ * @author https://github.com/funnywolfdadada
  * @since 2020/2/16
  */
 class RecyclerViewLoadMore(

@@ -4,7 +4,7 @@ import android.content.Context
 import android.widget.Toast
 
 /**
- * @author funnywolf
+ * @author https://github.com/funnywolfdadada
  * @since 2020/3/22
  */
 fun Context.toast(text: CharSequence?, duration: Int = Toast.LENGTH_SHORT) {

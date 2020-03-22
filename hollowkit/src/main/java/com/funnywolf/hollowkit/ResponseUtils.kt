@@ -7,7 +7,7 @@ import java.lang.Exception
 /**
  * Utilities for [Response]
  *
- * @author funnywolf
+ * @author https://github.com/funnywolfdadada
  * @since 2020/2/16
  */
 

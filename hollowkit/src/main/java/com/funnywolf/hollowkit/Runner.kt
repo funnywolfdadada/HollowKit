@@ -10,7 +10,7 @@ import androidx.lifecycle.OnLifecycleEvent
 /**
  * Utilities for run on main thread or [Lifecycle.Event]
  *
- * @author funnywolf
+ * @author https://github.com/funnywolfdadada
  * @since 2020/2/16
  */
 

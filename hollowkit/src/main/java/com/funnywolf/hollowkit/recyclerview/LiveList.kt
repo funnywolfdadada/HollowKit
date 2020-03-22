@@ -7,7 +7,7 @@ import java.lang.ref.WeakReference
 /**
  * Updates of the list will notify [RecyclerView.Adapter]
  *
- * @author funnywolf
+ * @author https://github.com/funnywolfdadada
  * @since 2020/2/16
  */
 

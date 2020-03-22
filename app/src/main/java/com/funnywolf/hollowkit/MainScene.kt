@@ -10,7 +10,7 @@ import com.funnywolf.hollowkit.list.ListDemoScene
 /**
  * 主页
  *
- * @author funnywolf
+ * @author https://github.com/funnywolfdadada
  * @since 2020/3/21
  */
 class MainScene: Scene() {

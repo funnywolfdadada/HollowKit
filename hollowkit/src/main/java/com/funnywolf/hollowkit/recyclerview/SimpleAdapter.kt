@@ -16,7 +16,7 @@ import kotlin.collections.HashMap
 /**
  * 百行代码实现的一个简单高效的 RecyclerView.Adapter
  *
- * @author funnywolf
+ * @author https://github.com/funnywolfdadada
  * @since 2020/3/15
  */
 open class SimpleAdapter(list: List<Any>): RecyclerView.Adapter<SimpleHolder<Any>>() {

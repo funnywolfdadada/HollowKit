@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit
 /**
  * 列表 demo，会用到 [SimpleAdapter]、[RecyclerViewLoadMore] 和 [LiveList]
  *
- * @author funnywolf
+ * @author https://github.com/funnywolfdadada
  * @since 2020/3/21
  */
 class ListDemoScene: Scene() {

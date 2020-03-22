@@ -3,7 +3,7 @@ apply plugin: 'maven'
 ext {
     PUBLISH_GROUP_ID = 'com.funnywolf'
     PUBLISH_ARTIFACT_ID = 'hollowkit'
-    PUBLISH_VERSION = '0.0.1'
+    PUBLISH_VERSION = '0.0.2'
 }
 
 uploadArchives {

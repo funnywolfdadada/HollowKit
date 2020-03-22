@@ -5,6 +5,12 @@ import android.os.Bundle
 import com.bytedance.scene.NavigationSceneUtility
 import com.bytedance.scene.SceneDelegate
 
+/**
+ * App 的壳 Activity，主页在 [MainScene]
+ *
+ * @author https://github.com/funnywolfdadada
+ * @since 2020/3/21
+ */
 class MainActivity : Activity() {
     private var delegate: SceneDelegate? = null
 

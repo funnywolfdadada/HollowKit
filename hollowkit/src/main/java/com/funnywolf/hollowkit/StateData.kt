@@ -3,7 +3,7 @@ package com.funnywolf.hollowkit
 /**
  * Data with [state] and [error] message
  *
- * @author funnywolf
+ * @author https://github.com/funnywolfdadada
  * @since 2020/2/16
  */
 data class StateData<T> (
