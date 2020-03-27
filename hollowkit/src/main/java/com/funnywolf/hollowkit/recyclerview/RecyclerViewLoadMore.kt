@@ -10,10 +10,10 @@ import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING
  * @since 2020/2/16
  */
 class RecyclerViewLoadMore(
-    private val thresholdPixel: Int,
+    private val thresholdCount: Int,
     private val loadMore: ()->Unit
 ): RecyclerView.OnScrollListener() {
-    var interval = 100L
+    var interval = 30L
     private var lastTime = 0L
 
     fun setup(recyclerView: RecyclerView?) {
@@ -31,16 +31,22 @@ class RecyclerViewLoadMore(
         }
     }
 
+    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+        // try invoke when scroll down
+        if (dy > 0) {
+            tryInvoke(recyclerView)
+        }
+    }
+
     private fun tryInvoke(v: RecyclerView) {
         if (System.currentTimeMillis() - lastTime < interval) {
             return
         }
-        val rest = (v.computeVerticalScrollRange()
-                - v.computeVerticalScrollExtent()
-                - v.computeVerticalScrollOffset())
-        // rest 等于 0 可能是到底部或者异常情况，需要额外判断
-        if (rest in 1..thresholdPixel || !v.canScrollVertically(1)) {
-            lastTime = System.currentTimeMillis()
+        lastTime = System.currentTimeMillis()
+        // only invoke loadMore when we have adapter
+        val c = v.adapter?.itemCount ?: return
+        if (c < thresholdCount
+            || v.findViewHolderForLayoutPosition(c - thresholdCount) != null) {
             loadMore.invoke()
         }
     }

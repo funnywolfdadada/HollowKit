@@ -75,7 +75,7 @@ class ListDemoScene: Scene() {
             }
             it.layoutManager = layoutManager
 
-            RecyclerViewLoadMore(500) {
+            RecyclerViewLoadMore(5) {
                 viewModel.loadMore()
             }.setup(it)
         }
