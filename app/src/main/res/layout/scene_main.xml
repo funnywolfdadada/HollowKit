@@ -6,6 +6,7 @@
     android:fitsSystemWindows="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:gravity="center"
     android:background="@drawable/bg_main"
     >
@@ -13,6 +14,15 @@
     <Button
         android:id="@+id/bt_list"
         android:text="List Demo"
+        android:background="#8FFF"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        />
+
+    <Button
+        android:id="@+id/bt_douban"
+        android:text="豆瓣详情页"
         android:background="#8FFF"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

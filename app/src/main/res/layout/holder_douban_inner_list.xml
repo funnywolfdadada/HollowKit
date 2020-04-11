@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.funnywolf.hollowkit.view.JellyLayout
+    android:id="@+id/jelly"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler"
+        android:overScrollMode="never"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+</com.funnywolf.hollowkit.view.JellyLayout>

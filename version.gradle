@@ -2,12 +2,13 @@ ext.versions = [:]
 
 versions.compileSdk = 29
 versions.targetSdk = 29
-versions.minSdk = 21
+versions.minSdk = 23
 
 versions.appcompat = '1.1.0'
 versions.kotlin = '1.3.61'
 versions.core_ktx = '1.2.0'
 
+versions.material = '1.1.0'
 versions.recyclerview = '1.1.0'
 versions.constraintlayout = '1.1.3'
 versions.swiperefreshlayout = '1.0.0'
@@ -15,3 +16,4 @@ versions.swiperefreshlayout = '1.0.0'
 versions.rxjava = '2.2.8'
 versions.rxandroid = '2.1.1'
 versions.scene = '1.0.0'
+versions.glide = '4.11.0'

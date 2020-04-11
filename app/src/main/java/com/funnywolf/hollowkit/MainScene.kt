@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.bytedance.scene.Scene
+import com.funnywolf.hollowkit.douban.DoubanDetailScene
 import com.funnywolf.hollowkit.list.ListDemoScene
 
 /**
@@ -28,6 +29,10 @@ class MainScene: Scene() {
 
         findViewById<View>(R.id.bt_list)?.setOnClickListener {
             navigationScene?.push(ListDemoScene::class.java)
+        }
+
+        findViewById<View>(R.id.bt_douban)?.setOnClickListener {
+            navigationScene?.push(DoubanDetailScene::class.java)
         }
 
     }

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/toolbar_height"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout"
+    >
+
+    <View
+        android:id="@+id/bg_view"
+        android:alpha="0"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:background="#B85D3A"
+        tools:alpha="1"
+        />
+
+    <ImageView
+        android:id="@+id/iv_back"
+        android:src="@drawable/ic_arrow_right"
+        android:tint="#FFFF"
+        android:rotation="180"
+        android:padding="18dp"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        />
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:textColor="#FFFF"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/toolbar_height"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="电视"
+        />
+
+    <ImageView
+        android:id="@+id/iv_more"
+        android:src="@drawable/ic_more"
+        android:tint="#FFFF"
+        android:rotation="180"
+        android:padding="18dp"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/detail_layout"
+        android:alpha="0"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/toolbar_height"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/iv_back"
+        tools:alpha="1"
+        >
+
+        <ImageView
+            android:id="@+id/iv_poster"
+            android:src="@drawable/poster_westworld_season_3"
+            android:layout_width="20dp"
+            android:layout_height="30dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            />
+
+        <TextView
+            android:id="@+id/tv_detail"
+            android:textColor="#FFFF"
+            android:textStyle="bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            app:layout_constraintTop_toTopOf="@id/iv_poster"
+            app:layout_constraintBottom_toTopOf="@id/rating_bar"
+            app:layout_constraintStart_toEndOf="@id/iv_poster"
+            tools:text="西部世界 第三季"
+            />
+
+        <RatingBar
+            android:id="@+id/rating_bar"
+            style="@style/Widget.AppCompat.RatingBar.Small"
+            android:rating="4.5"
+            android:numStars="5"
+            android:stepSize="0.5"
+            android:progressTint="#FFA000"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            app:layout_constraintTop_toBottomOf="@id/tv_detail"
+            app:layout_constraintBottom_toBottomOf="@id/iv_poster"
+            app:layout_constraintStart_toEndOf="@id/iv_poster"
+            />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</merge>
