@@ -9,7 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Scroller
-import androidx.core.view.*
+import kotlin.math.abs
 
 /**
  * 实现顶部视图和底部视图联动滑动的 view
@@ -17,7 +17,7 @@ import androidx.core.view.*
  * @author https://github.com/funnywolfdadada
  * @since 2020/3/30
  */
-class LinkedTopBottomScrollView: FrameLayout, NestedScrollingParent2 {
+class LinkedTopBottomScrollView: FrameLayout {
 
     /**
      * 顶部视图容器
@@ -45,6 +45,11 @@ class LinkedTopBottomScrollView: FrameLayout, NestedScrollingParent2 {
     private var maxScrollY = 0
 
     /**
+     * 上次触摸事件的 x 值，用于判断是否拦截事件
+     */
+    private var lastX = 0F
+
+    /**
      * 上次触摸事件的 y 值，用于处理自身的滑动事件
      */
     private var lastY = 0F
@@ -60,16 +65,15 @@ class LinkedTopBottomScrollView: FrameLayout, NestedScrollingParent2 {
     private val velocityTracker = VelocityTracker.obtain()
 
     /**
-     * fling 是一连串连续的滚动操作，这里需要暂存 fling 的 view
+     * fling 是一连串连续的滚动操作，这里需要暂存 fling 相关的 view
      */
     private var flingChild: View? = null
+    private var flingTarget: View? = null
 
     /**
      * 暂存 fling 时上次的 y 轴位置，用以计算当前需要滚动的距离
      */
     private var lastFlingY = 0
-
-    private val parentHelper = NestedScrollingParentHelper(this)
 
     constructor(context: Context): super(context)
     constructor(context: Context, attrs: AttributeSet?): super(context, attrs)
@@ -123,6 +127,26 @@ class LinkedTopBottomScrollView: FrameLayout, NestedScrollingParent2 {
         return super.dispatchTouchEvent(e)
     }
 
+    override fun onInterceptTouchEvent(e: MotionEvent): Boolean {
+        return when (e.action) {
+            MotionEvent.ACTION_DOWN -> {
+                lastX = e.x
+                lastY = e.y
+                false
+            }
+            MotionEvent.ACTION_MOVE -> {
+                if (abs(lastX - e.x) < abs(lastY - e.y)) {
+                    true
+                } else {
+                    lastX = e.x
+                    lastY = e.y
+                    false
+                }
+            }
+            else -> super.onInterceptTouchEvent(e)
+        }
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(e: MotionEvent): Boolean {
         return when (e.action) {
@@ -134,9 +158,10 @@ class LinkedTopBottomScrollView: FrameLayout, NestedScrollingParent2 {
                 true
             }
             MotionEvent.ACTION_MOVE -> {
-                // 当 touch 事件没有子 view 处理，就需要自身处理，进行滚动
+                // 移动时分发滚动量
                 val dScrollY = (lastY - e.y).toInt()
-                dispatchScrollY(dScrollY)?.scrollBy(0, dScrollY)
+                val child = findChildUnder(e.rawX, e.rawY)
+                dispatchScrollY(dScrollY, child, child?.findScrollableTarget(e.rawX, e.rawY, dScrollY))
                 lastY = e.y
                 velocityTracker.addMovement(e)
                 true
@@ -145,61 +170,23 @@ class LinkedTopBottomScrollView: FrameLayout, NestedScrollingParent2 {
                 // 手指抬起时计算 y 轴速度，然后自身处理 fling
                 velocityTracker.addMovement(e)
                 velocityTracker.computeCurrentVelocity(1000)
-                handleFling(-velocityTracker.yVelocity.toInt(), null)
+                val yv = -velocityTracker.yVelocity.toInt()
+                val child = findChildUnder(e.rawX, e.rawY)
+                handleFling(yv, child, child?.findScrollableTarget(e.rawX, e.rawY, yv))
                 true
             }
             else -> super.onTouchEvent(e)
         }
     }
 
-    override fun onStartNestedScroll(child: View, target: View, axes: Int, type: Int): Boolean {
-        // 只处理垂直方向的滚动
-        return axes and ViewCompat.SCROLL_AXIS_VERTICAL != 0
-    }
-
-    override fun onNestedScrollAccepted(child: View, target: View, axes: Int, type: Int) {
-        parentHelper.onNestedScrollAccepted(child, target, axes)
-    }
-
-    override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray, type: Int) {
-        // 分发 y 轴的滚动量，如果需要自身滚就拦截处理
-        if (dispatchScrollY(dy, target) == this) {
-            consumed[1] = dy
-            scrollBy(0, dy)
-        }
-    }
-
-    override fun onNestedScroll(
-        target: View,
-        dxConsumed: Int,
-        dyConsumed: Int,
-        dxUnconsumed: Int,
-        dyUnconsumed: Int,
-        type: Int
-    ) {
-        // 未消耗的滚动量，就需要自身滚动
-        scrollBy(0, dyUnconsumed)
-    }
-
-    /**
-     * 子 view 将要 fling 时的回调。这里拦截 y 轴的 fling 事件，自己处理
-     */
-    override fun onNestedPreFling(target: View, velocityX: Float, velocityY: Float): Boolean {
-        handleFling(velocityY.toInt(), target)
-        return true
-    }
-
-    override fun onStopNestedScroll(target: View, type: Int) {
-        parentHelper.onStopNestedScroll(target)
-    }
-
     /**
      * 处理 fling，通过 scroller 计算 fling，暂存 fling 的初值和需要 fling 的 view
      */
-    private fun handleFling(vy: Int, target: View?) {
+    private fun handleFling(yv: Int, child: View?, target: View?) {
         lastFlingY = 0
-        scroller.fling(0, lastFlingY, 0, vy, 0, 0, Int.MIN_VALUE, Int.MAX_VALUE)
-        flingChild = target
+        scroller.fling(0, lastFlingY, 0, yv, 0, 0, Int.MIN_VALUE, Int.MAX_VALUE)
+        flingChild = child
+        flingTarget = target
         invalidate()
     }
 
@@ -210,7 +197,7 @@ class LinkedTopBottomScrollView: FrameLayout, NestedScrollingParent2 {
         if (scroller.computeScrollOffset()) {
             val currentFlingY = scroller.currY
             val dScrollY = currentFlingY - lastFlingY
-            dispatchScrollY(dScrollY, flingChild)?.scrollBy(0, dScrollY)
+            dispatchScrollY(dScrollY, flingChild, flingTarget)
             lastFlingY = currentFlingY
             invalidate()
         } else {
@@ -218,49 +205,28 @@ class LinkedTopBottomScrollView: FrameLayout, NestedScrollingParent2 {
         }
     }
 
-    /**
-     * 根据需要滚动的 view target 和滚动方向，确定将滚动量具体传递给哪个 view
-     * 向下滚动（子 view 整体上移）时优先级：target（在顶部 view 时） -> 自己 -> 底部 view
-     * 向上滚动（子 view 整体下移）时优先级: target（在底部 view 时） -> 自己 -> 顶部 view
-     *
-     * @param dScrollY y 轴的滚动增量
-     * @param target 需要滚动的子 view，null 时则是自身需要在滚动
-     * @return 需要消耗该滚动量的 view
-     */
-    private fun dispatchScrollY(dScrollY: Int, target: View? = null): View? {
-        return if (dScrollY > 0) {
-            // 向下滚动（子 view 整体上移）
-            if (target != null && topContainer.containsChild(target) && target.canScrollVertically(dScrollY)) {
-                // target 在顶部 view 中，且自己还可以消耗滚动，就自己处理
-                target
-            } else if (canScrollVertically(dScrollY)) {
-                // target 为空，或者不在顶部 view 中，或者 target 无法消耗该滚动量
-                // 自己可以处理就自己处理
-                this
-            } else if (target != null && bottomContainer.containsChild(target) && target.canScrollVertically(dScrollY)) {
-                // target 在底部 view 中，且自己还可以消耗滚动，就自己处理
-                target
-            } else {
-                // 最后轮到底部的可滚动 view 处理
-                bottomScrollableView?.invoke()
+    private fun dispatchScrollY(dScrollY: Int, child: View?, target: View?) {
+        if (dScrollY == 0) {
+            return
+        }
+        // 滚动所处的位置没有在子 view，或者子 view 没有完全显示处理
+        // 或者子 view 中没有要处理滚动的 target，或者 target 不在能够滚动
+        if (child == null || !isChildTotallyShowing(child)
+            || target == null || !target.canScrollVertically(dScrollY)) {
+            // 优先自己处理，处理不了再根据滚动方向交给顶部或底部的 view 处理
+            when {
+                canScrollVertically(dScrollY) -> scrollBy(0, dScrollY)
+                dScrollY > 0 -> bottomScrollableView?.invoke()?.scrollBy(0, dScrollY)
+                else -> topScrollableView?.invoke()?.scrollBy(0, dScrollY)
             }
         } else {
-            // 向上滚动（子 view 整体下移）
-            if (target != null && bottomContainer.containsChild(target) && target.canScrollVertically(dScrollY)) {
-                // target 在底部 view 中，且自己还可以消耗滚动，就自己处理
-                target
-            } else if (canScrollVertically(dScrollY)) {
-                // target 为空，或者不在底部 view 中，或者 target 无法消耗该滚动量
-                // 自己可以处理就自己处理
-                this
-            } else if (target != null && topContainer.containsChild(target) && target.canScrollVertically(dScrollY)) {
-                // target 在顶部 view 中，且自己还可以消耗滚动，就自己处理
-                target
-            } else {
-                // 最后轮到顶部的可滚动 view 处理
-                topScrollableView?.invoke()
-            }
+            target.scrollBy(0, dScrollY)
         }
+    }
+
+    private fun isChildTotallyShowing(c: View): Boolean {
+        val relativeY = c.y - scrollY
+        return relativeY >= 0 && relativeY + c.height <= height
     }
 
     /**
@@ -285,18 +251,38 @@ class LinkedTopBottomScrollView: FrameLayout, NestedScrollingParent2 {
         })
     }
 
-    private fun ViewGroup.containsChild(v: View?): Boolean {
-        v ?: return false
-        return if (this == v || indexOfChild(v) >= 0) {
-            true
-        } else {
-            repeat(childCount) {
-                val child = getChildAt(it)
-                if (child is ViewGroup && child.containsChild(v)) {
-                    return true
+}
+
+fun View.isUnder(rawX: Float, rawY: Float): Boolean {
+    val xy = IntArray(2)
+    getLocationOnScreen(xy)
+    return rawX.toInt() in xy[0]..(xy[1] + width) && rawY.toInt() in xy[1]..(xy[1] + height)
+}
+
+fun ViewGroup.findChildUnder(rawX: Float, rawY: Float): View? {
+    for (i in 0 until childCount) {
+        val c = getChildAt(i)
+        if (c.isUnder(rawX, rawY)) {
+            return c
+        }
+    }
+    return null
+}
+
+fun View.findScrollableTarget(rawX: Float, rawY: Float, dScrollY: Int): View? {
+    return when {
+        !isUnder(rawX, rawY) -> null
+        canScrollVertically(dScrollY) -> this
+        this !is ViewGroup -> null
+        else -> {
+            var t: View? = null
+            for (i in 0 until childCount) {
+                t = getChildAt(i).findScrollableTarget(rawX, rawY, dScrollY)
+                if (t != null) {
+                    break
                 }
             }
-            false
+            t
         }
     }
 }
