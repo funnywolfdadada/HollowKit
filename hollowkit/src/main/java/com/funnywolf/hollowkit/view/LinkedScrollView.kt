@@ -6,9 +6,10 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.VelocityTracker
 import android.view.View
-import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Scroller
+import com.funnywolf.hollowkit.utils.findChildUnder
+import com.funnywolf.hollowkit.utils.findScrollableTarget
 import kotlin.math.abs
 
 /**
@@ -251,38 +252,4 @@ class LinkedTopBottomScrollView: FrameLayout {
         })
     }
 
-}
-
-fun View.isUnder(rawX: Float, rawY: Float): Boolean {
-    val xy = IntArray(2)
-    getLocationOnScreen(xy)
-    return rawX.toInt() in xy[0]..(xy[1] + width) && rawY.toInt() in xy[1]..(xy[1] + height)
-}
-
-fun ViewGroup.findChildUnder(rawX: Float, rawY: Float): View? {
-    for (i in 0 until childCount) {
-        val c = getChildAt(i)
-        if (c.isUnder(rawX, rawY)) {
-            return c
-        }
-    }
-    return null
-}
-
-fun View.findScrollableTarget(rawX: Float, rawY: Float, dScrollY: Int): View? {
-    return when {
-        !isUnder(rawX, rawY) -> null
-        canScrollVertically(dScrollY) -> this
-        this !is ViewGroup -> null
-        else -> {
-            var t: View? = null
-            for (i in 0 until childCount) {
-                t = getChildAt(i).findScrollableTarget(rawX, rawY, dScrollY)
-                if (t != null) {
-                    break
-                }
-            }
-            t
-        }
-    }
 }
