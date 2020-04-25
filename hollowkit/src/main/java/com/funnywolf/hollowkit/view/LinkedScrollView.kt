@@ -18,7 +18,7 @@ import kotlin.math.abs
  * @author https://github.com/funnywolfdadada
  * @since 2020/3/30
  */
-class LinkedTopBottomScrollView: FrameLayout {
+class LinkedScrollView: FrameLayout {
 
     /**
      * 顶部视图容器
@@ -210,7 +210,7 @@ class LinkedTopBottomScrollView: FrameLayout {
         if (dScrollY == 0) {
             return
         }
-        // 滚动所处的位置没有在子 view，或者子 view 没有完全显示处理
+        // 滚动所处的位置没有在子 view，或者子 view 没有完全显示出来
         // 或者子 view 中没有要处理滚动的 target，或者 target 不在能够滚动
         if (child == null || !isChildTotallyShowing(child)
             || target == null || !target.canScrollVertically(dScrollY)) {

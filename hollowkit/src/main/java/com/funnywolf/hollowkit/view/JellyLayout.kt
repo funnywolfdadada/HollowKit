@@ -74,6 +74,7 @@ class JellyLayout : FrameLayout, NestedScrollingParent2 {
             scrollX > 0 -> if (maxScrollX != 0) { scrollX.toFloat() / maxScrollX } else { 0F }
             else -> 0F
         }
+        private set
 
     /**
      * 上次 x 轴的滚动方向，主要用来判断是否发生了滚动

@@ -1,12 +1,10 @@
 package com.funnywolf.hollowkit.view
 
 import android.content.Context
-import android.graphics.Color
 import android.util.AttributeSet
 import android.view.View
 import android.widget.FrameLayout
 import androidx.recyclerview.widget.RecyclerView
-import androidx.viewpager.widget.ViewPager
 import com.funnywolf.hollowkit.R
 import kotlin.math.max
 
@@ -19,12 +17,16 @@ import kotlin.math.max
 class DoubanDetailView: FrameLayout {
 
     val toolBar: ToolbarView
-    val linkedScrollView: LinkedTopBottomScrollView
+    val linkedScrollView: LinkedScrollView
     val bottomSheetLayout: BottomSheetLayout
     val topRecyclerView: RecyclerView
 
     val bottomLayout: FrameLayout
     var bottomScrollViewProvider: (()->View?)? = null
+        set(value) {
+            linkedScrollView.setBottomView(bottomLayout, value)
+            field = value
+        }
 
     var toolbarHeight = context.resources.getDimension(R.dimen.toolbar_height).toInt()
     var minBottomShowingHeight = toolbarHeight
@@ -39,7 +41,7 @@ class DoubanDetailView: FrameLayout {
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int): super(context, attrs, defStyleAttr)
 
     init {
-        linkedScrollView = LinkedTopBottomScrollView(context)
+        linkedScrollView = LinkedScrollView(context)
         addView(linkedScrollView)
         bottomSheetLayout = BottomSheetLayout(context)
         addView(bottomSheetLayout, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT).apply {
