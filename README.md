@@ -15,12 +15,12 @@
 ```
 allprojects {
     repositories {
-        maven { url "https://raw.githubusercontent.com/funnywolfdadada/repository/master" }
+        maven { url "https://jitpack.io" }
     }
 }
 
 dependencies {
-    implementation "com.funnywolf:hollowkit:$last_version"
+    implementation 'com.github.funnywolfdadada:HollowKit:1.0'
 }
 ```
 
