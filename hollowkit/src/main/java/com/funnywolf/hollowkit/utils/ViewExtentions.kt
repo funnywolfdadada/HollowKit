@@ -42,42 +42,47 @@ fun View.findScrollableTarget(rawX: Float, rawY: Float, dScrollY: Int): View? {
     }
 }
 
-fun View.findHorizontalNestedScrollingTarget(rawX: Float, rawY: Float): View? {
-    return when {
-        !isUnder(rawX, rawY) -> null
-        (this is NestedScrollingChild)
-                && (canScrollHorizontally(1) || canScrollHorizontally(-1)) -> this
-        this !is ViewGroup -> null
-        else -> {
-            var t: View? = null
-            for (i in 0 until childCount) {
-                t = getChildAt(i).findHorizontalNestedScrollingTarget(rawX, rawY)
-                if (t != null) {
-                    break
-                }
-            }
-            t
+fun ViewGroup.findHorizontalNestedScrollingTarget(rawX: Float, rawY: Float): View? {
+    for (i in 0 until childCount) {
+        val v = getChildAt(i)
+        if (!v.isUnder(rawX, rawY)) {
+            continue
+        }
+        if (v is NestedScrollingChild
+            && (v.canScrollHorizontally(1)
+                    || v.canScrollHorizontally(-1))) {
+            return v
+        }
+        if (v !is ViewGroup) {
+            continue
+        }
+        val t = v.findHorizontalNestedScrollingTarget(rawX, rawY)
+        if (t != null) {
+            return t
         }
     }
+    return null
 }
 
-fun View.findVerticalNestedScrollingTarget(rawX: Float, rawY: Float): View? {
-    return when {
-        !isUnder(rawX, rawY) -> null
-        (this is NestedScrollingChild)
-                && (canScrollVertically(1) || canScrollVertically(-1)) -> this
-        this !is ViewGroup -> null
-        else -> {
-            var t: View? = null
-            for (i in 0 until childCount) {
-                t = getChildAt(i).findVerticalNestedScrollingTarget(rawX, rawY)
-                if (t != null) {
-                    break
-                }
-            }
-            t
+fun ViewGroup.findVerticalNestedScrollingTarget(rawX: Float, rawY: Float): View? {
+    for (i in 0 until childCount) {
+        val v = getChildAt(i)
+        if (!v.isUnder(rawX, rawY)) {
+            continue
+        }
+        if (v is NestedScrollingChild
+            && (v.canScrollVertically(1) || v.canScrollVertically(-1))) {
+            return v
+        }
+        if (v !is ViewGroup) {
+            continue
+        }
+        val t = v.findVerticalNestedScrollingTarget(rawX, rawY)
+        if (t != null) {
+            return t
         }
     }
+    return null
 }
 
 fun ViewGroup.containsChild(v: View?): Boolean {

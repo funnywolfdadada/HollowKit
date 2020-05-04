@@ -268,11 +268,10 @@ class JellyLayout : FrameLayout, NestedScrollingParent2 {
                 if (dx == 0 && dy == 0) {
                     false
                 } else {
-                    val child = findChildUnder(e.rawX, e.rawY)
                     val target = if (abs(dx) > abs(dy)) {
-                        child?.findHorizontalNestedScrollingTarget(e.rawX, e.rawY)
+                        findHorizontalNestedScrollingTarget(e.rawX, e.rawY)
                     } else {
-                        child?.findVerticalNestedScrollingTarget(e.rawX, e.rawY)
+                        findVerticalNestedScrollingTarget(e.rawX, e.rawY)
                     }
                     target == null
                 }
