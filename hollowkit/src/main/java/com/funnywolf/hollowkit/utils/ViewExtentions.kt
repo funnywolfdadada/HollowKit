@@ -2,6 +2,7 @@ package com.funnywolf.hollowkit.utils
 
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.NestedScrollingChild
 
 /**
  * @author https://github.com/funnywolfdadada
@@ -32,6 +33,44 @@ fun View.findScrollableTarget(rawX: Float, rawY: Float, dScrollY: Int): View? {
             var t: View? = null
             for (i in 0 until childCount) {
                 t = getChildAt(i).findScrollableTarget(rawX, rawY, dScrollY)
+                if (t != null) {
+                    break
+                }
+            }
+            t
+        }
+    }
+}
+
+fun View.findHorizontalNestedScrollingTarget(rawX: Float, rawY: Float): View? {
+    return when {
+        !isUnder(rawX, rawY) -> null
+        (this is NestedScrollingChild)
+                && (canScrollHorizontally(1) || canScrollHorizontally(-1)) -> this
+        this !is ViewGroup -> null
+        else -> {
+            var t: View? = null
+            for (i in 0 until childCount) {
+                t = getChildAt(i).findHorizontalNestedScrollingTarget(rawX, rawY)
+                if (t != null) {
+                    break
+                }
+            }
+            t
+        }
+    }
+}
+
+fun View.findVerticalNestedScrollingTarget(rawX: Float, rawY: Float): View? {
+    return when {
+        !isUnder(rawX, rawY) -> null
+        (this is NestedScrollingChild)
+                && (canScrollVertically(1) || canScrollVertically(-1)) -> this
+        this !is ViewGroup -> null
+        else -> {
+            var t: View? = null
+            for (i in 0 until childCount) {
+                t = getChildAt(i).findVerticalNestedScrollingTarget(rawX, rawY)
                 if (t != null) {
                     break
                 }

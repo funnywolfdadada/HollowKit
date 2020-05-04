@@ -12,6 +12,9 @@ import androidx.annotation.IntDef
 import androidx.core.view.NestedScrollingParent2
 import androidx.core.view.NestedScrollingParentHelper
 import androidx.core.view.ViewCompat
+import com.funnywolf.hollowkit.utils.findChildUnder
+import com.funnywolf.hollowkit.utils.findHorizontalNestedScrollingTarget
+import com.funnywolf.hollowkit.utils.findVerticalNestedScrollingTarget
 import kotlin.math.abs
 
 /**
@@ -102,6 +105,11 @@ class JellyLayout : FrameLayout, NestedScrollingParent2 {
      * 复位时的动画时间
      */
     var resetDuration: Int = 500
+
+    /**
+     * 滚动的阻尼
+     */
+    var resistence = 2F
 
     private var topView: View? = null
     private var bottomView: View? = null
@@ -253,60 +261,45 @@ class JellyLayout : FrameLayout, NestedScrollingParent2 {
             }
             // move 时需要根据是否移动，是否有可处理对应方向移动的子 view，判断是否要自己拦截
             MotionEvent.ACTION_MOVE -> {
-                val horizontal = lastX != e.x
-                val vertical = lastY != e.y
+                val dx = (lastX - e.x).toInt()
+                val dy = (lastY - e.y).toInt()
                 lastX = e.x
                 lastY = e.y
-                if (horizontal || vertical) {
-                    // 寻找可以处理事件的子 view，没有就拦截下来自己处理
-                    getScrollableChildUnder(e.x, e.y, horizontal, vertical) == null
-                } else {
-                    // 没有发生移动就先不拦截
+                if (dx == 0 && dy == 0) {
                     false
+                } else {
+                    val child = findChildUnder(e.rawX, e.rawY)
+                    val target = if (abs(dx) > abs(dy)) {
+                        child?.findHorizontalNestedScrollingTarget(e.rawX, e.rawY)
+                    } else {
+                        child?.findVerticalNestedScrollingTarget(e.rawX, e.rawY)
+                    }
+                    target == null
                 }
+
             }
             else -> super.onInterceptTouchEvent(e)
         }
-    }
-
-    /**
-     * 寻找在 x, y 处可以水平或垂直移动的子 view
-     */
-    private fun getScrollableChildUnder(x: Float, y: Float, horizontal: Boolean, vertical: Boolean): View? {
-        for(i in 0 until childCount) {
-            val v = getChildAt(i)
-            // 先判断点击位置是否在 v 上
-            if (x !in v.x..(v.x + v.width) || y !in v.y..(v.y + v.height)) {
-                continue
-            }
-            if (
-                // 判断 v 是否可以左右移动
-                (horizontal && (v.canScrollHorizontally(1) || v.canScrollHorizontally(-1)))
-                ||
-                // 判断 v 是否可以上下移动
-                (vertical && (v.canScrollVertically(1) || v.canScrollVertically(-1)))
-            ) {
-                return v
-            }
-        }
-        return null
     }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(e: MotionEvent): Boolean {
         return when (e.action) {
             // down 不处理，之后的就无法处理
-            MotionEvent.ACTION_DOWN -> true
+            MotionEvent.ACTION_DOWN -> {
+                lastX = e.x
+                lastY = e.y
+                true
+            }
             // move 时判断自身是否能够处理
             MotionEvent.ACTION_MOVE -> {
                 val dx = (lastX - e.x).toInt()
                 val dy = (lastY - e.y).toInt()
                 lastX = e.x
                 lastY = e.y
-                if (canScrollHorizontally(dx) || canScrollVertically(dy)) {
+                if (dispatchScroll(dx, dy)) {
                     // 自己可以处理就请求父 view 不要拦截事件
                     requestDisallowInterceptTouchEvent(true)
-                    dispatchScroll(dx, dy)
                     true
                 } else {
                     false
@@ -327,31 +320,18 @@ class JellyLayout : FrameLayout, NestedScrollingParent2 {
 
     /**
      * 根据滚动区域和新的滚动量确定是否消耗 target 的滚动，滚动区域和处理优先级关系：
-     * [JELLY_REGION_TOP] -> 向下滚动（子 view 向上移动）时优先处理自己，向上滚动时优先处理 target
-     * [JELLY_REGION_BOTTOM] -> 向下滚动时优先处理 target，向上滚动时优先处理自己
-     * [JELLY_REGION_LEFT] -> 向右滚动（子 view 向左移动）时优先处理自己，向左滚动时优先处理 target
-     * [JELLY_REGION_RIGHT] -> 向右滚动时优先处理 target，向左滚动时优先处理自己
+     * [JELLY_REGION_TOP] 或 [JELLY_REGION_BOTTOM] -> 自己优先处理 y 轴滚动
+     * [JELLY_REGION_LEFT] 或 [JELLY_REGION_RIGHT] -> 自己优先处理 x 轴滚动
      */
     override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray, type: Int) {
         when (currRegion) {
-            JELLY_REGION_TOP -> if ((dy > 0 && canScrollVertically(dy))
-                || (dy < 0 && !target.canScrollVertically(dy))) {
+            JELLY_REGION_TOP, JELLY_REGION_BOTTOM -> if (canScrollVertically(dy)) {
                 consumed[1] = dy
             }
-            JELLY_REGION_BOTTOM -> if ((dy > 0 && !target.canScrollVertically(dy))
-                || (dy < 0 && canScrollVertically(dy))) {
-                consumed[1] = dy
-            }
-            JELLY_REGION_LEFT -> if ((dx > 0 && canScrollHorizontally(dx))
-                || (dx < 0 && !target.canScrollHorizontally(dx))) {
-                consumed[0] = dx
-            }
-            JELLY_REGION_RIGHT -> if ((dx > 0 && !target.canScrollHorizontally(dx))
-                || (dx < 0 && canScrollHorizontally(dx))) {
+            JELLY_REGION_LEFT, JELLY_REGION_RIGHT -> if (canScrollHorizontally(dx)) {
                 consumed[0] = dx
             }
         }
-
         dispatchScroll(consumed[0], consumed[1])
     }
 
@@ -371,25 +351,32 @@ class JellyLayout : FrameLayout, NestedScrollingParent2 {
     }
 
     /**
-     * 分发滚动量，当滚动区域未知时需要先确定滚动区域
+     * 分发滚动量，当滚动区域已知时，只处理对应方向上的滚动，未知时先通过滚动量确定方向，再滚动
      */
-    private fun dispatchScroll(dScrollX: Int, dScrollY: Int) {
-        if (dScrollX == 0 && dScrollY == 0) {
-            return
+    private fun dispatchScroll(dScrollX: Int, dScrollY: Int): Boolean {
+        val dx = (dScrollX / resistence).toInt()
+        val dy = (dScrollY / resistence).toInt()
+        if (dx == 0 && dy == 0) {
+            return true
         }
-        when (currRegion) {
-            JELLY_REGION_TOP, JELLY_REGION_BOTTOM -> {
-                scrollBy(0, dScrollY / 2)
+        val horizontal = when (currRegion) {
+            JELLY_REGION_TOP, JELLY_REGION_BOTTOM -> false
+            JELLY_REGION_LEFT, JELLY_REGION_RIGHT -> true
+            else -> abs(dScrollX) > abs(dScrollY)
+        }
+        return if (horizontal) {
+            if (canScrollHorizontally(dx)) {
+                scrollBy(dx, 0)
+                true
+            } else {
+                false
             }
-            JELLY_REGION_LEFT, JELLY_REGION_RIGHT -> {
-                scrollBy(dScrollX / 2, 0)
-            }
-            JELLY_REGION_NONE -> {
-                if (abs(dScrollX) > abs(dScrollY)) {
-                    scrollBy(dScrollX / 2, 0)
-                } else {
-                    scrollBy(0, dScrollY / 2)
-                }
+        } else {
+            if (canScrollVertically(dy)) {
+                scrollBy(0, dy)
+                true
+            } else {
+                false
             }
         }
     }
@@ -415,75 +402,43 @@ class JellyLayout : FrameLayout, NestedScrollingParent2 {
         }
     }
 
+    override fun canScrollHorizontally(direction: Int): Boolean {
+        return if (direction > 0) {
+            scrollX < maxScrollX
+        } else {
+            scrollX > minScrollX
+        }
+    }
+
+    override fun canScrollVertically(direction: Int): Boolean {
+        return if (direction > 0) {
+            scrollY < maxScrollY
+        } else {
+            scrollY > minScrollY
+        }
+    }
+
     /**
-     * 是否可以滚动取决于当前的滚动区域 [currRegion] 和要判断的方向，这里的区域判断分得很细，可以使得一次只处理一个区域的滚动，
+     * 具体滚动的限制取决于当前的滚动区域 [currRegion]，这里的区域判断分得很细，可以使得一次只处理一个区域的滚动，
      * 否则会存在在临界位置的一次大的滚动导致滚过了的问题。
      * 具体规则:
      * [JELLY_REGION_LEFT] -> 只能在水平 [[minScrollX], 0] 范围内滚动
      * [JELLY_REGION_RIGHT] -> 只能在水平 [0, [maxScrollX]] 范围内滚动
      * [JELLY_REGION_TOP] -> 只能在垂直 [[minScrollY], 0] 范围内滚动
      * [JELLY_REGION_BOTTOM] -> 只能在垂直 [0, [maxScrollY]] 范围内滚动
-     * [JELLY_REGION_NONE] -> 水平时是在 [[minScrollX], [maxScrollX]] 范围内，垂直时在 [[minScrollY], [maxScrollY]]
-     * [canScrollHorizontally]，[canScrollVertically] 和 [scrollTo] 都遵循这个规则
-     */
-    override fun canScrollHorizontally(direction: Int): Boolean {
-        return when (currRegion) {
-            JELLY_REGION_LEFT -> if (direction > 0) {
-                scrollX < 0
-            } else {
-                scrollX > minScrollX
-            }
-            JELLY_REGION_RIGHT -> if (direction > 0) {
-                scrollX < maxScrollX
-            } else {
-                scrollX > 0
-            }
-            JELLY_REGION_NONE -> if (direction > 0) {
-                scrollX < maxScrollX
-            } else {
-                scrollX > minScrollX
-            }
-            else -> false
-        }
-    }
-
-    override fun canScrollVertically(direction: Int): Boolean {
-        return when (currRegion) {
-            JELLY_REGION_TOP -> if (direction > 0) {
-                scrollY < 0
-            } else {
-                scrollY > minScrollY
-            }
-            JELLY_REGION_BOTTOM -> if (direction > 0) {
-                scrollY < maxScrollY
-            } else {
-                scrollY > 0
-            }
-            JELLY_REGION_NONE -> if (direction > 0) {
-                scrollY < maxScrollY
-            } else {
-                scrollY > minScrollY
-            }
-            else -> false
-        }
-    }
-
-    /**
-     * 根据当前的滚动区域限制滚动范围，当滚动区域无法确定时就不滚动
+     * [JELLY_REGION_NONE] -> 水平是在 [[minScrollX], [maxScrollX]] 范围内，垂直在 [[minScrollY], [maxScrollY]]
      */
     override fun scrollTo(x: Int, y: Int) {
         val region = currRegion
         val xx = when(region) {
             JELLY_REGION_LEFT -> x.constrains(minScrollX, 0)
             JELLY_REGION_RIGHT -> x.constrains(0, maxScrollX)
-            JELLY_REGION_NONE -> x.constrains(minScrollX, maxScrollX)
-            else -> 0
+            else -> x.constrains(minScrollX, maxScrollX)
         }
         val yy = when(region) {
             JELLY_REGION_TOP -> y.constrains(minScrollY, 0)
             JELLY_REGION_BOTTOM -> y.constrains(0, maxScrollY)
-            JELLY_REGION_NONE -> y.constrains(minScrollY, maxScrollY)
-            else -> 0
+            else -> y.constrains(minScrollY, maxScrollY)
         }
         super.scrollTo(xx, yy)
     }
