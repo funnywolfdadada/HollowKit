@@ -9,7 +9,7 @@
 - `Runner.kt`: 在主线程或者某个 `Lifecycle.Event` 执行 `Runnable`
 - `BottomSheetLayout`: 底部弹层，[仿写豆瓣详情页（二）底部浮层](https://juejin.im/post/5ea3fc386fb9a03c7a333830)
 - `LinkedScrollView`: 一个上下联动的滚动结构，[仿写豆瓣详情页（三）内容列表](https://juejin.im/post/5ea3ffade51d4546ca30ccec)
-- `JellyLayout`: 弹性布局
+- `JellyLayout`: 弹性布局，[仿写豆瓣详情页（四）弹性布局](https://juejin.im/post/5eb2c471e51d454d980e3db7)
 
 ## Dependency
 ```
