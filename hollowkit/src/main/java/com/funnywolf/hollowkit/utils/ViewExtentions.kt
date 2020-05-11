@@ -15,13 +15,14 @@ fun View.isUnder(rawX: Float, rawY: Float): Boolean {
 }
 
 fun ViewGroup.findChildUnder(rawX: Float, rawY: Float): View? {
-    for (i in 0 until childCount) {
-        val c = getChildAt(i)
-        if (c.isUnder(rawX, rawY)) {
-            return c
-        }
+    return findFirst(false) { it.isUnder(rawX, rawY) }
+}
+
+fun ViewGroup.findVerticalScrollableTarget(dScrollY: Int, includeSelf: Boolean): View? {
+    if (includeSelf && this.canScrollVertically(dScrollY)) {
+        return this
     }
-    return null
+    return findFirst(true) { it.canScrollVertically(dScrollY) }
 }
 
 fun View.findScrollableTarget(rawX: Float, rawY: Float, dScrollY: Int): View? {
@@ -79,6 +80,26 @@ fun ViewGroup.findVerticalNestedScrollingTarget(rawX: Float, rawY: Float): View?
         }
         val t = v.findVerticalNestedScrollingTarget(rawX, rawY)
         if (t != null) {
+            return t
+        }
+    }
+    return null
+}
+
+fun View.canNestedScrollVertically(): Boolean = this is NestedScrollingChild
+        && (this.canScrollVertically(1) || this.canScrollVertically(-1))
+
+fun View.canNestedScrollHorizontally(): Boolean = this is NestedScrollingChild
+        && (this.canScrollHorizontally(1) || this.canScrollHorizontally(-1))
+
+fun ViewGroup.findFirst(recursively: Boolean, predict: (View)->Boolean): View? {
+    for (i in 0 until childCount) {
+        val v = getChildAt(i)
+        if (predict(v)) {
+            return v
+        }
+        if (recursively) {
+            val t = (v as? ViewGroup)?.findFirst(recursively, predict) ?: continue
             return t
         }
     }

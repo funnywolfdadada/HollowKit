@@ -27,6 +27,10 @@ class MainScene: Scene() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        findViewById<View>(R.id.bt_test)?.setOnClickListener {
+            navigationScene?.push(TestScene::class.java)
+        }
+
         findViewById<View>(R.id.bt_list)?.setOnClickListener {
             navigationScene?.push(ListDemoScene::class.java)
         }
