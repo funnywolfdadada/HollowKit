@@ -24,73 +24,22 @@ import com.funnywolf.hollowkit.utils.*
  */
 open class BehavioralNestedScrollLayout : FrameLayout, NestedScrollingParent3 {
 
-    /**
-     * 当前区域的滚动进度
-     */
-    @FloatRange(from = 0.0, to = 1.0)
-    var currProcess = 0F
-        private set
-        get() = when {
-            else -> 0F
-        }
+    private var behavior: NestedScrollBehavior? = null
 
-    /**
-     * 上次 x 轴的滚动方向，主要用来判断是否发生了滚动
-     */
-    var lastScrollXDir: Int = 0
-        private set
-
-    /**
-     * 上次 y 轴的滚动方向
-     */
-    var lastScrollYDir: Int = 0
-        private set
-
-    var prevView: View? = null
-        set(value) {
-            removeView(field)
-            if (value != null) {
-                addView(value)
-            }
-            field = value
-            views[0] = value
-        }
-
-    var contentView: View? = null
-        set(value) {
-            removeView(field)
-            if (value != null) {
-                addView(value)
-            }
-            field = value
-            views[1] = value
-        }
-
-    var nextView: View? = null
-        set(value) {
-            removeView(field)
-            if (value != null) {
-                addView(value)
-            }
-            field = value
-            views[2] = value
-        }
-
-    private val views = ArrayList<View?>(3).also {
-        it.add(null)
-        it.add(null)
-        it.add(null)
-    }
+    private val views = arrayOfNulls<View>(3)
+    private val targets = arrayOfNulls<NestedScrollTarget>(3)
 
     /**
      * 滚动的最小值
      */
     private var minScroll = 0
+    private var minOverScroll = 0
 
     /**
      * 滚动的最大值
      */
     private var maxScroll = 0
+    private var maxOverScroll = 0
 
     /**
      * 上次触摸事件的 y 值，用于处理自身的滑动事件
@@ -116,24 +65,60 @@ open class BehavioralNestedScrollLayout : FrameLayout, NestedScrollingParent3 {
     constructor(context: Context, attrs: AttributeSet?): super(context, attrs)
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int): super(context, attrs, defStyleAttr)
 
-    fun setupViews(content: View?, prev: View? = null, next: View? = null) {
-        contentView = content
-        prevView = prev
-        nextView = next
+    fun setupBehavior(behavior: NestedScrollBehavior?) {
+        removeAllViews()
+        this.behavior = behavior
+        views[0] = behavior?.prevView?.also {
+            addView(it)
+        }
+        targets[0] = behavior?.prevScrollTarget
+        views[1] = behavior?.contentView?.also {
+            addView(it)
+        }
+        targets[1] = behavior?.contentScrollTarget
+        views[2] = behavior?.nextView?.also {
+            addView(it)
+        }
+        targets[2] = behavior?.nextScrollTarget
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        super.onLayout(changed, left, top, right, bottom)
-        prevView?.also {
-            it.x = (width - it.width) / 2F
-            it.y = -it.height.toFloat()
+        minScroll = 0
+        maxScroll = 0
+        layoutVertical(left, top, right, bottom)
+        minOverScroll = minScroll + (behavior?.minOverScrollOffset ?: 0)
+        maxOverScroll = maxScroll + (behavior?.maxOverScrollOffset ?: 0)
+    }
+
+    private fun layoutVertical(left: Int, top: Int, right: Int, bottom: Int) {
+        var t = top
+        views[0]?.also {
+            it.layout(
+                left + ((it.layoutParams as? MarginLayoutParams)?.leftMargin ?: 0),
+                t - it.measuredHeight,
+                right + ((it.layoutParams as? MarginLayoutParams)?.rightMargin ?: 0),
+                0
+            )
+            minScroll = -it.measuredHeight
         }
-        nextView?.also {
-            it.x = (width - it.width) / 2F
-            it.y = height.toFloat()
+        views[1]?.also {
+            it.layout(
+                left + ((it.layoutParams as? MarginLayoutParams)?.leftMargin ?: 0),
+                t,
+                right + ((it.layoutParams as? MarginLayoutParams)?.rightMargin ?: 0),
+                t + it.measuredHeight
+            )
+            t += it.measuredHeight
         }
-        minScroll = -(prevView?.height ?: 0)
-        maxScroll = nextView?.height ?: 0
+        views[2]?.also {
+            it.layout(
+                left + ((it.layoutParams as? MarginLayoutParams)?.leftMargin ?: 0),
+                t,
+                right + ((it.layoutParams as? MarginLayoutParams)?.rightMargin ?: 0),
+                t + it.measuredHeight
+            )
+            maxScroll = (it.y + it.height - height).toInt()
+        }
     }
 
     override fun onInterceptTouchEvent(e: MotionEvent): Boolean {
@@ -281,7 +266,8 @@ open class BehavioralNestedScrollLayout : FrameLayout, NestedScrollingParent3 {
             val index = views.indexOf(child) + if (scroll > 0) { 1 } else { -1 }
             if (index >= 0 && index < views.size) {
                 nestedScrollChild = views[index]
-                nestedScrollTarget = (nestedScrollChild as? ViewGroup)?.findVerticalScrollableTarget(scroll, true)
+                nestedScrollTarget = targets[index]?.invoke(this, scroll, type)
+                    ?: (nestedScrollChild as? ViewGroup)?.findVerticalScrollableTarget(scroll, true)
             }
         }
     }
@@ -302,6 +288,7 @@ open class BehavioralNestedScrollLayout : FrameLayout, NestedScrollingParent3 {
 
     override fun canScrollVertically(direction: Int): Boolean {
         return when {
+            behavior?.vertical != true -> false
             direction > 0 -> scrollY < maxScroll
             direction < 0 -> scrollY > minScroll
             else -> true
@@ -313,6 +300,7 @@ open class BehavioralNestedScrollLayout : FrameLayout, NestedScrollingParent3 {
      */
     override fun scrollTo(x: Int, y: Int) {
         val yy = when {
+            behavior?.vertical != true -> scrollY
             scrollY > 0 -> y.constrains(0, maxScroll)
             scrollY < 0 -> y.constrains(minScroll, 0)
             else -> y.constrains(minScroll, maxScroll)
@@ -328,11 +316,48 @@ open class BehavioralNestedScrollLayout : FrameLayout, NestedScrollingParent3 {
 
 }
 
+/**
+ * 嵌套滚动的目标 View
+ * 参数分别时 [BehavioralNestedScrollLayout]、滚动量和 [ViewCompat.NestedScrollType]
+ */
+typealias NestedScrollTarget = (BehavioralNestedScrollLayout, Int, Int)->View
+
 class NestedScrollBehavior(
     val contentView: View,
-    val contentScrollTarget: (BehavioralNestedScrollLayout, Int, Int)->View?
+    val contentScrollTarget: NestedScrollTarget? = null
 ) {
     var prevView: View? = null
+    var prevScrollTarget: NestedScrollTarget? = null
+
     var nextView: View? = null
-//    var
+    var nextScrollTarget: NestedScrollTarget? = null
+
+    var vertical: Boolean = true
+
+    var minOverScrollOffset: Int = 0
+    var maxOverScrollOffset: Int = 0
+
+    fun setPrevView(v: View, target: NestedScrollTarget? = null): NestedScrollBehavior {
+        prevView = v
+        prevScrollTarget = target
+        return this
+    }
+
+    fun setNextView(v: View, target: NestedScrollTarget? = null): NestedScrollBehavior {
+        nextView = v
+        nextScrollTarget = target
+        return this
+    }
+
+    fun setOrientation(vertical: Boolean): NestedScrollBehavior {
+        this.vertical = vertical
+        return this
+    }
+
+    fun setOverScrollOffset(min: Int, max: Int): NestedScrollBehavior {
+        minOverScrollOffset = min
+        maxOverScrollOffset = max
+        return this
+    }
+
 }

@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bytedance.scene.Scene
 import com.funnywolf.hollowkit.utils.simpleInit
 import com.funnywolf.hollowkit.view.BehavioralNestedScrollLayout
+import com.funnywolf.hollowkit.view.NestedScrollBehavior
 
 /**
  * @author https://github.com/funnywolfdadada
@@ -24,41 +25,28 @@ class TestScene: Scene() {
         savedInstanceState: Bundle?
     ): View {
         return BehavioralNestedScrollLayout(container.context).apply {
-            recyclerView = RecyclerView(context)
-            recyclerView.simpleInit(50)
-            recyclerView.overScrollMode = View.OVER_SCROLL_NEVER
-            setupViews(
-                recyclerView,
-//                View(context).also {
-//                    it.setBackgroundColor(Color.YELLOW)
-//                    it.layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT).also { lp ->
-//                        lp.topMargin = 500
-//                    }
-//                },
-
-
-                View(context).also {
-                    it.setBackgroundColor(Color.BLUE)
-                    it.layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT).also { lp ->
-                        lp.topMargin = 200
-                    }
-                },
-
-
-//                RecyclerView(context).also {
-//                    it.simpleInit(50, Color.YELLOW)
-//                    it.layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT).also { lp ->
-//                        lp.topMargin = 500
-//                    }
-//                },
-                RecyclerView(context).also {
-                    it.simpleInit(50, Color.GREEN)
-                    it.layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT).also { lp ->
-                        lp.topMargin = 100
-                    }
-
-
+            recyclerView = RecyclerView(context).also {
+                it.simpleInit(50)
+                it.layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT).also { lp ->
+//                    lp.topMargin = 100
                 }
+            }
+            recyclerView.overScrollMode = View.OVER_SCROLL_NEVER
+            setupBehavior(
+                NestedScrollBehavior(recyclerView)
+                    .setPrevView(View(context).also {
+                        it.setBackgroundColor(Color.BLUE)
+                        it.layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT).also { lp ->
+                            lp.height = 100
+                        }
+                    })
+                    .setNextView(RecyclerView(context).also {
+                        it.simpleInit(50, Color.GREEN)
+                        it.layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT).also { lp ->
+                            lp.topMargin = 100
+                        }
+                    })
+                    .setOverScrollOffset(-100, 100)
             )
         }
     }
