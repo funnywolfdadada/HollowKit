@@ -10,7 +10,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Scroller
-import androidx.annotation.FloatRange
 import androidx.core.view.NestedScrollingParent3
 import androidx.core.view.NestedScrollingParentHelper
 import androidx.core.view.ViewCompat
@@ -32,14 +31,18 @@ open class BehavioralNestedScrollLayout : FrameLayout, NestedScrollingParent3 {
     /**
      * 滚动的最小值
      */
-    private var minScroll = 0
-    private var minOverScroll = 0
+    var minScroll = 0
+        private set
+    var minOverScroll = 0
+        private set
 
     /**
      * 滚动的最大值
      */
-    private var maxScroll = 0
-    private var maxOverScroll = 0
+    var maxScroll = 0
+        private set
+    var maxOverScroll = 0
+        private set
 
     /**
      * 上次触摸事件的 y 值，用于处理自身的滑动事件
@@ -224,7 +227,7 @@ open class BehavioralNestedScrollLayout : FrameLayout, NestedScrollingParent3 {
         parentHelper.onStopNestedScroll(target, type)
     }
 
-    protected open fun fling(v: Int) {
+    private fun fling(v: Int) {
         lastPosition = 0
         scroller.fling(0, lastPosition, 0, v, 0, 0, Int.MIN_VALUE, Int.MAX_VALUE)
         invalidate()
@@ -234,7 +237,7 @@ open class BehavioralNestedScrollLayout : FrameLayout, NestedScrollingParent3 {
         if (scroller.computeScrollOffset()) {
             val currY = scroller.currY
             val scroll = currY - lastPosition
-            Log.d("zdl", "computeScroll $scroll")
+            Log.d(javaClass.simpleName, "computeScroll $scroll")
             if (!dispatchScroll(scroll, ViewCompat.TYPE_NON_TOUCH)) {
                 nestedScrollTarget?.scrollBy(0, scroll)
             }
@@ -243,24 +246,52 @@ open class BehavioralNestedScrollLayout : FrameLayout, NestedScrollingParent3 {
         }
     }
 
-    protected open fun dispatchScroll(scroll: Int, @ViewCompat.NestedScrollType type: Int): Boolean {
-        Log.d("zdl", "dispatchScroll $scroll ${type == ViewCompat.TYPE_TOUCH} ${nestedScrollTarget?.canScrollVertically(scroll)}")
+    /**
+     * 分发滚动量
+     * @return 是否自己处理滚动量
+     */
+    private fun dispatchScroll(scroll: Int, @ViewCompat.NestedScrollType type: Int): Boolean {
+        Log.d(javaClass.simpleName, "dispatchScroll $scroll ${type == ViewCompat.TYPE_TOUCH} ${nestedScrollTarget?.canScrollVertically(scroll)}")
         return when {
+            // 默认 0 可以处理
             scroll == 0 -> true
+            // 优先自己滚动且自己可以滚动，就自己滚动
+            scrollSelfFirst(scroll, type) && canScrollSelf(scroll) -> {
+                scrollSelf(scroll, type)
+                true
+            }
+            // 判断 nestedScrollTarget 是否滚动
             shouldTargetScroll(scroll, type) -> false
+            // nestedScrollTarget 不滚动就自己滚动
             else -> {
                 switchTargetIfNeed(scroll, type)
                 scrollSelf(scroll, type)
+                true
             }
         }
     }
 
-    protected open fun shouldTargetScroll(scroll: Int, @ViewCompat.NestedScrollType type: Int): Boolean {
+    private fun scrollSelfFirst(scroll: Int, @ViewCompat.NestedScrollType type: Int): Boolean {
+        return behavior?.scrollSelfFirst?.invoke(this, scroll, type) ?: when (behavior?.scrollVertical) {
+            true -> (scrollY in minOverScroll until minScroll
+                    || scrollY in (maxScroll + 1)..maxOverScroll)
+            false -> (scrollX in minOverScroll until minScroll
+                    || scrollX in (maxScroll + 1)..maxOverScroll)
+            else -> false
+        }
+    }
+
+    private fun shouldTargetScroll(scroll: Int, @ViewCompat.NestedScrollType type: Int): Boolean {
         return nestedScrollTarget?.canScrollVertically(scroll) == true
                 && nestedScrollChild?.let { isChildTotallyShowing(it) } == true
     }
 
-    protected open fun switchTargetIfNeed(scroll: Int, @ViewCompat.NestedScrollType type: Int) {
+    private fun isChildTotallyShowing(c: View): Boolean {
+        val relativeY = c.y - scrollY
+        return relativeY >= 0 && relativeY + c.height <= height
+    }
+
+    private fun switchTargetIfNeed(scroll: Int, @ViewCompat.NestedScrollType type: Int) {
         if (ViewCompat.TYPE_NON_TOUCH == type && nestedScrollTarget?.canScrollVertically(scroll) != true) {
             val child = nestedScrollChild ?: return
             val index = views.indexOf(child) + if (scroll > 0) { 1 } else { -1 }
@@ -272,40 +303,74 @@ open class BehavioralNestedScrollLayout : FrameLayout, NestedScrollingParent3 {
         }
     }
 
-    private fun scrollSelf(scroll: Int, @ViewCompat.NestedScrollType type: Int): Boolean {
-        return if (canScrollVertically(scroll)) {
-            scrollBy(0, scroll)
-            true
-        } else {
-            false
-        }
+    private fun scrollSelf(scroll: Int, @ViewCompat.NestedScrollType type: Int) {
+        scrollBy(0, scroll)
     }
 
-    private fun isChildTotallyShowing(c: View): Boolean {
-        val relativeY = c.y - scrollY
-        return relativeY >= 0 && relativeY + c.height <= height
+    private fun canScrollSelf(dir: Int): Boolean {
+        return when (behavior?.scrollVertical) {
+            true -> canScrollVertically(dir)
+            false -> canScrollHorizontally(dir)
+            else -> false
+        }
     }
 
     override fun canScrollVertically(direction: Int): Boolean {
         return when {
-            behavior?.vertical != true -> false
-            direction > 0 -> scrollY < maxScroll
-            direction < 0 -> scrollY > minScroll
+            behavior?.scrollVertical != true -> false
+            direction > 0 -> scrollY < maxOverScroll
+            direction < 0 -> scrollY > minOverScroll
             else -> true
         }
     }
 
-    /**
-     * 根据当前的滚动区域限制滚动范围，当滚动区域无法确定时就不滚动
-     */
-    override fun scrollTo(x: Int, y: Int) {
-        val yy = when {
-            behavior?.vertical != true -> scrollY
-            scrollY > 0 -> y.constrains(0, maxScroll)
-            scrollY < 0 -> y.constrains(minScroll, 0)
-            else -> y.constrains(minScroll, maxScroll)
+    override fun canScrollHorizontally(direction: Int): Boolean {
+        return when {
+            behavior?.scrollVertical != false -> false
+            direction > 0 -> scrollX < maxOverScroll
+            direction < 0 -> scrollX > minOverScroll
+            else -> true
         }
-        super.scrollTo(x, yy)
+    }
+
+    override fun scrollBy(x: Int, y: Int) {
+        super.scrollBy(getScrollByX(x), getScrollByY(y))
+    }
+
+    private fun getScrollByX(dx: Int): Int {
+        val newX = scrollX + dx
+        return when {
+            behavior?.scrollVertical != false -> scrollX
+            scrollX > 0 -> when {
+                scrollX > maxScroll -> newX.constrains(maxScroll, maxOverScroll)
+                scrollX < maxScroll -> newX.constrains(0, maxScroll)
+                else -> newX.constrains(0, maxOverScroll)
+            }
+            scrollX < 0 -> when {
+                scrollX > minScroll -> newX.constrains(minScroll, 0)
+                scrollX < minScroll -> newX.constrains(minOverScroll, minScroll)
+                else -> newX.constrains(minOverScroll, 0)
+            }
+            else -> newX.constrains(minScroll, maxScroll)
+        } - scrollX
+    }
+
+    private fun getScrollByY(dy: Int): Int {
+        val newY = scrollY + dy
+        return when {
+            behavior?.scrollVertical != true -> scrollY
+            scrollY > 0 -> when {
+                scrollY > maxScroll -> newY.constrains(maxScroll, maxOverScroll)
+                scrollY < maxScroll -> newY.constrains(0, maxScroll)
+                else -> newY.constrains(0, maxOverScroll)
+            }
+            scrollY < 0 -> when {
+                scrollY > minScroll -> newY.constrains(minScroll, 0)
+                scrollY < minScroll -> newY.constrains(minOverScroll, minScroll)
+                else -> newY.constrains(minOverScroll, 0)
+            }
+            else -> newY.constrains(minScroll, maxScroll)
+        } - scrollY
     }
 
     private fun Int.constrains(min: Int, max: Int): Int = when {
@@ -332,10 +397,16 @@ class NestedScrollBehavior(
     var nextView: View? = null
     var nextScrollTarget: NestedScrollTarget? = null
 
-    var vertical: Boolean = true
+    var scrollVertical: Boolean = true
 
     var minOverScrollOffset: Int = 0
     var maxOverScrollOffset: Int = 0
+
+    /**
+     * 是否优先滚动自己
+     * 参数分别时 [BehavioralNestedScrollLayout]、滚动量和 [ViewCompat.NestedScrollType]
+     */
+    var scrollSelfFirst: ((BehavioralNestedScrollLayout, Int, Int)->Boolean)? = null
 
     fun setPrevView(v: View, target: NestedScrollTarget? = null): NestedScrollBehavior {
         prevView = v
@@ -350,7 +421,7 @@ class NestedScrollBehavior(
     }
 
     fun setOrientation(vertical: Boolean): NestedScrollBehavior {
-        this.vertical = vertical
+        this.scrollVertical = vertical
         return this
     }
 
