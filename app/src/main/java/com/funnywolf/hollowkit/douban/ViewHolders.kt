@@ -121,6 +121,7 @@ class PictureViewHolder(v: View): SimpleHolder<Picture>(v) {
     override fun onBind(data: Picture) {
         super.onBind(data)
         Glide.with(imageView).load(data.pictureRes).into(imageView)
+        imageView.requestLayout()
     }
 }
 

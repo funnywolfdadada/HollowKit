@@ -8,12 +8,12 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    android:background="@drawable/bg_main"
+    android:background="@drawable/bg_west_world"
     >
 
     <Button
-        android:id="@+id/bt_test"
-        android:text="TEST"
+        android:id="@+id/bt_bottom_sheet"
+        android:text="底部浮层"
         android:background="#8FFF"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -32,15 +32,6 @@
     <Button
         android:id="@+id/bt_douban"
         android:text="豆瓣详情页"
-        android:background="#8FFF"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        />
-
-    <Button
-        android:id="@+id/bt_nested_scroll_behavior"
-        android:text="万能嵌套滚动"
         android:background="#8FFF"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

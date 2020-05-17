@@ -2,6 +2,11 @@ package com.funnywolf.hollowkit.utils
 
 import android.content.Context
 import android.graphics.Outline
+import android.graphics.Path
+import android.graphics.RectF
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.ShapeDrawable
+import android.graphics.drawable.shapes.RoundRectShape
 import android.view.View
 import android.view.ViewOutlineProvider
 
@@ -21,4 +26,22 @@ fun View.setRoundRect(radius: Float) {
             outline.setRoundRect(0, 0, view.width, view.height, radius)
         }
     }
+}
+
+fun roundRectDrawable(
+    color: Int,
+    topLeft: Float,
+    topRight: Float = topLeft,
+    bottomLeft: Float = topLeft,
+    bottomRight: Float = topLeft
+): Drawable {
+    val shape = RoundRectShape(floatArrayOf(
+        topLeft, topLeft,
+        topRight, topRight,
+        bottomLeft, bottomLeft,
+        bottomRight, bottomRight
+    ), null, null)
+    val d = ShapeDrawable(shape)
+    d.paint.color = color
+    return d
 }

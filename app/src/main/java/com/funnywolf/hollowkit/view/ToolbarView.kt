@@ -78,11 +78,6 @@ class ToolbarView: ConstraintLayout {
         ivMore.setOnClickListener(clickMore)
     }
 
-    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
-        super.dispatchTouchEvent(ev)
-        return true
-    }
-
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
         if (process < 1) {

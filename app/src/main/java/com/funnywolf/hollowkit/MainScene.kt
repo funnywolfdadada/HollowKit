@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import com.bytedance.scene.Scene
 import com.funnywolf.hollowkit.douban.DoubanDetailScene
 import com.funnywolf.hollowkit.list.ListDemoScene
+import com.funnywolf.hollowkit.scroll.behavior.NestedScrollBehaviorScene
 
 /**
  * 主页
@@ -37,6 +38,10 @@ class MainScene: Scene() {
 
         findViewById<View>(R.id.bt_douban)?.setOnClickListener {
             navigationScene?.push(DoubanDetailScene::class.java)
+        }
+
+        findViewById<View>(R.id.bt_nested_scroll_behavior)?.setOnClickListener {
+            navigationScene?.push(NestedScrollBehaviorScene::class.java)
         }
 
     }

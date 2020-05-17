@@ -5,13 +5,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.Space
 import androidx.recyclerview.widget.RecyclerView
 import com.bytedance.scene.Scene
 import com.funnywolf.hollowkit.utils.simpleInit
-import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralNestedScrollLayout
-import com.funnywolf.hollowkit.view.scroll.behavior.NestedScrollBehavior
-import com.funnywolf.hollowkit.view.scroll.behavior.NestedScrollTarget
+import com.funnywolf.hollowkit.view.scroll.behavior.*
 
 /**
  * @author https://github.com/funnywolfdadada
@@ -25,43 +24,48 @@ class TestScene: Scene() {
         container: ViewGroup,
         savedInstanceState: Bundle?
     ): View {
-        return BehavioralNestedScrollLayout(
+        val context = container.context
+        val recyclerView1 = RecyclerView(context).also {
+            it.simpleInit(50)
+            it.layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT).also { lp ->
+                lp.topMargin = 100
+//                    lp.bottomMargin = 100
+            }
+            it.overScrollMode = View.OVER_SCROLL_NEVER
+        }
+        val recyclerView2 = RecyclerView(context).also {
+            it.simpleInit(50, Color.GREEN)
+            it.layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT).also { lp ->
+                lp.topMargin = 100
+            }
+        }
+        val space = Space(context).also {
+            it.layoutParams = ViewGroup.MarginLayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            ).also { lp ->
+                lp.topMargin = 100
+            }
+        }
+
+        val frameLayout = FrameLayout(context).also {
+            it.setBackgroundColor(Color.BLUE)
+            it.layoutParams = ViewGroup.MarginLayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            ).also { lp ->
+                lp.topMargin = 100
+            }
+            it.addView(recyclerView1)
+        }
+        val bnsl = BehavioralNestedScrollLayout(
             container.context
         ).apply {
-            val recyclerView1 = RecyclerView(context).also {
-                it.simpleInit(50)
-                it.layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT).also { lp ->
-//                    lp.topMargin = 100
-                }
-            }
-            val recyclerView2 = RecyclerView(context).also {
-                it.simpleInit(50, Color.GREEN)
-                it.layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT).also { lp ->
-                    lp.topMargin = 100
-                }
-            }
-            val space = Space(context).also {
-                it.layoutParams = ViewGroup.MarginLayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                ).also { lp ->
-                    lp.topMargin = 100
-                }
-            }
-            recyclerView1.overScrollMode = View.OVER_SCROLL_NEVER
-            setupBehavior(
-                object: NestedScrollBehavior{
-                    override val scrollVertical: Boolean = true
-                    override val prevView: View? = space
-                    override val prevScrollTarget: NestedScrollTarget? = null
-                    override val midView: View = recyclerView1
-//                    override val midScrollTarget: NestedScrollTarget? = {_, _, _ -> recyclerView1}
-                    override val midScrollTarget: NestedScrollTarget? = null
-                    override val nextView: View? = recyclerView2
-//                    override val nextScrollTarget: NestedScrollTarget? = {_, _, _ -> recyclerView2}
-                    override val nextScrollTarget: NestedScrollTarget? = null
-                }
-            )
+            setupBehavior(BottomSheetBehavior(frameLayout, BottomSheetBehavior.POSITION_MID, 100, 500))
+        }
+        return FrameLayout(context).apply {
+            addView(recyclerView2)
+            addView(bnsl)
         }
     }
 
