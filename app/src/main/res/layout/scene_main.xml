@@ -47,4 +47,13 @@
         android:layout_margin="10dp"
         />
 
+    <Button
+        android:id="@+id/bt_rich_text"
+        android:text="富文本测试"
+        android:background="#8FFF"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        />
+
 </LinearLayout>
