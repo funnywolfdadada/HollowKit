@@ -21,37 +21,79 @@ import androidx.annotation.IntDef
  */
 class UniDecorSpan: ReplacementSpan() {
 
-    var textProvider: TextProvider? = null
+    /**
+     * 整体对齐方式
+     */
+    @TextAlign var align = TextAlign.BASELINE
 
-    var align = TextAlign.BASELINE
-
+    /**
+     * 文本的 padding，top 和 bottom 会影响字体的高度和 [fmi]，left 和 right 影响距离左右图片的距离
+     */
     val padding = Rect(0, 0, 0, 0)
 
     /**
-     * margin 的 top 和 bottom 不影响实际高度
+     * 文本的 margin，top 和 bottom 不影响实际高度，left 和 right 是富文本距离左右文本的距离
      */
     val margin = Rect(0, 0, 0, 0)
 
     /**
-     * 背景图
+     * 提供文本的替换和颜色大小
+     */
+    var textProvider: TextProvider? = null
+
+    /**
+     * 背景图，背景图的宽高不受 provider 控制
+     * 高度等于 [fmi] 的 ascent 到 descent 距离
+     * 宽度等于整体宽度 [totalWidth] 减去左右的 margin
      */
     var backgroundDrawable: DrawableProvider? = null
 
+    /**
+     * 替换文本的图片
+     */
+    var replacementDrawable: DrawableProvider? = null
+    private var replacementBaselineShift = 0
+
+    /**
+     * 文本左图
+     */
     var leftDrawable: DrawableProvider? = null
     private var leftBaselineShift = 0
 
+    /**
+     * 文本右图
+     */
     var rightDrawable: DrawableProvider? = null
     private var rightBaselineShift = 0
 
+    /**
+     * 是否绘制 [fmi] 的各个参数的实际位置，方便 debug
+     */
     var drawFontMatrix = false
 
+    /**
+     * 经过替换后真正要绘制的文本
+     */
     private var realText: String? = null
+
+    /**
+     * 文本的字体尺寸信息
+     */
     private var fmi = Paint.FontMetricsInt()
 
+    /**
+     * 文本左边起始位置的偏移
+     */
     private var textLeftShift = 0
 
+    /**
+     * 富文本的总体宽度，包括 [padding]、[margin]、[leftDrawable]、[rightDrawable]、文本宽度或 [replacementDrawable]
+     */
     private var totalWidth = 0
-    private var totalHeight = 0
+
+    /**
+     * 根据对齐方式 [align]，计算的基线偏移量，用于绘制文本
+     */
     private var baselineShift = 0
 
     override fun getSize(
@@ -90,14 +132,15 @@ class UniDecorSpan: ReplacementSpan() {
         }
         // 计算需要的 fontMetrics
         calculateFmi(originFmi, paint, outFmi)
-        // 计算总体高度
-        totalHeight = fmi.bottom - fmi.top + padding.top + margin.top + padding.bottom + margin.bottom
         // 计算总体宽度
         totalWidth = margin.left + margin.right + padding.left + padding.right
         // 文本左边偏移
         textLeftShift = margin.left + padding.left
-        // 计算字体宽度
-        realText?.also {
+        // 计算字体或替换图片的宽度
+        replacementDrawable?.also {
+            replacementBaselineShift = calculateDrawableShift(it.height(fmi), it.align())
+            totalWidth += it.width(fmi)
+        } ?: realText?.also {
             totalWidth += paint.measureText(it).toInt()
         }
         // 计算图片宽度和基线偏移
@@ -182,7 +225,11 @@ class UniDecorSpan: ReplacementSpan() {
         drawBackground(canvas, xi, y)
         drawLeft(canvas, xi, y)
         drawRight(canvas, xi, y)
-        drawText(t, canvas, paint, x, y.toFloat())
+        if (replacementDrawable != null) {
+            drawReplacement(canvas, xi, y)
+        } else {
+            drawText(t, canvas, paint, x, y.toFloat())
+        }
 
         if (drawFontMatrix) {
             canvas.drawLine(x, y.toFloat() + fmi.top, x + totalWidth, y.toFloat() + fmi.top, paint)
@@ -228,6 +275,17 @@ class UniDecorSpan: ReplacementSpan() {
         d.draw(c)
     }
 
+    private fun drawReplacement(c: Canvas, x: Int, y: Int) {
+        val dp = replacementDrawable ?: return
+        val d = dp.drawable()
+        val left = x + textLeftShift
+        val top = y + replacementBaselineShift
+        val width = dp.width(fmi)
+        val height = dp.height(fmi)
+        d.setBounds(left, top, left + width, top + height)
+        d.draw(c)
+    }
+
     private fun drawText(t: String, c: Canvas, p: Paint, x: Float, y: Float) {
         val originSize = p.textSize
         val originColor = p.color
@@ -269,7 +327,7 @@ interface TextProvider {
      * @param paintTextSize 画笔的文本大小
      * @return 需要的文本大小
      */
-    fun textSize(paintTextSize: Float): Float
+    fun textSize(paintTextSize: Float): Float = paintTextSize
 
     /**
      * 文本颜色
@@ -277,7 +335,7 @@ interface TextProvider {
      * @param paintColor 画笔的颜色
      * @return 文本颜色
      */
-    fun textColor(paintColor: Int): Int
+    fun textColor(paintColor: Int): Int = paintColor
 
 }
 
@@ -307,10 +365,49 @@ interface DrawableProvider {
     fun width(fmi: Paint.FontMetricsInt): Int = fmi.descent - fmi.ascent
 
     /**
-     * Drawable 的对齐方式，默认是和文案居中对齐
+     * Drawable 的对齐方式，默认是和文案居中对齐（图片没有基线，所以不存在基线对齐）
      *
-     * @return 要绘制的 Drawable
+     * @return 对齐方式
      */
     @TextAlign fun align(): Int = TextAlign.CENTER
 
+}
+
+class SimpleTextProvider(
+    val textSize: Float? = null,
+    val textColor: Int? = null,
+    val replacementText: String? = null
+): TextProvider {
+    override fun text(rawText: String): String? {
+        return replacementText ?: super.text(rawText)
+    }
+
+    override fun textSize(paintTextSize: Float): Float {
+        return textSize ?: super.textSize(paintTextSize)
+    }
+
+    override fun textColor(paintColor: Int): Int {
+        return textColor ?: super.textColor(paintColor)
+    }
+}
+
+class SimpleDrawableProvider(
+    val drawable: Drawable,
+    val width: Int? = null,
+    val height: Int? = null,
+    @TextAlign val align: Int? = null
+): DrawableProvider {
+    override fun drawable(): Drawable = drawable
+
+    override fun width(fmi: Paint.FontMetricsInt): Int {
+        return width ?: super.width(fmi)
+    }
+
+    override fun height(fmi: Paint.FontMetricsInt): Int {
+        return height ?: super.height(fmi)
+    }
+
+    override fun align(): Int {
+        return align ?: super.align()
+    }
 }

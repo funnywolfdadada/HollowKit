@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.text.Spanned
+import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -35,6 +36,8 @@ class RichTextScene: Scene() {
         super.onViewCreated(view, savedInstanceState)
 
         val tv = view.findViewById<TextView>(R.id.text_view)
+        tv.ellipsize = TextUtils.TruncateAt.END
+        tv.maxLines = 3
         var textSize = 24.dp
         val tp = object: TextProvider {
             override fun text(rawText: String): String? {
@@ -56,6 +59,15 @@ class RichTextScene: Scene() {
                 return view.context.getDrawable(R.drawable.picture_1)!!
             }
 
+        }
+        val replacement = object: DrawableProvider {
+
+            override fun drawable(): Drawable {
+                return view.context.getDrawable(R.drawable.avatar_3)!!
+            }
+
+            override fun width(fmi: Paint.FontMetricsInt): Int = 20.dp
+            override fun height(fmi: Paint.FontMetricsInt): Int = 20.dp
         }
         val left = object: DrawableProvider {
 
@@ -80,12 +92,14 @@ class RichTextScene: Scene() {
         val uds = UniDecorSpan().apply {
             textProvider = tp
             backgroundDrawable = bg
+            replacementDrawable = replacement
             leftDrawable = left
             rightDrawable = right
         }
 
         val richText = SpannableStringBuilder()
             .append("围绕台海的大棋，从1949年算起已经下了70年，这场漫长的棋f")
+            .append("围绕台海的大棋，从1949年算起已经下了70年，")
             .append("A", uds, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             .append("g现在终于接近终盘。在我们进行终局")
         tv.text = richText
