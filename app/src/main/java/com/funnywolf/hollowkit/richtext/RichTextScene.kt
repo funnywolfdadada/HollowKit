@@ -1,8 +1,6 @@
 package com.funnywolf.hollowkit.richtext
 
 import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.text.Spanned
@@ -15,6 +13,7 @@ import android.widget.TextView
 import com.bytedance.scene.Scene
 import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.utils.dp
+import com.funnywolf.hollowkit.utils.roundRectDrawable
 
 /**
  * 富文本测试页面
@@ -37,7 +36,6 @@ class RichTextScene: Scene() {
 
         val tv = view.findViewById<TextView>(R.id.text_view)
         tv.ellipsize = TextUtils.TruncateAt.END
-        tv.maxLines = 3
         var textSize = 24.dp
         val tp = object: TextProvider {
             override fun text(rawText: String): String? {
@@ -53,52 +51,60 @@ class RichTextScene: Scene() {
             }
 
         }
-        val bg = object: DrawableProvider {
-
-            override fun drawable(): Drawable {
-                return view.context.getDrawable(R.drawable.picture_1)!!
-            }
-
-        }
-        val replacement = object: DrawableProvider {
-
-            override fun drawable(): Drawable {
-                return view.context.getDrawable(R.drawable.avatar_3)!!
-            }
-
-            override fun width(fmi: Paint.FontMetricsInt): Int = 20.dp
-            override fun height(fmi: Paint.FontMetricsInt): Int = 20.dp
-        }
-        val left = object: DrawableProvider {
-
-            override fun drawable(): Drawable {
-                return view.context.getDrawable(R.drawable.avatar_1)!!
-            }
-
-            override fun width(fmi: Paint.FontMetricsInt): Int = 20.dp
-            override fun height(fmi: Paint.FontMetricsInt): Int = 20.dp
-            override fun align(): Int = TextAlign.ASCENT
-        }
-        val right = object: DrawableProvider {
-
-            override fun drawable(): Drawable {
-                return view.context.getDrawable(R.drawable.avatar_2)!!
-            }
-
-            override fun width(fmi: Paint.FontMetricsInt): Int = 20.dp
-            override fun height(fmi: Paint.FontMetricsInt): Int = 20.dp
-            override fun align(): Int = TextAlign.DESCENT
-        }
         val uds = UniDecorSpan().apply {
             textProvider = tp
-            backgroundDrawable = bg
-            replacementDrawable = replacement
-            leftDrawable = left
-            rightDrawable = right
+            backgroundDrawable = SimpleDrawableProvider(view.context.getDrawable(R.drawable.picture_1)!!)
+            replacementDrawable = SimpleDrawableProvider(view.context.getDrawable(R.drawable.avatar_3)!!, 20.dp, 20.dp)
+            leftDrawable = SimpleDrawableProvider(view.context.getDrawable(R.drawable.avatar_1)!!, 20.dp, 20.dp, TextAlign.ASCENT)
+            rightDrawable = SimpleDrawableProvider(view.context.getDrawable(R.drawable.avatar_2)!!, 20.dp, 20.dp, TextAlign.DESCENT)
         }
 
         val richText = SpannableStringBuilder()
-            .append("围绕台海的大棋，从1949年算起已经下了70年，这场漫长的棋f")
+            .append(
+                "围",
+                UniDecorSpan().apply {
+                    align = TextAlign.DESCENT
+                    textProvider = SimpleTextProvider(textSize = 48.dp.toFloat())
+                },
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            .append("绕台海的大棋，从1949年算起已经下了70年，")
+            .append(
+                "g这场漫长g",
+                UniDecorSpan().apply {
+                    align = TextAlign.BASELINE
+                    drawFontMatrix = true
+                    padding.top = 3.dp
+                    padding.bottom = 1.dp
+                    padding.left = 5.dp
+                    padding.right = 10.dp
+                    textProvider = SimpleTextProvider(textColor = Color.CYAN)
+                    backgroundDrawable = SimpleDrawableProvider(roundRectDrawable(Color.BLUE, 20.dp))
+                    leftDrawable = SimpleDrawableProvider(
+                        view.context.getDrawable(R.drawable.ic_camera)!!,
+                        align = TextAlign.ASCENT
+                    )
+                },
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            .append(
+                "这场漫长的棋",
+                UniDecorSpan().apply {
+                    drawFontMatrix = true
+                },
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            .append(
+                ".",
+                UniDecorSpan().apply {
+                    align = TextAlign.DESCENT
+                    replacementDrawable = SimpleDrawableProvider(
+                        view.context.getDrawable(R.drawable.ic_access_alarms)!!,
+                        align = TextAlign.CENTER
+                    )
+                },
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
             .append("围绕台海的大棋，从1949年算起已经下了70年，")
             .append("A", uds, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             .append("g现在终于接近终盘。在我们进行终局")

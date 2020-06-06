@@ -58,7 +58,7 @@ class BottomSheetBehaviorScene: Scene() {
             )).addHolderInfo(HolderInfo(Picture::class.java, R.layout.holder_big_picture, PictureViewHolder::class.java))
         }
         val f = FrameLayout(context).apply {
-            background = roundRectDrawable(0xFF9E7D6D.toInt(), 20F, 20F, 0F, 0F)
+            background = roundRectDrawable(0xFF9E7D6D.toInt(), 20, 20, 0, 0)
             addView(recyclerView)
             addView(toolBar)
             recyclerView.addOnScrollListener(object: RecyclerView.OnScrollListener() {

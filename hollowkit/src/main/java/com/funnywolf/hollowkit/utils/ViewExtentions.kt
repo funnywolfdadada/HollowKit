@@ -1,7 +1,9 @@
 package com.funnywolf.hollowkit.utils
 
+import android.graphics.Outline
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewOutlineProvider
 import androidx.core.view.NestedScrollingChild
 
 /**
@@ -118,5 +120,14 @@ fun ViewGroup.containsChild(v: View?): Boolean {
             }
         }
         false
+    }
+}
+
+fun View.setRoundRect(radius: Float) {
+    clipToOutline = true
+    outlineProvider = object: ViewOutlineProvider() {
+        override fun getOutline(view: View, outline: Outline) {
+            outline.setRoundRect(0, 0, view.width, view.height, radius)
+        }
     }
 }

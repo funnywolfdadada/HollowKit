@@ -136,7 +136,7 @@ class UniDecorSpan: ReplacementSpan() {
         totalWidth = margin.left + margin.right + padding.left + padding.right
         // 文本左边偏移
         textLeftShift = margin.left + padding.left
-        // 计算字体或替换图片的宽度
+        // 计算字体或替换图片的宽度和基线偏移
         replacementDrawable?.also {
             replacementBaselineShift = calculateDrawableShift(it.height(fmi), it.align())
             totalWidth += it.width(fmi)

@@ -11,7 +11,7 @@ import android.widget.TextView
 import androidx.annotation.FloatRange
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.funnywolf.hollowkit.R
-import com.funnywolf.hollowkit.utils.dp2pix
+import com.funnywolf.hollowkit.utils.dp
 import com.funnywolf.hollowkit.utils.setRoundRect
 import kotlinx.android.synthetic.main.view_douban_toolbar.view.*
 
@@ -57,7 +57,7 @@ class ToolbarView: ConstraintLayout {
         tvDetail = findViewById(R.id.tv_detail)
         ivPoster = findViewById(R.id.iv_poster)
 
-        ivPoster.setRoundRect(4.dp2pix(context).toFloat())
+        ivPoster.setRoundRect(4.dp.toFloat())
     }
 
     fun setup(title: CharSequence?, detail: CharSequence?, posterId: Int, bgColor: Int): ToolbarView {

@@ -14,7 +14,7 @@ import com.funnywolf.hollowkit.recyclerview.HolderInfo
 import com.funnywolf.hollowkit.recyclerview.LiveList
 import com.funnywolf.hollowkit.recyclerview.SimpleAdapter
 import com.funnywolf.hollowkit.recyclerview.SimpleHolder
-import com.funnywolf.hollowkit.utils.dp2pix
+import com.funnywolf.hollowkit.utils.dp
 import com.funnywolf.hollowkit.view.JellyLayout
 import com.funnywolf.hollowkit.view.RightDragToOpenView
 
@@ -94,8 +94,8 @@ class ActorsViewHolder(v: View): SimpleHolder<Actors>(v) {
     init {
         dragView.layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT).also {
-            it.topMargin = 20.dp2pix(v.context)
-            it.bottomMargin = 20.dp2pix(v.context)
+            it.topMargin = 20.dp
+            it.bottomMargin = 20.dp
         }
         jelly?.setRightView(dragView)
         jelly?.setLeftView(View(v.context))
@@ -136,8 +136,8 @@ class PicturesViewHolder(v: View): SimpleHolder<Pictures>(v) {
     init {
         dragView.layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT).also {
-            it.topMargin = 20.dp2pix(v.context)
-            it.bottomMargin = 20.dp2pix(v.context)
+            it.topMargin = 20.dp
+            it.bottomMargin = 20.dp
         }
         jelly?.setRightView(dragView)
         jelly?.setLeftView(View(v.context))
