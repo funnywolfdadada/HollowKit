@@ -1,6 +1,7 @@
 package com.funnywolf.hollowkit.richtext
 
 import android.graphics.Color
+import android.graphics.Paint
 import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.text.Spanned
@@ -42,19 +43,15 @@ class RichTextScene: Scene() {
                 return "f局g"
             }
 
-            override fun textSize(paintTextSize: Float): Float {
-                return textSize.toFloat()
-            }
-
-            override fun textColor(paintColor: Int): Int {
-                return Color.GREEN
+            override fun setupPaint(paint: Paint) {
+                paint.textSize = textSize.toFloat()
+                paint.color = Color.GREEN
             }
 
         }
         val uds = UniDecorSpan().apply {
             textProvider = tp
             backgroundDrawable = SimpleDrawableProvider(view.context.getDrawable(R.drawable.picture_1)!!)
-            replacementDrawable = SimpleDrawableProvider(view.context.getDrawable(R.drawable.avatar_3)!!, 20.dp, 20.dp)
             leftDrawable = SimpleDrawableProvider(view.context.getDrawable(R.drawable.avatar_1)!!, 20.dp, 20.dp, TextAlign.ASCENT)
             rightDrawable = SimpleDrawableProvider(view.context.getDrawable(R.drawable.avatar_2)!!, 20.dp, 20.dp, TextAlign.DESCENT)
         }
@@ -64,7 +61,13 @@ class RichTextScene: Scene() {
                 "围",
                 UniDecorSpan().apply {
                     align = TextAlign.DESCENT
-                    textProvider = SimpleTextProvider(textSize = 48.dp.toFloat())
+                    textProvider = SimpleTextProvider(
+                        textSize = 48.dp.toFloat(),
+                        textColor = Color.RED,
+                        fakeBold = true,
+                        underline = true,
+                        deleteLine = true
+                    )
                 },
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
             )

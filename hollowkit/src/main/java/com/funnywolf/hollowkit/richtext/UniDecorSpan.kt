@@ -9,12 +9,12 @@ import androidx.annotation.IntDef
 
 /**
  * 统一装饰 span，支持：
- * - 设置文本、字体大小和颜色
+ * - 文本替换和画笔设置
  * - 上下左右的 padding 和 margin
  * - 整体的对其方式
  * - 背景图片
  * - 前置图片和后置图片及其大小设置
- * - 替换图片
+ * - 替换图片及其大小设置
  *
  * @author https://github.com/funnywolfdadada
  * @since 2020/5/30
@@ -107,9 +107,7 @@ class UniDecorSpan: ReplacementSpan() {
         if (realText.isNullOrEmpty()) {
             return 0
         }
-        val originSize = paint.textSize
         measure(paint, fm)
-        paint.textSize = originSize
         return totalWidth
     }
 
@@ -128,7 +126,7 @@ class UniDecorSpan: ReplacementSpan() {
         val originFmi = paint.fontMetricsInt
         // 设置文本大小
         textProvider?.also {
-            paint.textSize = it.textSize(paint.textSize)
+            it.setupPaint(paint)
         }
         // 计算需要的 fontMetrics
         calculateFmi(originFmi, paint, outFmi)
@@ -287,15 +285,10 @@ class UniDecorSpan: ReplacementSpan() {
     }
 
     private fun drawText(t: String, c: Canvas, p: Paint, x: Float, y: Float) {
-        val originSize = p.textSize
-        val originColor = p.color
         textProvider?.also {
-            p.textSize = it.textSize(p.textSize)
-            p.color = it.textColor(p.color)
+            it.setupPaint(p)
         }
         c.drawText(t, x + textLeftShift, y + baselineShift, p)
-        p.textSize = originSize
-        p.color = originColor
     }
 
 }
@@ -314,7 +307,7 @@ annotation class TextAlign {
 interface TextProvider {
 
     /**
-     * 文本
+     * 文本，可以在这里替换文本
      *
      * @param rawText 原始文本
      * @return 要绘制的文本
@@ -322,20 +315,11 @@ interface TextProvider {
     fun text(rawText: String): String? = rawText
 
     /**
-     * 文本大小，单位 pixel
+     * 设置 Paint 的文本大小，颜色等参数
      *
-     * @param paintTextSize 画笔的文本大小
-     * @return 需要的文本大小
+     * @param paint 画笔
      */
-    fun textSize(paintTextSize: Float): Float = paintTextSize
-
-    /**
-     * 文本颜色
-     *
-     * @param paintColor 画笔的颜色
-     * @return 文本颜色
-     */
-    fun textColor(paintColor: Int): Int = paintColor
+    fun setupPaint(paint: Paint) = Unit
 
 }
 
@@ -374,21 +358,25 @@ interface DrawableProvider {
 }
 
 class SimpleTextProvider(
+    val replacementText: String? = null,
     val textSize: Float? = null,
     val textColor: Int? = null,
-    val replacementText: String? = null
+    val fakeBold: Boolean? = null,
+    val underline: Boolean? = null,
+    val deleteLine: Boolean? = null
 ): TextProvider {
     override fun text(rawText: String): String? {
         return replacementText ?: super.text(rawText)
     }
 
-    override fun textSize(paintTextSize: Float): Float {
-        return textSize ?: super.textSize(paintTextSize)
+    override fun setupPaint(paint: Paint) {
+        textSize?.also { paint.textSize = it }
+        textColor?.also { paint.color = it }
+        fakeBold?.also { paint.isFakeBoldText = it }
+        underline?.also { paint.isUnderlineText = it }
+        deleteLine?.also { paint.isStrikeThruText = it }
     }
 
-    override fun textColor(paintColor: Int): Int {
-        return textColor ?: super.textColor(paintColor)
-    }
 }
 
 class SimpleDrawableProvider(
