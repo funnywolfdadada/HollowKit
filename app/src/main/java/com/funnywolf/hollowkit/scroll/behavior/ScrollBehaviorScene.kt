@@ -7,15 +7,17 @@ import android.view.ViewGroup
 import com.bytedance.scene.Scene
 import com.bytedance.scene.interfaces.PushOptions
 import com.funnywolf.hollowkit.R
-import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralNestedScrollLayout
+import com.funnywolf.hollowkit.douban.Picture
+import com.funnywolf.hollowkit.douban.Pictures
+import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollView
 
 /**
- * [BehavioralNestedScrollLayout] 的 Demo 入口
+ * [BehavioralScrollView] 的 Demo 入口
  *
  * @author https://github.com/funnywolfdadada
  * @since 2020/3/21
  */
-class NestedScrollBehaviorScene: Scene() {
+class ScrollBehaviorScene: Scene() {
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -29,9 +31,8 @@ class NestedScrollBehaviorScene: Scene() {
         super.onViewCreated(view, savedInstanceState)
 
         findViewById<View>(R.id.bt_bottom_sheet)?.setOnClickListener {
-            navigationScene?.push(BottomSheetBehaviorScene(), PushOptions.Builder().setTranslucent(true).build())
+            navigationScene?.push(BottomSheetScene(), PushOptions.Builder().setTranslucent(true).build())
         }
-
     }
 
 }

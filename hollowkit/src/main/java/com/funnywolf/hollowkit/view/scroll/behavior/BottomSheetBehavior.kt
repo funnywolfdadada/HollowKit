@@ -14,9 +14,21 @@ import com.funnywolf.hollowkit.utils.isUnder
  * @since 2020/5/17
  */
 class BottomSheetBehavior(
+    /**
+     * 浮层的内容视图
+     */
     contentView: View,
+    /**
+     * 初始位置，最低高度 [POSITION_MIN]、中间高度 [POSITION_MID] 或最大高度 [POSITION_MAX]
+     */
     private val initPosition: Int,
+    /**
+     * 内容视图的最低显示高度
+     */
     private val minHeight: Int,
+    /**
+     * 内容视图中间停留的显示高度，默认等于最低高度
+     */
     private val midHeight: Int = minHeight
 ): NestedScrollBehavior {
     override val scrollVertical: Boolean = true
@@ -35,15 +47,15 @@ class BottomSheetBehavior(
     private var midScroll = 0
     private var firstLayout = true
 
-    override fun afterLayout(layout: BehavioralNestedScrollLayout) {
-        midScroll = layout.minScroll + midHeight - minHeight
+    override fun afterLayout(v: BehavioralScrollView) {
+        midScroll = v.minScroll + midHeight - minHeight
         if (firstLayout) {
             firstLayout = false
-            layout.scrollTo(
-                layout.scrollX,
+            v.scrollTo(
+                v.scrollX,
                 when (initPosition) {
-                    POSITION_MIN -> layout.minScroll
-                    POSITION_MAX -> layout.maxScroll
+                    POSITION_MIN -> v.minScroll
+                    POSITION_MAX -> v.maxScroll
                     else -> midScroll
                 }
             )
@@ -51,34 +63,34 @@ class BottomSheetBehavior(
     }
 
     override fun handleDispatchTouchEvent(
-        layout: BehavioralNestedScrollLayout,
+        v: BehavioralScrollView,
         e: MotionEvent
     ): Boolean? {
         if ((e.action == MotionEvent.ACTION_CANCEL || e.action == MotionEvent.ACTION_UP)
-            && layout.scrollY != 0
-            && layout.lastScrollDir != 0) {
-            layout.smoothScrollTo(
-                if (layout.scrollY > midScroll) {
-                    if (layout.lastScrollDir > 0) {
-                        layout.maxScroll
+            && v.scrollY != 0
+            && v.lastScrollDir != 0) {
+            v.smoothScrollTo(
+                if (v.scrollY > midScroll) {
+                    if (v.lastScrollDir > 0) {
+                        v.maxScroll
                     } else {
                         midScroll
                     }
                 } else {
-                    if (layout.lastScrollDir > 0) {
+                    if (v.lastScrollDir > 0) {
                         midScroll
                     } else {
-                        layout.minScroll
+                        v.minScroll
                     }
                 }
             )
             return true
         }
-        return super.handleDispatchTouchEvent(layout, e)
+        return super.handleDispatchTouchEvent(v, e)
     }
 
     override fun handleInterceptTouchEvent(
-        layout: BehavioralNestedScrollLayout,
+        v: BehavioralScrollView,
         e: MotionEvent
     ): Boolean? {
         return if (prevView?.isUnder(e.rawX, e.rawY) != true) {
@@ -88,7 +100,7 @@ class BottomSheetBehavior(
         }
     }
 
-    override fun handleTouchEvent(layout: BehavioralNestedScrollLayout, e: MotionEvent): Boolean? {
+    override fun handleTouchEvent(v: BehavioralScrollView, e: MotionEvent): Boolean? {
         return if (prevView?.isUnder(e.rawX, e.rawY) != true) {
             null
         } else {
@@ -97,19 +109,19 @@ class BottomSheetBehavior(
     }
 
     override fun scrollSelfFirst(
-        layout: BehavioralNestedScrollLayout,
+        v: BehavioralScrollView,
         scroll: Int,
         @ViewCompat.NestedScrollType type: Int
     ): Boolean {
-        return layout.scrollY != 0
+        return v.scrollY != 0
     }
 
     override fun interceptScrollSelf(
-        layout: BehavioralNestedScrollLayout,
+        v: BehavioralScrollView,
         scroll: Int,
         @ViewCompat.NestedScrollType type: Int
     ): Boolean {
-        return layout.isFling
+        return v.isFling
     }
 
     companion object {
