@@ -121,7 +121,7 @@ class BottomSheetBehavior(
         scroll: Int,
         @ViewCompat.NestedScrollType type: Int
     ): Boolean {
-        return v.isFling
+        return v.state == NestedScrollState.FLING
     }
 
     companion object {

@@ -9,11 +9,13 @@ import android.view.VelocityTracker
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.Scroller
+import androidx.annotation.IntDef
 import androidx.core.view.NestedScrollingParent3
 import androidx.core.view.NestedScrollingParentHelper
 import androidx.core.view.ViewCompat
-import androidx.core.view.ViewCompat.NestedScrollType
-import com.funnywolf.hollowkit.utils.*
+import com.funnywolf.hollowkit.utils.findChildUnder
+import com.funnywolf.hollowkit.utils.findHorizontalNestedScrollingTarget
+import com.funnywolf.hollowkit.utils.findVerticalNestedScrollingTarget
 import kotlin.math.abs
 
 /**
@@ -52,9 +54,10 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
         private set
 
     /**
-     * 是否正在 fling，Scroller 带来的滚动可能是 fling 也可能是 [smoothScrollTo]
+     * 当前的滚动状态
      */
-    var isFling = false
+    @NestedScrollState
+    var state: Int = NestedScrollState.NONE
         private set
 
     var enableLog = false
@@ -81,7 +84,6 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
      * 上次触摸事件的 x 值，或者 scroller.currX，用于处理自身的滑动事件或动画
      */
     private var lastX = 0F
-
     /**
      * 上次触摸事件的 y 值，或者 scroller.currY，用于处理自身的滑动事件或动画
      */
@@ -192,21 +194,26 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
     }
 
     override fun dispatchTouchEvent(e: MotionEvent): Boolean {
+        val handle = behavior?.handleDispatchTouchEvent(this, e)
+        log("handleDispatchTouchEvent $handle")
+        if (handle != null) {
+            return handle
+        }
         // 在 down 时复位一些标志位，停掉 scroller 的动画
         if (e.action == MotionEvent.ACTION_DOWN) {
             lastScrollDir = 0
-            isFling = false
+            state = NestedScrollState.NONE
             scroller.abortAnimation()
         }
         // behavior 优先处理，不处理走默认逻辑
-        return behavior?.handleDispatchTouchEvent(this, e)
-            ?: super.dispatchTouchEvent(e)
+        return super.dispatchTouchEvent(e)
     }
 
     override fun onInterceptTouchEvent(e: MotionEvent): Boolean {
         // behavior 优先处理，不处理时走自身的拦截逻辑
-        return behavior?.handleInterceptTouchEvent(this, e)
-            ?: when (e.action) {
+        val handle = behavior?.handleInterceptTouchEvent(this, e)
+        log("handleInterceptTouchEvent $handle")
+        return handle ?: when (e.action) {
                 // down 时不拦截，但需要记录触点位置，寻找触点位置的 child 和垂直滚动的 target
                 MotionEvent.ACTION_DOWN -> {
                     lastX = e.x
@@ -244,8 +251,9 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(e: MotionEvent): Boolean {
         // behavior 优先处理，不处理时自己处理 touch 事件
-        return behavior?.handleTouchEvent(this, e)
-            ?: when (e.action) {
+        val handle = behavior?.handleTouchEvent(this, e)
+        log("handleTouchEvent $handle")
+        return handle ?: when (e.action) {
                 // down 不处理，之后的就无法处理
                 MotionEvent.ACTION_DOWN -> {
                     velocityTracker.addMovement(e)
@@ -332,7 +340,8 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
     }
 
     private fun fling(vx: Float, vy: Float) {
-        isFling = true
+        log("fling $vx $vy")
+        state = NestedScrollState.FLING
         lastX = 0F
         lastY = 0F
         // 这里不区分滚动方向，在分发滚动量的时候会处理
@@ -345,7 +354,8 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
     }
 
     private fun smoothScrollSelf(scroll: Int, duration: Int) {
-        isFling = false
+        log("smoothScrollSelf $scroll")
+        state = NestedScrollState.ANIMATION
         lastX = 0F
         lastY = 0F
         // 这里不区分滚动方向，在分发滚动量的时候会处理
@@ -365,8 +375,6 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
             val dy = (scroller.currY - lastY).toInt()
             lastX = scroller.currX.toFloat()
             lastY = scroller.currY.toFloat()
-            log("computeScroll dx = $dx, dy = $dy, vx = ${scroller.currVelocity}")
-
             if (dispatchBothScroll(dx, dy, ViewCompat.TYPE_NON_TOUCH) == null) {
                 // 自身不处理滚动时，在这里需要手动滚动 target
                 if (sv) {
@@ -377,7 +385,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
             }
             invalidate()
         } else {
-            isFling = false
+            state = NestedScrollState.NONE
         }
     }
 
@@ -406,38 +414,33 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
      * @return 是否自己处理滚动量
      */
     private fun dispatchScroll(scroll: Int, @ViewCompat.NestedScrollType type: Int): Boolean {
-        log("dispatchScroll $scroll ${type == ViewCompat.TYPE_TOUCH} ${target?.canScrollVertically(scroll)}")
-        return when {
-            // 默认 0 可以处理
-            scroll == 0 -> true
-            // 优先自己滚动且自己可以滚动，就自己滚动
-            scrollSelfFirst(scroll, type) && canScrollSelf(scroll) -> {
-                scrollSelf(scroll, type)
-                true
-            }
-            // 判断 target 是否滚动
-            shouldTargetScroll(scroll, type) && canScrollTarget(scroll) -> false
-            // target 不滚动就自己滚动
-            else -> {
-                switchTargetIfNeed(scroll, type)
-                scrollSelf(scroll, type)
-                true
-            }
+        log("dispatchScroll: state = $state, type = $type, scroll = $scroll")
+        // 默认 0 可以处理
+        if (scroll == 0) {
+            return true
         }
-    }
 
-    /**
-     * 在分发滚动量时，是否优先滚动自己
-     */
-    private fun scrollSelfFirst(scroll: Int, @ViewCompat.NestedScrollType type: Int): Boolean {
-        return behavior?.scrollSelfFirst(this, scroll, type) ?: false
-    }
+        // 优先自己滚动且自己可以滚动，就自己滚动
+        val scrollSelfFirst = behavior?.scrollSelfFirst(this, scroll, type)
+        log("scrollSelfFirst $scrollSelfFirst")
+        if (scrollSelfFirst == true && canScrollSelf(scroll)) {
+            scrollSelf(scroll, type)
+            return true
+        }
 
-    /**
-     * 在分发滚动量时，是否允许 target 滚动
-     */
-    private fun shouldTargetScroll(scroll: Int, @ViewCompat.NestedScrollType type: Int): Boolean {
-        return behavior?.shouldTargetScroll(this, scroll, type) ?: true
+        // 判断 target 是否滚动
+        val shouldTargetScroll = behavior?.shouldTargetScroll(this, scroll, type)
+        log("shouldTargetScroll $shouldTargetScroll")
+        if (shouldTargetScroll == true && canScrollTarget(scroll)) {
+            // 该 target 滚动，且 target 可以滚动，自己就不在处理
+            log("canScrollTarget $shouldTargetScroll")
+            return false
+        }
+
+        // target 不滚动就自己滚动
+        switchTargetIfNeed(scroll, type)
+        scrollSelf(scroll, type)
+        return true
     }
 
     /**
@@ -461,7 +464,9 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
      */
     private fun scrollSelf(scroll: Int, @ViewCompat.NestedScrollType type: Int) {
         // behavior 优先拦截处理，不拦截时就默认处理自身的滚动
-        if (behavior?.handleScrollSelf(this, scroll, type) == true) {
+        val handle = behavior?.handleScrollSelf(this, scroll, type)
+        log("handleScrollSelf $handle")
+        if (handle == true) {
             return
         }
         scrollBy(scroll, scroll)
@@ -555,10 +560,32 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
         onScrollChangedListener?.invoke(this)
     }
 
-    private fun log(text: String) {
+    fun log(text: String) {
         if (enableLog) {
             Log.d(javaClass.simpleName, text)
         }
+    }
+}
+
+/**
+ * 用于描述 [BehavioralScrollView] 正处于的嵌套滚动状态，和滚动类型 [ViewCompat.NestedScrollType] 共同描述滚动量
+ */
+@IntDef(NestedScrollState.NONE, NestedScrollState.FLING, NestedScrollState.ANIMATION)
+@Retention(AnnotationRetention.SOURCE)
+annotation class NestedScrollState {
+    companion object {
+        /**
+         * 无状态
+         */
+        const val NONE = 0
+        /**
+         * 正在 fling
+         */
+        const val FLING = 1
+        /**
+         * 正在动画
+         */
+        const val ANIMATION = 2
     }
 }
 
@@ -629,7 +656,7 @@ interface NestedScrollBehavior {
      * @param type 滚动类型
      * @return true -> 优先滚动自己，false -> 不优先
      */
-    fun scrollSelfFirst(v: BehavioralScrollView, scroll: Int, @NestedScrollType type: Int): Boolean = false
+    fun scrollSelfFirst(v: BehavioralScrollView, scroll: Int, @ViewCompat.NestedScrollType type: Int): Boolean = false
 
     /**
      * 在 [v] 分发滚动量时，是否允许子 View target 滚动
@@ -639,7 +666,7 @@ interface NestedScrollBehavior {
      * @param type 滚动类型
      * @return true -> 允许 target 滚动，false -> 不允许其滚动
      */
-    fun shouldTargetScroll(v: BehavioralScrollView, scroll: Int, @NestedScrollType type: Int): Boolean = true
+    fun shouldTargetScroll(v: BehavioralScrollView, scroll: Int, @ViewCompat.NestedScrollType type: Int): Boolean = true
 
     /**
      * 在需要 [v] 自身滚动时，是否拦截处理
@@ -649,6 +676,6 @@ interface NestedScrollBehavior {
      * @param type 滚动类型
      * @return true -> 拦截下来自己处理，false -> 不拦截，让 [v] 自己滚动
      */
-    fun handleScrollSelf(v: BehavioralScrollView, scroll: Int, @NestedScrollType type: Int): Boolean = false
+    fun handleScrollSelf(v: BehavioralScrollView, scroll: Int, @ViewCompat.NestedScrollType type: Int): Boolean = false
 
 }

@@ -27,21 +27,6 @@ class PullRefreshBehavior(
     override val midScrollTarget: NestedScrollTarget? = null
 ) : NestedScrollBehavior {
 
-    private val refreshView = RefreshView(midView.context).also {
-        it.layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT)
-    }
-
-    override val scrollVertical: Boolean = true
-    override val prevView: View? = refreshView
-    override val prevScrollTarget: NestedScrollTarget? = null
-    override val nextView: View? = null
-    override val nextScrollTarget: NestedScrollTarget? = null
-
-    private var bsvRef: WeakReference<BehavioralScrollView>? = null
-    private val onScrollChanged: (BehavioralScrollView)->Unit = {
-        refreshView.process = abs(it.currProcess())
-    }
-
     var enable: Boolean = true
         set(value) {
             field = value
@@ -52,15 +37,46 @@ class PullRefreshBehavior(
 
     var refreshListener: (()->Unit)? = null
 
-    var isRefreshing: Boolean
-        get() = refreshView.isRefreshing
+    var isRefreshing: Boolean = false
         set(value) {
-            if (value && value != refreshView.isRefreshing) {
+            if (value && value != field) {
                 refreshListener?.invoke()
             }
-            refreshView.isRefreshing = value
+            field = value
             bsvRef?.get()?.smoothScrollTo(if (value) { -refreshView.height / 2 } else { 0 })
+            if (value) {
+                refreshView.loadingView.alpha = 1F
+                refreshView.animator.start()
+            } else {
+                refreshView.animator.cancel()
+            }
         }
+
+    private var process: Float = 0F
+        set(value) {
+            if (isRefreshing) {
+                return
+            }
+            field = value
+            refreshView.animator.cancel()
+            refreshView.loadingView.alpha = process * 3
+            refreshView.loadingView.rotation = process * 3 * 360
+        }
+
+    val refreshView = RefreshView(midView.context).also {
+        it.layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT)
+    }
+
+    private var bsvRef: WeakReference<BehavioralScrollView>? = null
+    private val onScrollChanged: (BehavioralScrollView)->Unit = {
+        process = abs(it.currProcess())
+    }
+
+    override val scrollVertical: Boolean = true
+    override val prevView: View? = refreshView
+    override val prevScrollTarget: NestedScrollTarget? = null
+    override val nextView: View? = null
+    override val nextScrollTarget: NestedScrollTarget? = null
 
     override fun afterLayout(v: BehavioralScrollView) {
         super.afterLayout(v)
@@ -69,7 +85,12 @@ class PullRefreshBehavior(
     }
 
     override fun handleDispatchTouchEvent(v: BehavioralScrollView, e: MotionEvent): Boolean? {
-        if (e.action == MotionEvent.ACTION_UP && !isRefreshing) {
+        // 防止动画被打断
+        if (v.state == NestedScrollState.ANIMATION) {
+            return true
+        }
+        // 抬手时，如果头部已经滚出来了，且未刷新，则根据滚出的距离设置刷新状态
+        if (e.action == MotionEvent.ACTION_UP && v.scrollY != 0 && !isRefreshing) {
             isRefreshing = abs(v.scrollY) > refreshView.refreshHeight
             return true
         }
@@ -77,19 +98,31 @@ class PullRefreshBehavior(
     }
 
     override fun scrollSelfFirst(v: BehavioralScrollView, scroll: Int, type: Int): Boolean {
-        return (v.scrollY != 0 && !isRefreshing) || (type == ViewCompat.TYPE_NON_TOUCH && !v.isFling)
+        val handle = if (v.state == NestedScrollState.ANIMATION) {
+            // 在动画过程中，且不是 touch 类型的滚动，即动画造成的滚动，自己优先处理
+            type == ViewCompat.TYPE_NON_TOUCH
+        } else {
+            // 不在动画过程中，只在自身发生滚动，且不在刷新过程中，即拖拽头部 view 的过程中，优先自己处理
+            v.scrollY != 0 && !isRefreshing && type == ViewCompat.TYPE_TOUCH
+        }
+        v.log("scrollSelfFirst $handle, state = ${v.state}, type = $type, isRefreshing = $isRefreshing")
+        return handle
     }
 
     override fun handleScrollSelf(v: BehavioralScrollView, scroll: Int, type: Int): Boolean {
-        return when {
-            isRefreshing -> type != ViewCompat.TYPE_NON_TOUCH || v.isFling
-            type == ViewCompat.TYPE_TOUCH -> {
+        val handle = if (type == ViewCompat.TYPE_TOUCH) {
+            // touch 类型的滚动都要拦下来，刷新中的就忽略
+            if (!isRefreshing) {
+                // 不再刷新中的就滚动自身，根据滚动方向决定是否添加阻尼效果
                 v.scrollBy(0, scroll / if (scroll < 0) { 2 } else { 1 })
-                true
             }
-            v.isFling -> true
-            else -> super.handleScrollSelf(v, scroll, type)
+            true
+        } else {
+            // 非 touch 的滚动基本是 fling 或者动画
+            v.state != NestedScrollState.ANIMATION
         }
+        v.log("handleScrollSelf $handle, state = ${v.state}, type = $type, isRefreshing = $isRefreshing")
+        return handle
     }
 
 }
@@ -98,39 +131,17 @@ class RefreshView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ): FrameLayout(context, attrs, defStyleAttr) {
 
-    private val loadingView = ImageView(context)
-    private val animator = ValueAnimator.ofFloat(0F, 360F).apply {
+    val loadingView = ImageView(context)
+
+    val refreshHeight = (36 * 2).dp
+
+    val animator: ValueAnimator = ValueAnimator.ofFloat(0F, 360F).apply {
         repeatCount = ValueAnimator.INFINITE
         repeatMode = ValueAnimator.RESTART
         addUpdateListener {
             loadingView.rotation = it.animatedValue as? Float ?: 0F
         }
     }
-
-    val refreshHeight = (36 * 2).dp
-
-    var isRefreshing: Boolean = false
-        set(value) {
-            if (field == value) {
-                return
-            }
-            field = value
-            if (value) {
-                loadingView.alpha = 1F
-                animator.start()
-            } else {
-                animator.cancel()
-            }
-        }
-
-    var process = 0F
-        set(value) {
-            if (field == value) {
-                return
-            }
-            field = value
-            update()
-        }
 
     init {
         layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, refreshHeight * 2)
@@ -141,15 +152,6 @@ class RefreshView @JvmOverloads constructor(
         addView(loadingView, LayoutParams(refreshHeight, refreshHeight).also {
             it.gravity = Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM
         })
-    }
-
-    private fun update() {
-        if (isRefreshing) {
-            return
-        }
-        animator.cancel()
-        loadingView.alpha = process * 3
-        loadingView.rotation = process * 3 * 360
     }
 
     override fun onDetachedFromWindow() {

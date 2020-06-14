@@ -59,7 +59,7 @@ class JellyBehavior(
         val p = abs(v.currProcess())
         val s = (scroll * (1 - p)).toInt()
         return when {
-            v.isFling -> {
+            v.state == NestedScrollState.FLING -> {
                 if (abs(s) < 10 || p > 0.1) {
                     v.smoothScrollTo(0)
                 } else {
