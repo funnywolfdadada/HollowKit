@@ -116,7 +116,7 @@ class BottomSheetBehavior(
         return v.scrollY != 0
     }
 
-    override fun interceptScrollSelf(
+    override fun handleScrollSelf(
         v: BehavioralScrollView,
         scroll: Int,
         @ViewCompat.NestedScrollType type: Int

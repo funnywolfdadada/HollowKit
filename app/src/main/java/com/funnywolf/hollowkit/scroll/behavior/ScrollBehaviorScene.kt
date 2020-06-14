@@ -7,9 +7,9 @@ import android.view.ViewGroup
 import com.bytedance.scene.Scene
 import com.bytedance.scene.interfaces.PushOptions
 import com.funnywolf.hollowkit.R
-import com.funnywolf.hollowkit.douban.Picture
-import com.funnywolf.hollowkit.douban.Pictures
+import com.funnywolf.hollowkit.utils.toast
 import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollView
+import com.funnywolf.hollowkit.view.scroll.behavior.PullRefreshBehavior
 
 /**
  * [BehavioralScrollView] 的 Demo 入口
@@ -24,7 +24,19 @@ class ScrollBehaviorScene: Scene() {
         container: ViewGroup,
         savedInstanceState: Bundle?
     ): View {
-        return inflater.inflate(R.layout.scene_nested_scroll_behavior, container, false)
+        val v = inflater.inflate(R.layout.scene_nested_scroll_behavior, container, false)
+        return BehavioralScrollView(inflater.context).apply {
+            setupBehavior(PullRefreshBehavior(v).apply {
+                enable = true
+                refreshListener = {
+                    postDelayed({
+                        isRefreshing = false
+                        context.toast("refresh success")
+                    }, 3000)
+                }
+            })
+            enableLog = true
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

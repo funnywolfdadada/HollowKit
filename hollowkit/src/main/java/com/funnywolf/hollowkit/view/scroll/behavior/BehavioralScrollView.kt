@@ -132,7 +132,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
                 }
             } else {
                 if (minScroll != 0) {
-                    scrollY.toFloat() / maxScroll
+                    scrollY.toFloat() / minScroll
                 } else {
                     0F
                 }
@@ -145,7 +145,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
                 }
             } else {
                 if (minScroll != 0) {
-                    scrollX.toFloat() / maxScroll
+                    scrollX.toFloat() / minScroll
                 } else {
                     0F
                 }
@@ -461,7 +461,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
      */
     private fun scrollSelf(scroll: Int, @ViewCompat.NestedScrollType type: Int) {
         // behavior 优先拦截处理，不拦截时就默认处理自身的滚动
-        if (behavior?.interceptScrollSelf(this, scroll, type) == true) {
+        if (behavior?.handleScrollSelf(this, scroll, type) == true) {
             return
         }
         scrollBy(scroll, scroll)
@@ -649,6 +649,6 @@ interface NestedScrollBehavior {
      * @param type 滚动类型
      * @return true -> 拦截下来自己处理，false -> 不拦截，让 [v] 自己滚动
      */
-    fun interceptScrollSelf(v: BehavioralScrollView, scroll: Int, @NestedScrollType type: Int): Boolean = false
+    fun handleScrollSelf(v: BehavioralScrollView, scroll: Int, @NestedScrollType type: Int): Boolean = false
 
 }

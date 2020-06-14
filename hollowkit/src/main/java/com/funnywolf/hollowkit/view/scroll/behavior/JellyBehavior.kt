@@ -55,7 +55,7 @@ class JellyBehavior(
         return !selfScrolled(v)
     }
 
-    override fun interceptScrollSelf(v: BehavioralScrollView, scroll: Int, type: Int): Boolean {
+    override fun handleScrollSelf(v: BehavioralScrollView, scroll: Int, type: Int): Boolean {
         val p = abs(v.currProcess())
         val s = (scroll * (1 - p)).toInt()
         return when {
