@@ -69,12 +69,12 @@ data class LifecycleStateListener(
 ): StateListener, LifecycleEventObserver {
 
     private var lifecycle: Lifecycle? = null
-    private var minLifecycleState: Lifecycle.State = Lifecycle.State.DESTROYED
+    private var minLifecycleState: Lifecycle.State = Lifecycle.State.CREATED
     private var states: States? = null
 
     private val stateList = ArrayList<State>()
 
-    fun addTo(states: States, lifecycle: Lifecycle? = null, minLifecycleState: Lifecycle.State = Lifecycle.State.STARTED) {
+    fun addTo(states: States, lifecycle: Lifecycle? = null, minLifecycleState: Lifecycle.State = Lifecycle.State.CREATED) {
         clear()
         this.minLifecycleState = minLifecycleState
         this.lifecycle = lifecycle
@@ -111,11 +111,12 @@ data class LifecycleStateListener(
 
     private fun dispatchAll() {
         val current = lifecycle?.currentState
-        if (current == null || current >= minLifecycleState) {
-            stateList.forEach {
-                listener.notify(it)
+        when {
+            current == Lifecycle.State.DESTROYED -> clear()
+            current == null || current >= minLifecycleState -> {
+                stateList.forEach { listener.notify(it) }
+                stateList.clear()
             }
-            stateList.clear()
         }
     }
 
