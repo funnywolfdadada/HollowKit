@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import com.bytedance.scene.Scene
 import com.funnywolf.hollowkit.douban.DoubanDetailScene
-import com.funnywolf.hollowkit.list.ListDemoScene
 import com.funnywolf.hollowkit.richtext.RichTextScene
 import com.funnywolf.hollowkit.scroll.behavior.ScrollBehaviorScene
 
@@ -31,10 +30,6 @@ class MainScene: Scene() {
 
         findViewById<View>(R.id.bt_test)?.setOnClickListener {
             navigationScene?.push(TestScene::class.java)
-        }
-
-        findViewById<View>(R.id.bt_list)?.setOnClickListener {
-            navigationScene?.push(ListDemoScene::class.java)
         }
 
         findViewById<View>(R.id.bt_douban)?.setOnClickListener {

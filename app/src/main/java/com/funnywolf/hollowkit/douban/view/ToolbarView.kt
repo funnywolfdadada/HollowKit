@@ -1,10 +1,8 @@
-package com.funnywolf.hollowkit.view
+package com.funnywolf.hollowkit.douban.view
 
-import android.animation.ValueAnimator
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
@@ -13,7 +11,6 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.utils.dp
 import com.funnywolf.hollowkit.utils.setRoundRect
-import kotlinx.android.synthetic.main.view_douban_toolbar.view.*
 
 /**
  * 豆瓣详情页的标题栏

@@ -13,11 +13,11 @@ import androidx.viewpager.widget.PagerAdapter
 import androidx.viewpager.widget.ViewPager
 import com.bytedance.scene.group.GroupScene
 import com.funnywolf.hollowkit.R
-import com.funnywolf.hollowkit.recyclerview.HolderInfo
-import com.funnywolf.hollowkit.recyclerview.SimpleAdapter
+import com.funnywolf.hollowkit.douban.view.BOTTOM_SHEET_STATE_EXTENDED
+import com.funnywolf.hollowkit.utils.HolderInfo
+import com.funnywolf.hollowkit.utils.SimpleAdapter
 import com.funnywolf.hollowkit.utils.*
-import com.funnywolf.hollowkit.view.BOTTOM_SHEET_STATE_EXTENDED
-import com.funnywolf.hollowkit.view.DoubanDetailView
+import com.funnywolf.hollowkit.douban.view.DoubanDetailView
 
 /**
  * 豆瓣详情页
@@ -34,7 +34,8 @@ class DoubanDetailScene : GroupScene() {
         container: ViewGroup,
         savedInstanceState: Bundle?
     ): ViewGroup {
-        doubanDetailView = DoubanDetailView(inflater.context)
+        doubanDetailView =
+            DoubanDetailView(inflater.context)
         return doubanDetailView
     }
 
@@ -94,14 +95,57 @@ class DoubanDetailScene : GroupScene() {
             add(Picture(R.drawable.picture_6))
         })
         list.addAll(getRandomStrings(20))
-        doubanDetailView.topRecyclerView.adapter = SimpleAdapter(list)
-            .addHolderInfo(HolderInfo(DoubanHeader::class.java, R.layout.holder_douban_header, DoubanHeaderHolder::class.java))
-            .addHolderInfo(HolderInfo(DoubanRating::class.java, R.layout.holder_douban_rating, RatingHolder::class.java))
-            .addHolderInfo(HolderInfo(DoubanTags::class.java, R.layout.holder_douban_tags))
-            .addHolderInfo(HolderInfo(TitleModel::class.java, R.layout.holder_douban_title, TitleHolder::class.java))
-            .addHolderInfo(HolderInfo(Brief::class.java, R.layout.holder_douban_brief, BriefHolder::class.java))
-            .addHolderInfo(HolderInfo(Actors::class.java, R.layout.holder_douban_inner_list, ActorsViewHolder::class.java))
-            .addHolderInfo(HolderInfo(Pictures::class.java, R.layout.holder_douban_inner_list, PicturesViewHolder::class.java))
+        doubanDetailView.topRecyclerView.adapter = SimpleAdapter(
+            list
+        )
+            .addHolderInfo(
+                HolderInfo(
+                    DoubanHeader::class.java,
+                    R.layout.holder_douban_header,
+                    DoubanHeaderHolder::class.java
+                )
+            )
+            .addHolderInfo(
+                HolderInfo(
+                    DoubanRating::class.java,
+                    R.layout.holder_douban_rating,
+                    RatingHolder::class.java
+                )
+            )
+            .addHolderInfo(
+                HolderInfo(
+                    DoubanTags::class.java,
+                    R.layout.holder_douban_tags
+                )
+            )
+            .addHolderInfo(
+                HolderInfo(
+                    TitleModel::class.java,
+                    R.layout.holder_douban_title,
+                    TitleHolder::class.java
+                )
+            )
+            .addHolderInfo(
+                HolderInfo(
+                    Brief::class.java,
+                    R.layout.holder_douban_brief,
+                    BriefHolder::class.java
+                )
+            )
+            .addHolderInfo(
+                HolderInfo(
+                    Actors::class.java,
+                    R.layout.holder_douban_inner_list,
+                    ActorsViewHolder::class.java
+                )
+            )
+            .addHolderInfo(
+                HolderInfo(
+                    Pictures::class.java,
+                    R.layout.holder_douban_inner_list,
+                    PicturesViewHolder::class.java
+                )
+            )
             .addHolderInfo(createSimpleStringHolderInfo(0   ))
         doubanDetailView.topRecyclerView.layoutManager = LinearLayoutManager(view.context)
     }
@@ -143,7 +187,8 @@ class DoubanDetailScene : GroupScene() {
             addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
                 override fun onPageSelected(position: Int) {
                     if (doubanDetailView.isBottomViewFloating
-                        && doubanDetailView.bottomSheetLayout.state != BOTTOM_SHEET_STATE_EXTENDED) {
+                        && doubanDetailView.bottomSheetLayout.state != BOTTOM_SHEET_STATE_EXTENDED
+                    ) {
                         doubanDetailView.bottomSheetLayout.setProcess(1F, true)
                     }
                 }

@@ -2,7 +2,6 @@ package com.funnywolf.hollowkit.douban
 
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
@@ -10,13 +9,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.funnywolf.hollowkit.R
-import com.funnywolf.hollowkit.recyclerview.HolderInfo
+import com.funnywolf.hollowkit.douban.view.JellyLayout
+import com.funnywolf.hollowkit.utils.HolderInfo
 import com.funnywolf.hollowkit.recyclerview.LiveList
-import com.funnywolf.hollowkit.recyclerview.SimpleAdapter
-import com.funnywolf.hollowkit.recyclerview.SimpleHolder
+import com.funnywolf.hollowkit.utils.SimpleAdapter
+import com.funnywolf.hollowkit.utils.SimpleHolder
 import com.funnywolf.hollowkit.utils.dp
-import com.funnywolf.hollowkit.view.JellyLayout
-import com.funnywolf.hollowkit.view.RightDragToOpenView
+import com.funnywolf.hollowkit.douban.view.RightDragToOpenView
 
 /**
  * @author https://github.com/funnywolfdadada
@@ -87,7 +86,8 @@ class ActorsViewHolder(v: View): SimpleHolder<Actors>(v) {
     private val jelly = v<JellyLayout>(R.id.jelly)
     private val recyclerView = v<RecyclerView>(R.id.recycler)
 
-    private val dragView = RightDragToOpenView(v.context)
+    private val dragView =
+        RightDragToOpenView(v.context)
 
     private val liveList = LiveList<Any>()
 
@@ -102,8 +102,16 @@ class ActorsViewHolder(v: View): SimpleHolder<Actors>(v) {
         jelly?.onScrollChangedListener = {
             dragView.process = it.currProcess
         }
-        recyclerView?.adapter = SimpleAdapter(liveList.get())
-            .addHolderInfo(HolderInfo(Actor::class.java, R.layout.holder_douban_actor, ActorViewHolder::class.java))
+        recyclerView?.adapter = SimpleAdapter(
+            liveList.get()
+        )
+            .addHolderInfo(
+                HolderInfo(
+                    Actor::class.java,
+                    R.layout.holder_douban_actor,
+                    ActorViewHolder::class.java
+                )
+            )
         recyclerView?.layoutManager = LinearLayoutManager(v.context).also {
             it.orientation = LinearLayoutManager.HORIZONTAL
         }
@@ -129,7 +137,8 @@ class PicturesViewHolder(v: View): SimpleHolder<Pictures>(v) {
     private val jelly = v<JellyLayout>(R.id.jelly)
     private val recyclerView = v<RecyclerView>(R.id.recycler)
 
-    private val dragView = RightDragToOpenView(v.context)
+    private val dragView =
+        RightDragToOpenView(v.context)
 
     private val liveList = LiveList<Any>()
 
@@ -144,8 +153,16 @@ class PicturesViewHolder(v: View): SimpleHolder<Pictures>(v) {
         jelly?.onScrollChangedListener = {
             dragView.process = it.currProcess
         }
-        recyclerView?.adapter = SimpleAdapter(liveList.get())
-            .addHolderInfo(HolderInfo(Picture::class.java, R.layout.holder_douban_picture, PictureViewHolder::class.java))
+        recyclerView?.adapter = SimpleAdapter(
+            liveList.get()
+        )
+            .addHolderInfo(
+                HolderInfo(
+                    Picture::class.java,
+                    R.layout.holder_douban_picture,
+                    PictureViewHolder::class.java
+                )
+            )
         recyclerView?.layoutManager = LinearLayoutManager(v.context).also {
             it.orientation = LinearLayoutManager.HORIZONTAL
         }

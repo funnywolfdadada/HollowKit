@@ -1,4 +1,4 @@
-package com.funnywolf.hollowkit.recyclerview
+package com.funnywolf.hollowkit.utils
 
 import android.util.SparseArray
 import android.view.LayoutInflater
@@ -38,7 +38,7 @@ open class SimpleAdapter(list: List<Any>): RecyclerView.Adapter<SimpleHolder<Any
      * onCreateViewHolder 的出错处理，可以返回自定义的 SimpleHolder 来显示错误信息
      * 不设置或者返回 null 会重新抛出异常
      */
-    var onCreateError: ((SimpleAdapter, Exception, ViewGroup, Int)->SimpleHolder<Any>?)? = null
+    var onCreateError: ((SimpleAdapter, Exception, ViewGroup, Int)-> SimpleHolder<Any>?)? = null
 
     /**
      * 监听 onBindViewHolder

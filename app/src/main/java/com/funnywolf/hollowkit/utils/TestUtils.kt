@@ -1,17 +1,10 @@
 package com.funnywolf.hollowkit.utils
 
-import android.graphics.BitmapFactory
-import android.view.View
-import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.DrawableRes
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.funnywolf.hollowkit.R
-import com.funnywolf.hollowkit.recyclerview.HolderInfo
-import com.funnywolf.hollowkit.recyclerview.SimpleAdapter
-import com.funnywolf.hollowkit.recyclerview.SimpleHolder
 import kotlin.math.round
 import kotlin.random.Random
 
@@ -21,7 +14,8 @@ import kotlin.random.Random
  */
 
 fun createSimpleStringHolderInfo(color: Int = 0xFFF89798.toInt()): HolderInfo<String> {
-    return HolderInfo(String::class.java, R.layout.holder_simple_view,
+    return HolderInfo(String::class.java,
+        R.layout.holder_simple_view,
         onCreate = { holder ->
             holder.itemView.setBackgroundColor(color)
             holder.itemView.setOnClickListener {
@@ -58,5 +52,6 @@ fun getRandomInt(n: Int, start: Int = 0, end: Int = Int.MAX_VALUE): MutableList<
 
 fun RecyclerView.simpleInit(count: Int = 30, color: Int = 0xFFF89798.toInt()) {
     layoutManager = LinearLayoutManager(context)
-    adapter = SimpleAdapter(getRandomStrings(count)).addHolderInfo(createSimpleStringHolderInfo(color))
+    adapter = SimpleAdapter(getRandomStrings(count))
+        .addHolderInfo(createSimpleStringHolderInfo(color))
 }

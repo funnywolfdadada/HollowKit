@@ -10,15 +10,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bytedance.scene.Scene
 import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.douban.*
-import com.funnywolf.hollowkit.recyclerview.HolderInfo
+import com.funnywolf.hollowkit.utils.HolderInfo
 import com.funnywolf.hollowkit.recyclerview.LiveList
-import com.funnywolf.hollowkit.recyclerview.SimpleAdapter
-import com.funnywolf.hollowkit.recyclerview.SimpleHolder
+import com.funnywolf.hollowkit.utils.SimpleAdapter
+import com.funnywolf.hollowkit.utils.SimpleHolder
 import com.funnywolf.hollowkit.utils.dp
 import com.funnywolf.hollowkit.utils.roundRectDrawable
-import com.funnywolf.hollowkit.view.JellyLayout
-import com.funnywolf.hollowkit.view.RightDragToOpenView
-import com.funnywolf.hollowkit.view.ToolbarView
+import com.funnywolf.hollowkit.douban.view.RightDragToOpenView
+import com.funnywolf.hollowkit.douban.view.ToolbarView
 import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollView
 import com.funnywolf.hollowkit.view.scroll.behavior.BottomSheetBehavior
 import com.funnywolf.hollowkit.view.scroll.behavior.JellyBehavior
@@ -77,11 +76,29 @@ class BottomSheetScene: Scene() {
                     Picture(R.drawable.picture_6)
                 )
             )
-                .addHolderInfo(HolderInfo(Picture::class.java, R.layout.holder_big_picture, PictureViewHolder::class.java))
-                .addHolderInfo(HolderInfo(Pictures::class.java, R.layout.holder_behavior_scroll_view, PicturesViewHolder::class.java))
+                .addHolderInfo(
+                    HolderInfo(
+                        Picture::class.java,
+                        R.layout.holder_big_picture,
+                        PictureViewHolder::class.java
+                    )
+                )
+                .addHolderInfo(
+                    HolderInfo(
+                        Pictures::class.java,
+                        R.layout.holder_behavior_scroll_view,
+                        PicturesViewHolder::class.java
+                    )
+                )
         }
         val f = FrameLayout(context).apply {
-            background = roundRectDrawable(0xFF9E7D6D.toInt(), 20, 20, 0, 0)
+            background = roundRectDrawable(
+                0xFF9E7D6D.toInt(),
+                20,
+                20,
+                0,
+                0
+            )
             addView(recyclerView)
             addView(toolBar)
             recyclerView.addOnScrollListener(object: RecyclerView.OnScrollListener() {
@@ -104,7 +121,8 @@ class PicturesViewHolder(v: View): SimpleHolder<Pictures>(v) {
     private val bsv = v<BehavioralScrollView>(R.id.behavior_scroll_view)
     private val recyclerView = RecyclerView(v.context)
 
-    private val dragView = RightDragToOpenView(v.context)
+    private val dragView =
+        RightDragToOpenView(v.context)
 
     private val liveList = LiveList<Any>()
 
@@ -114,8 +132,16 @@ class PicturesViewHolder(v: View): SimpleHolder<Pictures>(v) {
             it.topMargin = 20.dp
             it.bottomMargin = 20.dp
         }
-        recyclerView.adapter = SimpleAdapter(liveList.get())
-            .addHolderInfo(HolderInfo(Picture::class.java, R.layout.holder_douban_picture, PictureViewHolder::class.java))
+        recyclerView.adapter = SimpleAdapter(
+            liveList.get()
+        )
+            .addHolderInfo(
+                HolderInfo(
+                    Picture::class.java,
+                    R.layout.holder_douban_picture,
+                    PictureViewHolder::class.java
+                )
+            )
         recyclerView.layoutManager = LinearLayoutManager(v.context).also {
             it.orientation = LinearLayoutManager.HORIZONTAL
         }

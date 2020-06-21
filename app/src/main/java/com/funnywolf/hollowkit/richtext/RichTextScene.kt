@@ -82,7 +82,12 @@ class RichTextScene: Scene() {
                     padding.left = 5.dp
                     padding.right = 10.dp
                     textProvider = SimpleTextProvider(textColor = Color.CYAN)
-                    backgroundDrawable = SimpleDrawableProvider(roundRectDrawable(Color.BLUE, 20.dp))
+                    backgroundDrawable = SimpleDrawableProvider(
+                        roundRectDrawable(
+                            Color.BLUE,
+                            20.dp
+                        )
+                    )
                     leftDrawable = SimpleDrawableProvider(
                         view.context.getDrawable(R.drawable.ic_camera)!!,
                         align = TextAlign.ASCENT

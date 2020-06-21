@@ -1,4 +1,4 @@
-package com.funnywolf.hollowkit.view
+package com.funnywolf.hollowkit.douban.view
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -88,7 +88,8 @@ class BottomSheetLayout: FrameLayout {
     /**
      * 添加内容视图时的初始状态
      */
-    private var initState: Int = BOTTOM_SHEET_STATE_COLLAPSED
+    private var initState: Int =
+        BOTTOM_SHEET_STATE_COLLAPSED
 
     /**
      * y 轴最小的滚动值，此时 [contentView] 在底部露出 [minShowingHeight]

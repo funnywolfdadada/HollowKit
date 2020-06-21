@@ -1,4 +1,4 @@
-package com.funnywolf.hollowkit.view
+package com.funnywolf.hollowkit.douban.view
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -12,7 +12,6 @@ import androidx.annotation.IntDef
 import androidx.core.view.NestedScrollingParent2
 import androidx.core.view.NestedScrollingParentHelper
 import androidx.core.view.ViewCompat
-import com.funnywolf.hollowkit.utils.findChildUnder
 import com.funnywolf.hollowkit.utils.findHorizontalNestedScrollingTarget
 import com.funnywolf.hollowkit.utils.findVerticalNestedScrollingTarget
 import kotlin.math.abs
@@ -38,7 +37,13 @@ const val JELLY_REGION_LEFT = 3
  */
 const val JELLY_REGION_RIGHT = 4
 
-@IntDef(JELLY_REGION_NONE, JELLY_REGION_TOP, JELLY_REGION_BOTTOM, JELLY_REGION_LEFT, JELLY_REGION_RIGHT)
+@IntDef(
+    JELLY_REGION_NONE,
+    JELLY_REGION_TOP,
+    JELLY_REGION_BOTTOM,
+    JELLY_REGION_LEFT,
+    JELLY_REGION_RIGHT
+)
 @Retention(AnnotationRetention.SOURCE)
 annotation class JellyRegion
 
