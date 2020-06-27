@@ -55,11 +55,11 @@ class JellyBehavior(
         return !selfScrolled(v)
     }
 
-    override fun interceptScrollSelf(v: BehavioralScrollView, scroll: Int, type: Int): Boolean {
+    override fun handleScrollSelf(v: BehavioralScrollView, scroll: Int, type: Int): Boolean {
         val p = abs(v.currProcess())
         val s = (scroll * (1 - p)).toInt()
         return when {
-            v.isFling -> {
+            v.state == NestedScrollState.FLING -> {
                 if (abs(s) < 10 || p > 0.1) {
                     v.smoothScrollTo(0)
                 } else {

@@ -131,3 +131,9 @@ fun View.setRoundRect(radius: Float) {
         }
     }
 }
+
+fun Int.constrains(min: Int, max: Int): Int = when {
+    this < min -> min
+    this > max -> max
+    else -> this
+}

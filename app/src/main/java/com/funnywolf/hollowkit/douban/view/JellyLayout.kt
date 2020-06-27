@@ -12,6 +12,7 @@ import androidx.annotation.IntDef
 import androidx.core.view.NestedScrollingParent2
 import androidx.core.view.NestedScrollingParentHelper
 import androidx.core.view.ViewCompat
+import com.funnywolf.hollowkit.utils.constrains
 import com.funnywolf.hollowkit.utils.findHorizontalNestedScrollingTarget
 import com.funnywolf.hollowkit.utils.findVerticalNestedScrollingTarget
 import kotlin.math.abs
@@ -37,13 +38,7 @@ const val JELLY_REGION_LEFT = 3
  */
 const val JELLY_REGION_RIGHT = 4
 
-@IntDef(
-    JELLY_REGION_NONE,
-    JELLY_REGION_TOP,
-    JELLY_REGION_BOTTOM,
-    JELLY_REGION_LEFT,
-    JELLY_REGION_RIGHT
-)
+@IntDef(JELLY_REGION_NONE, JELLY_REGION_TOP, JELLY_REGION_BOTTOM, JELLY_REGION_LEFT, JELLY_REGION_RIGHT)
 @Retention(AnnotationRetention.SOURCE)
 annotation class JellyRegion
 
@@ -445,12 +440,6 @@ class JellyLayout : FrameLayout, NestedScrollingParent2 {
             else -> y.constrains(minScrollY, maxScrollY)
         }
         super.scrollTo(xx, yy)
-    }
-
-    private fun Int.constrains(min: Int, max: Int): Int = when {
-        this < min -> min
-        this > max -> max
-        else -> this
     }
 
     /**
