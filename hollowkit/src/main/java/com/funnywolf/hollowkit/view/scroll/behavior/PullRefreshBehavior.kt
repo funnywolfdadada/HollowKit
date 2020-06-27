@@ -2,7 +2,6 @@ package com.funnywolf.hollowkit.view.scroll.behavior
 
 import android.animation.ValueAnimator
 import android.content.Context
-import android.graphics.Color
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.MotionEvent
@@ -81,7 +80,7 @@ class PullRefreshBehavior(
     override fun afterLayout(v: BehavioralScrollView) {
         super.afterLayout(v)
         bsvRef = WeakReference(v)
-        v.onScrollChangedListener = onScrollChanged
+        v.onScrollChangedListeners.add(onScrollChanged)
     }
 
     override fun handleDispatchTouchEvent(v: BehavioralScrollView, e: MotionEvent): Boolean? {
@@ -146,7 +145,6 @@ class RefreshView @JvmOverloads constructor(
     init {
         layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, refreshHeight * 2)
         setPadding(0, refreshHeight, 0, 0)
-        setBackgroundColor(Color.BLACK)
         loadingView.setImageResource(R.drawable.ic_loading)
         loadingView.setPadding(refreshHeight / 4, refreshHeight / 4, refreshHeight / 4, refreshHeight / 4)
         addView(loadingView, LayoutParams(refreshHeight, refreshHeight).also {

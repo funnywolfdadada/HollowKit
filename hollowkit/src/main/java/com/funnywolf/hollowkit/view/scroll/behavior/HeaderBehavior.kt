@@ -38,7 +38,7 @@ class HeaderBehavior(
 
     override fun afterLayout(v: BehavioralScrollView) {
         super.afterLayout(v)
-        v.onScrollChangedListener = onScrollChanged
+        v.onScrollChangedListeners.add(onScrollChanged)
     }
 
     override fun handleDispatchTouchEvent(v: BehavioralScrollView, e: MotionEvent): Boolean? {

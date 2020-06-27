@@ -1,18 +1,17 @@
 package com.funnywolf.hollowkit.scroll.behavior
 
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.bytedance.scene.Scene
-import com.bytedance.scene.interfaces.PushOptions
+import androidx.viewpager.widget.ViewPager
+import com.bytedance.scene.group.GroupScene
+import com.bytedance.scene.group.UserVisibleHintGroupScene
+import com.bytedance.scene.ui.GroupSceneUIUtility
 import com.funnywolf.hollowkit.R
-import com.funnywolf.hollowkit.utils.dp
-import com.funnywolf.hollowkit.utils.toast
 import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollView
-import com.funnywolf.hollowkit.view.scroll.behavior.HeaderBehavior
-import com.funnywolf.hollowkit.view.scroll.behavior.PullRefreshBehavior
+import com.google.android.material.tabs.TabLayout
+import java.util.LinkedHashMap
 
 /**
  * [BehavioralScrollView] 的 Demo 入口
@@ -20,42 +19,32 @@ import com.funnywolf.hollowkit.view.scroll.behavior.PullRefreshBehavior
  * @author https://github.com/funnywolfdadada
  * @since 2020/3/21
  */
-class ScrollBehaviorScene: Scene() {
+class ScrollBehaviorScene: GroupScene() {
+
+    private var tabLayout: TabLayout? = null
+    private var viewPager: ViewPager? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup,
         savedInstanceState: Bundle?
-    ): View {
-        val v: View = inflater.inflate(R.layout.scene_nested_scroll_behavior, container, false)
-        return BehavioralScrollView(inflater.context).apply {
-//            setupBehavior(PullRefreshBehavior(v).apply {
-//                enable = true
-//                refreshListener = {
-//                    postDelayed({
-//                        isRefreshing = false
-//                        context.toast("refresh success")
-//                    }, 3000)
-//                }
-//            })
-            val height = 200.dp
-            val header = View(context).apply {
-                layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, height)
-                setBackgroundResource(R.drawable.picture_3)
-            }
-            v.layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT).apply {
-                topMargin = 50.dp
-            }
-            setupBehavior(HeaderBehavior(v, header))
-            enableLog = true
-        }
+    ): ViewGroup {
+        return inflater.inflate(R.layout.scene_nested_scroll_behavior, container, false) as ViewGroup
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        findViewById<View>(R.id.bt_bottom_sheet)?.setOnClickListener {
-            navigationScene?.push(BottomSheetScene(), PushOptions.Builder().setTranslucent(true).build())
+        val list = LinkedHashMap<String, UserVisibleHintGroupScene>().apply {
+            put("下拉刷新", PullRefreshScene())
+            put("折叠头部", CollapsingHeaderScene())
+            put("底部浮层", BottomSheetScene())
+        }
+        viewPager = view.findViewById<ViewPager>(R.id.view_pager).apply {
+            GroupSceneUIUtility.setupWithViewPager(this, this@ScrollBehaviorScene, list)
+        }
+        tabLayout = view.findViewById<TabLayout>(R.id.tab_layout).apply {
+            setupWithViewPager(viewPager)
         }
     }
 

@@ -7,17 +7,13 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bytedance.scene.Scene
+import com.bytedance.scene.group.UserVisibleHintGroupScene
 import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.douban.*
-import com.funnywolf.hollowkit.utils.HolderInfo
 import com.funnywolf.hollowkit.recyclerview.LiveList
-import com.funnywolf.hollowkit.utils.SimpleAdapter
-import com.funnywolf.hollowkit.utils.SimpleHolder
-import com.funnywolf.hollowkit.utils.dp
-import com.funnywolf.hollowkit.utils.roundRectDrawable
 import com.funnywolf.hollowkit.douban.view.RightDragToOpenView
 import com.funnywolf.hollowkit.douban.view.ToolbarView
+import com.funnywolf.hollowkit.utils.*
 import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollView
 import com.funnywolf.hollowkit.view.scroll.behavior.BottomSheetBehavior
 import com.funnywolf.hollowkit.view.scroll.behavior.JellyBehavior
@@ -28,17 +24,17 @@ import com.funnywolf.hollowkit.view.scroll.behavior.JellyBehavior
  * @author https://github.com/funnywolfdadada
  * @since 2020/3/21
  */
-class BottomSheetScene: Scene() {
+class BottomSheetScene: UserVisibleHintGroupScene() {
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup,
         savedInstanceState: Bundle?
-    ): View {
+    ): ViewGroup {
         val context = container.context
         val toolbarHeight = context.resources.getDimension(R.dimen.toolbar_height).toInt()
         val toolBar = ToolbarView(context).apply {
-            setup("电视", "西部世界 第三季", R.drawable.poster_westworld_season_3, 0xFF9E7D6D.toInt())
+            setup("电视", "西部世界 第三季", R.drawable.poster_westworld_season_3, westWorldHolderBackgroundColor)
             setListeners(View.OnClickListener { navigationScene?.pop() }, null)
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, toolbarHeight)
         }
@@ -93,7 +89,7 @@ class BottomSheetScene: Scene() {
         }
         val f = FrameLayout(context).apply {
             background = roundRectDrawable(
-                0xFF9E7D6D.toInt(),
+                westWorldHolderBackgroundColor,
                 20,
                 20,
                 0,
@@ -147,7 +143,7 @@ class PicturesViewHolder(v: View): SimpleHolder<Pictures>(v) {
         }
         bsv?.enableLog = true
         bsv?.setupBehavior(JellyBehavior(false, recyclerView, View(v.context), dragView))
-        bsv?.onScrollChangedListener = {
+        bsv?.onScrollChangedListeners?.add {
             dragView.process = it.currProcess()
         }
     }

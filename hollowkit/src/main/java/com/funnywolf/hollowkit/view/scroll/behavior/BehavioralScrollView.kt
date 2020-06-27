@@ -65,7 +65,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
     /**
      * 发生滚动时的回调
      */
-    var onScrollChangedListener: ((BehavioralScrollView)->Unit)? = null
+    var onScrollChangedListeners = HashSet<((BehavioralScrollView)->Unit)>()
 
     private var behavior: NestedScrollBehavior? = null
     private val children = arrayOfNulls<View>(3)
@@ -557,7 +557,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
             false -> l - oldl
             else -> 0
         }
-        onScrollChangedListener?.invoke(this)
+        onScrollChangedListeners.forEach { it(this) }
     }
 
     fun log(text: String) {

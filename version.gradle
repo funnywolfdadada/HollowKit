@@ -15,5 +15,5 @@ versions.swiperefreshlayout = '1.0.0'
 
 versions.rxjava = '2.2.8'
 versions.rxandroid = '2.1.1'
-versions.scene = '1.0.0'
+versions.scene = '1.0.4'
 versions.glide = '4.11.0'

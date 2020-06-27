@@ -1,68 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:fitsSystemWindows="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_west_world"
+    android:orientation="vertical"
+    android:background="#FFFF"
     >
 
-    <LinearLayout
-        android:orientation="vertical"
-        android:gravity="center"
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tab_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"/>
 
-        <Button
-            android:id="@+id/bt_bottom_sheet"
-            android:text="底部浮层"
-            android:background="#8FFF"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            />
+    <androidx.viewpager.widget.ViewPager
+        android:id="@+id/view_pager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 
-        <Button
-            android:id="@+id/bt_list"
-            android:text="List Demo"
-            android:background="#8FFF"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            />
-
-        <Button
-            android:id="@+id/bt_douban"
-            android:text="豆瓣详情页"
-            android:background="#8FFF"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            />
-
-        <ImageView
-            android:src="@drawable/poster_1917"
-            android:scaleType="centerCrop"
-            android:layout_margin="10dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-
-        <ImageView
-            android:src="@drawable/poster_american_dreams_in_china"
-            android:scaleType="centerCrop"
-            android:layout_margin="10dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-
-        <ImageView
-            android:src="@drawable/poster_little_women"
-            android:scaleType="centerCrop"
-            android:layout_margin="10dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-
-    </LinearLayout>
-
-</androidx.core.widget.NestedScrollView>
+</LinearLayout>

@@ -47,11 +47,11 @@ class DoubanDetailScene : GroupScene() {
     }
 
     private fun initToolbar() {
-        doubanDetailView.setBackgroundColor(0xFF9E7D6D.toInt())
+        doubanDetailView.setBackgroundColor(westWorldHolderBackgroundColor)
         doubanDetailView.toolBar.setup(
             "电视", "西部世界 第三季",
             R.drawable.poster_westworld_season_3,
-            0xFF9E7D6D.toInt()
+            westWorldHolderBackgroundColor
         ).setListeners(
             View.OnClickListener { it.context.toast("Click back") },
             View.OnClickListener { it.context.toast("Click more") }

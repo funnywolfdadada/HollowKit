@@ -13,6 +13,9 @@ import kotlin.random.Random
  * @since 2020/4/10
  */
 
+var defaultHolderBackgroundColor = 0xFFF89798.toInt()
+var westWorldHolderBackgroundColor = 0xFF9E7D6D.toInt()
+
 fun createSimpleStringHolderInfo(color: Int = 0xFFF89798.toInt()): HolderInfo<String> {
     return HolderInfo(String::class.java,
         R.layout.holder_simple_view,
@@ -50,7 +53,7 @@ fun getRandomInt(n: Int, start: Int = 0, end: Int = Int.MAX_VALUE): MutableList<
     }
 }
 
-fun RecyclerView.simpleInit(count: Int = 30, color: Int = 0xFFF89798.toInt()) {
+fun RecyclerView.simpleInit(count: Int = 30, color: Int = defaultHolderBackgroundColor) {
     layoutManager = LinearLayoutManager(context)
     adapter = SimpleAdapter(getRandomStrings(count))
         .addHolderInfo(createSimpleStringHolderInfo(color))
