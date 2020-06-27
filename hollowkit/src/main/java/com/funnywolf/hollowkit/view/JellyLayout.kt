@@ -12,7 +12,7 @@ import androidx.annotation.IntDef
 import androidx.core.view.NestedScrollingParent2
 import androidx.core.view.NestedScrollingParentHelper
 import androidx.core.view.ViewCompat
-import com.funnywolf.hollowkit.utils.findChildUnder
+import com.funnywolf.hollowkit.utils.constrains
 import com.funnywolf.hollowkit.utils.findHorizontalNestedScrollingTarget
 import com.funnywolf.hollowkit.utils.findVerticalNestedScrollingTarget
 import kotlin.math.abs
@@ -440,12 +440,6 @@ class JellyLayout : FrameLayout, NestedScrollingParent2 {
             else -> y.constrains(minScrollY, maxScrollY)
         }
         super.scrollTo(xx, yy)
-    }
-
-    private fun Int.constrains(min: Int, max: Int): Int = when {
-        this < min -> min
-        this > max -> max
-        else -> this
     }
 
     /**
