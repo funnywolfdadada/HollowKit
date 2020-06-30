@@ -6,14 +6,15 @@ import android.widget.Space
 import androidx.core.view.ViewCompat
 
 /**
- * 带滑动头部的 behavior
+ * 带折叠滑动头部的 behavior
  *
  * @author https://github.com/funnywolfdadada
  * @since 2020/6/23
  */
-class HeaderBehavior(
-    contentView: View,
-    headerView: View
+class CollapsingHeaderBehavior(
+    val contentView: View,
+    val headerView: View,
+    val enableOverScroll: Boolean = true
 ): NestedScrollBehavior {
 
     override val scrollVertical: Boolean = true
@@ -23,23 +24,6 @@ class HeaderBehavior(
     override val midScrollTarget: NestedScrollTarget? = null
     override val nextView: View? = contentView
     override val nextScrollTarget: NestedScrollTarget? = null
-
-    private val onScrollChanged: (BehavioralScrollView)->Unit = {
-        val height = headerView.height.toFloat()
-        val scale = if (it.scrollY < 0) {
-            1F - it.scrollY / height
-        } else {
-            1F
-        }
-        headerView.scaleX = scale
-        headerView.scaleY = scale
-        headerView.pivotY = height
-    }
-
-    override fun afterLayout(v: BehavioralScrollView) {
-        super.afterLayout(v)
-        v.onScrollChangedListeners.add(onScrollChanged)
-    }
 
     override fun handleDispatchTouchEvent(v: BehavioralScrollView, e: MotionEvent): Boolean? {
         if (e.action == MotionEvent.ACTION_UP && v.scrollY < 0) {
@@ -56,6 +40,18 @@ class HeaderBehavior(
     override fun handleScrollSelf(v: BehavioralScrollView, scroll: Int, type: Int): Boolean {
         if (type == ViewCompat.TYPE_NON_TOUCH && v.state == NestedScrollState.FLING) {
             return v.scrollY <= 0 && scroll < 0
+        }
+        if (type == ViewCompat.TYPE_TOUCH && v.scrollY < 0) {
+            if (enableOverScroll) {
+                val height = headerView.height
+                val s = if (height > 0) {
+                    scroll * (v.scrollY + height) / height
+                } else {
+                    0
+                }
+                v.scrollBy(0, s)
+            }
+            return true
         }
         return false
     }

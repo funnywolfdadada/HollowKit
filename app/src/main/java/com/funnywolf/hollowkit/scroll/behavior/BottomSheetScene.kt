@@ -1,5 +1,6 @@
 package com.funnywolf.hollowkit.scroll.behavior
 
+import android.graphics.Point
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -107,8 +108,12 @@ class BottomSheetScene: UserVisibleHintGroupScene() {
             })
         }
 
+        val wh = Point().let {
+            requireActivity().windowManager.defaultDisplay.getRealSize(it)
+            it.y
+        }
         return BehavioralScrollView(context).apply {
-            setupBehavior(BottomSheetBehavior(f, BottomSheetBehavior.POSITION_MID, 100, 500))
+            setupBehavior(BottomSheetBehavior(f, BottomSheetBehavior.POSITION_MID, toolbarHeight, wh / 2))
         }
     }
 }

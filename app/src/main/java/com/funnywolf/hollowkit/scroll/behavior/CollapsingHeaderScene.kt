@@ -1,5 +1,6 @@
 package com.funnywolf.hollowkit.scroll.behavior
 
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,7 +15,7 @@ import com.funnywolf.hollowkit.utils.dp
 import com.funnywolf.hollowkit.utils.simpleInit
 import com.funnywolf.hollowkit.utils.westWorldHolderBackgroundColor
 import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollView
-import com.funnywolf.hollowkit.view.scroll.behavior.HeaderBehavior
+import com.funnywolf.hollowkit.view.scroll.behavior.CollapsingHeaderBehavior
 
 /**
  * @author https://github.com/funnywolfdadada
@@ -27,30 +28,40 @@ class CollapsingHeaderScene: UserVisibleHintGroupScene() {
 
         val toolbarHeight = 50.dp
         val toolbar = ToolbarView(context).apply {
-            setup("电视", "西部世界 第三季", R.drawable.poster_westworld_season_3, westWorldHolderBackgroundColor)
+            setup("电视", "西部世界 第三季", R.drawable.poster_westworld_season_3, Color.BLACK)
             setListeners(View.OnClickListener { navigationScene?.pop() }, null)
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, toolbarHeight)
         }
 
-        val headerHeight = 200.dp
-        val headerView = ImageView(context).apply {
+        val headerHeight = 260.dp
+        val headerBgHeight = (headerHeight * 1.2).toInt()
+        val headerBgView = ImageView(context).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
-            setImageResource(R.drawable.picture_3)
+            setImageResource(R.drawable.poster_westworld_season_3)
+            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, headerBgHeight)
+        }
+        val headerView = View(context).apply {
+            alpha = 0F
+            setBackgroundColor(Color.BLACK)
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, headerHeight)
         }
         val rv = RecyclerView(context).apply {
             simpleInit(55, westWorldHolderBackgroundColor)
         }
-        val behavior = HeaderBehavior(rv, headerView).apply {
-
-        }
         val behavioralScrollView = BehavioralScrollView(context).apply {
-            setupBehavior(behavior)
+            setupBehavior(CollapsingHeaderBehavior(rv, headerView))
             onScrollChangedListeners.add {
-                toolbar.process = it.scrollY / headerHeight.toFloat()
+                val sy = it.scrollY.toFloat()
+                toolbar.process = sy / headerHeight
+                headerView.alpha = if (sy < 0) { 0F } else { sy / headerHeight }
+                headerBgView.layoutParams?.also { lp ->
+                    lp.height = headerBgHeight - it.scrollY
+                    headerBgView.requestLayout()
+                }
             }
         }
         return FrameLayout(context).apply {
+            addView(headerBgView)
             addView(behavioralScrollView)
             addView(toolbar)
         }

@@ -4,12 +4,15 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.LinearLayout
 import androidx.viewpager.widget.ViewPager
 import com.bytedance.scene.group.GroupScene
 import com.bytedance.scene.group.UserVisibleHintGroupScene
 import com.bytedance.scene.ui.GroupSceneUIUtility
 import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollView
+import com.funnywolf.hollowkit.view.scroll.behavior.FloatingHeaderBehavior
 import com.google.android.material.tabs.TabLayout
 import java.util.LinkedHashMap
 
@@ -21,31 +24,41 @@ import java.util.LinkedHashMap
  */
 class ScrollBehaviorScene: GroupScene() {
 
-    private var tabLayout: TabLayout? = null
-    private var viewPager: ViewPager? = null
+    private lateinit var  tabLayout: TabLayout
+    private lateinit var viewPager: ViewPager
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup,
         savedInstanceState: Bundle?
     ): ViewGroup {
-        return inflater.inflate(R.layout.scene_nested_scroll_behavior, container, false) as ViewGroup
+        val context = inflater.context
+        viewPager = ViewPager(context).apply {
+            id = View.generateViewId()
+        }
+        tabLayout = TabLayout(context).apply {
+            id = View.generateViewId()
+            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
+        return LinearLayout(context).apply {
+            id = View.generateViewId()
+            orientation = LinearLayout.VERTICAL
+            addView(tabLayout)
+            addView(viewPager)
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         val list = LinkedHashMap<String, UserVisibleHintGroupScene>().apply {
-            put("下拉刷新", PullRefreshScene())
             put("折叠头部", CollapsingHeaderScene())
+            put("悬浮头部", FloatingHeaderScene())
+            put("下拉刷新", PullRefreshScene())
             put("底部浮层", BottomSheetScene())
         }
-        viewPager = view.findViewById<ViewPager>(R.id.view_pager).apply {
-            GroupSceneUIUtility.setupWithViewPager(this, this@ScrollBehaviorScene, list)
-        }
-        tabLayout = view.findViewById<TabLayout>(R.id.tab_layout).apply {
-            setupWithViewPager(viewPager)
-        }
+        GroupSceneUIUtility.setupWithViewPager(viewPager, this, list)
+        tabLayout.setupWithViewPager(viewPager)
     }
 
 }

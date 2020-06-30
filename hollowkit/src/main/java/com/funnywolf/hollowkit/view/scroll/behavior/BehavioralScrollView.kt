@@ -259,8 +259,6 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
                     velocityTracker.addMovement(e)
                     lastX = e.x
                     lastY = e.y
-                    // 请求父 view 不要拦截事件
-                    requestDisallowInterceptTouchEvent(true)
                     true
                 }
                 // move 时计算并分发滚动量
