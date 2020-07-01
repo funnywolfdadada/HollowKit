@@ -37,6 +37,7 @@ class PullRefreshScene: UserVisibleHintGroupScene() {
             }
         }
         return BehavioralScrollView(context).apply {
+            enableLog = true
             setupBehavior(behavior)
         }
     }

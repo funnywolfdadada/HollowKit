@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bytedance.scene.group.UserVisibleHintGroupScene
 import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.douban.view.ToolbarView
@@ -48,8 +49,13 @@ class CollapsingHeaderScene: UserVisibleHintGroupScene() {
         val rv = RecyclerView(context).apply {
             simpleInit(55, westWorldHolderBackgroundColor)
         }
+        val rl = SwipeRefreshLayout(context).apply {
+            isEnabled = true
+            addView(rv)
+        }
         val behavioralScrollView = BehavioralScrollView(context).apply {
-            setupBehavior(CollapsingHeaderBehavior(rv, headerView))
+            enableLog = true
+            setupBehavior(CollapsingHeaderBehavior(rl, headerView))
             onScrollChangedListeners.add {
                 val sy = it.scrollY.toFloat()
                 toolbar.process = sy / headerHeight

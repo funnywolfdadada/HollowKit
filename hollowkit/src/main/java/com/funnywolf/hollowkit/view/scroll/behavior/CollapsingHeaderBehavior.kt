@@ -19,14 +19,12 @@ class CollapsingHeaderBehavior(
 
     override val scrollVertical: Boolean = true
     override val prevView: View? = Space(headerView.context)
-    override val prevScrollTarget: NestedScrollTarget? = null
     override val midView: View = headerView
-    override val midScrollTarget: NestedScrollTarget? = null
     override val nextView: View? = contentView
-    override val nextScrollTarget: NestedScrollTarget? = null
 
     override fun handleDispatchTouchEvent(v: BehavioralScrollView, e: MotionEvent): Boolean? {
-        if (e.action == MotionEvent.ACTION_UP && v.scrollY < 0) {
+        if ((e.action == MotionEvent.ACTION_UP || e.action == MotionEvent.ACTION_CANCEL)
+            && v.scrollY < 0) {
             v.smoothScrollTo(0)
             return true
         }
@@ -37,23 +35,24 @@ class CollapsingHeaderBehavior(
         return scroll > 0
     }
 
-    override fun handleScrollSelf(v: BehavioralScrollView, scroll: Int, type: Int): Boolean {
-        if (type == ViewCompat.TYPE_NON_TOUCH && v.state == NestedScrollState.FLING) {
-            return v.scrollY <= 0 && scroll < 0
-        }
-        if (type == ViewCompat.TYPE_TOUCH && v.scrollY < 0) {
-            if (enableOverScroll) {
-                val height = headerView.height
-                val s = if (height > 0) {
-                    scroll * (v.scrollY + height) / height
-                } else {
-                    0
-                }
-                v.scrollBy(0, s)
+    override fun handleScrollSelf(v: BehavioralScrollView, scroll: Int, type: Int): Boolean? {
+        return when {
+            type == ViewCompat.TYPE_NON_TOUCH && v.state != NestedScrollState.ANIMATION -> if (v.scrollY <= 0 && scroll < 0) {
+                false
+            } else {
+                null
             }
-            return true
+            type == ViewCompat.TYPE_TOUCH && v.scrollY < 0 -> if (enableOverScroll) {
+                val height = headerView.height
+                if (height > 0) {
+                    v.scrollBy(0, scroll * (v.scrollY + height) / height)
+                }
+                true
+            } else {
+                false
+            }
+            else -> null
         }
-        return false
     }
 
 }

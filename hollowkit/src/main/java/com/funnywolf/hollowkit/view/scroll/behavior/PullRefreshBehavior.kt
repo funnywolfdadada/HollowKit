@@ -22,8 +22,7 @@ import kotlin.math.abs
  * @since 2020/6/14
  */
 class PullRefreshBehavior(
-    override val midView: View,
-    override val midScrollTarget: NestedScrollTarget? = null
+    override val midView: View
 ) : NestedScrollBehavior {
 
     var enable: Boolean = true
@@ -73,9 +72,7 @@ class PullRefreshBehavior(
 
     override val scrollVertical: Boolean = true
     override val prevView: View? = refreshView
-    override val prevScrollTarget: NestedScrollTarget? = null
     override val nextView: View? = null
-    override val nextScrollTarget: NestedScrollTarget? = null
 
     override fun afterLayout(v: BehavioralScrollView) {
         super.afterLayout(v)
@@ -108,20 +105,22 @@ class PullRefreshBehavior(
         return handle
     }
 
-    override fun handleScrollSelf(v: BehavioralScrollView, scroll: Int, type: Int): Boolean {
-        val handle = if (type == ViewCompat.TYPE_TOUCH) {
-            // touch 类型的滚动都要拦下来，刷新中的就忽略
-            if (!isRefreshing) {
+    override fun handleScrollSelf(v: BehavioralScrollView, scroll: Int, type: Int): Boolean? {
+        return when {
+            // touch 类型的滚动都要拦下来
+            type == ViewCompat.TYPE_TOUCH -> if (isRefreshing) {
+                // 刷新中就不再滚动自身
+                false
+            } else {
                 // 不再刷新中的就滚动自身，根据滚动方向决定是否添加阻尼效果
                 v.scrollBy(0, scroll / if (scroll < 0) { 2 } else { 1 })
+                true
             }
-            true
-        } else {
-            // 非 touch 的滚动基本是 fling 或者动画
-            v.state != NestedScrollState.ANIMATION
+            // 动画的全部滚动
+            v.state == NestedScrollState.ANIMATION -> null
+            // 非 touch 的且不是动画滚动不处理
+            else -> false
         }
-        v.log("handleScrollSelf $handle, state = ${v.state}, type = $type, isRefreshing = $isRefreshing")
-        return handle
     }
 
 }

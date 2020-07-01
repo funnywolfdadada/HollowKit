@@ -38,11 +38,8 @@ class BottomSheetBehavior(
         it.layoutParams = lp
     }
 
-    override val prevScrollTarget: NestedScrollTarget? = null
     override val midView: View = contentView
-    override val midScrollTarget: NestedScrollTarget? = null
     override val nextView: View? = null
-    override val nextScrollTarget: NestedScrollTarget? = null
 
     private var midScroll = 0
     private var firstLayout = true
@@ -89,17 +86,6 @@ class BottomSheetBehavior(
         return super.handleDispatchTouchEvent(v, e)
     }
 
-    override fun handleInterceptTouchEvent(
-        v: BehavioralScrollView,
-        e: MotionEvent
-    ): Boolean? {
-        return if (prevView?.isUnder(e.rawX, e.rawY) != true) {
-            null
-        } else {
-            false
-        }
-    }
-
     override fun handleTouchEvent(v: BehavioralScrollView, e: MotionEvent): Boolean? {
         return if (prevView?.isUnder(e.rawX, e.rawY) != true) {
             null
@@ -120,8 +106,12 @@ class BottomSheetBehavior(
         v: BehavioralScrollView,
         scroll: Int,
         @ViewCompat.NestedScrollType type: Int
-    ): Boolean {
-        return v.state == NestedScrollState.FLING
+    ): Boolean? {
+        return if (type == ViewCompat.TYPE_NON_TOUCH && v.state != NestedScrollState.ANIMATION) {
+            true
+        } else {
+            null
+        }
     }
 
     companion object {

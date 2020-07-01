@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bytedance.scene.group.UserVisibleHintGroupScene
 import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.utils.simpleInit
@@ -38,8 +39,12 @@ class FloatingHeaderScene: UserVisibleHintGroupScene() {
         val rv = RecyclerView(context).apply {
             simpleInit(55, westWorldHolderBackgroundColor)
         }
+        val rl = SwipeRefreshLayout(context).apply {
+            addView(rv)
+        }
         return BehavioralScrollView(context).apply {
-            setupBehavior(FloatingHeaderBehavior(rv, floatingHeader))
+            enableLog = true
+            setupBehavior(FloatingHeaderBehavior(rl, floatingHeader))
         }
     }
 

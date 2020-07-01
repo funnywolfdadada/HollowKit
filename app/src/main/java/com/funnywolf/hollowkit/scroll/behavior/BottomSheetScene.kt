@@ -113,6 +113,7 @@ class BottomSheetScene: UserVisibleHintGroupScene() {
             it.y
         }
         return BehavioralScrollView(context).apply {
+            enableLog = true
             setupBehavior(BottomSheetBehavior(f, BottomSheetBehavior.POSITION_MID, toolbarHeight, wh / 2))
         }
     }

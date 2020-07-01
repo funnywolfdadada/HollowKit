@@ -3,7 +3,6 @@ package com.funnywolf.hollowkit.view.scroll.behavior
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.view.ViewCompat
-import kotlin.math.abs
 
 /**
  * 弹性滚动
@@ -30,10 +29,6 @@ class JellyBehavior(
     override val nextView: View? = null
 ) : NestedScrollBehavior {
 
-    override val prevScrollTarget: NestedScrollTarget? = null
-    override val midScrollTarget: NestedScrollTarget? = null
-    override val nextScrollTarget: NestedScrollTarget? = null
-
     private fun selfScrolled(v: BehavioralScrollView) = if (scrollVertical) {
         v.scrollY != 0
     } else {
@@ -51,27 +46,32 @@ class JellyBehavior(
         return super.handleDispatchTouchEvent(v, e)
     }
 
-    override fun shouldTargetScroll(v: BehavioralScrollView, scroll: Int, type: Int): Boolean {
-        return !selfScrolled(v)
+    override fun scrollSelfFirst(v: BehavioralScrollView, scroll: Int, type: Int): Boolean {
+        return selfScrolled(v)
     }
 
-    override fun handleScrollSelf(v: BehavioralScrollView, scroll: Int, type: Int): Boolean {
-        val p = abs(v.currProcess())
-        val s = (scroll * (1 - p)).toInt()
+    override fun handleScrollSelf(v: BehavioralScrollView, scroll: Int, type: Int): Boolean? {
         return when {
-            v.state == NestedScrollState.FLING -> {
-                if (abs(s) < 10 || p > 0.1) {
-                    v.smoothScrollTo(0)
+            type == ViewCompat.TYPE_NON_TOUCH && v.state != NestedScrollState.ANIMATION -> false
+            type == ViewCompat.TYPE_TOUCH -> {
+                if (scrollVertical) {
+                    val s = if ((v.scrollY < 0 && scroll < 0) || (v.scrollY > 0 && scroll > 0)) {
+                        scroll / 2
+                    } else {
+                        scroll
+                    }
+                    v.scrollBy(0, s)
                 } else {
-                    v.scrollBy(s, s)
+                    val s = if ((v.scrollX < 0 && scroll < 0) || (v.scrollX > 0 && scroll > 0)) {
+                        scroll / 2
+                    } else {
+                        scroll
+                    }
+                    v.scrollBy(s, 0)
                 }
                 true
             }
-            type == ViewCompat.TYPE_TOUCH -> {
-                v.scrollBy(s, s)
-                true
-            }
-            else -> false
+            else -> null
         }
     }
 
