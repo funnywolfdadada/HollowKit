@@ -4,16 +4,19 @@ import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.core.view.NestedScrollingParent3
 import androidx.core.view.ViewCompat
 import androidx.core.widget.NestedScrollView
 import androidx.recyclerview.widget.RecyclerView
 import com.bytedance.scene.Scene
+import com.funnywolf.hollowkit.drawable.RoundRectDrawable
 import com.funnywolf.hollowkit.utils.dp
 import com.funnywolf.hollowkit.utils.simpleInit
 
@@ -34,7 +37,11 @@ class TestScene: Scene() {
         }
         val content = TestLayout(context)
         return content.apply {
-            addView(rv)
+            background = RoundRectDrawable(Color.RED, 10.dp, 20.dp, 30.dp, 40.dp, false)
+            addView(ImageView(context).apply {
+                setBackgroundColor(Color.BLUE)
+                setImageDrawable(RoundRectDrawable(Color.RED, 10.dp, 20.dp, 30.dp, 40.dp, true))
+            }, FrameLayout.LayoutParams(100.dp, 100.dp, Gravity.CENTER))
         }
     }
 
