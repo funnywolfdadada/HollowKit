@@ -284,8 +284,9 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
             }
     }
 
+    // NestedScrollParent
     override fun getNestedScrollAxes(): Int {
-        return super.getNestedScrollAxes()
+        return scrollAxis
     }
 
     override fun onStartNestedScroll(child: View, target: View, nestedScrollAxes: Int): Boolean {
@@ -309,25 +310,11 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
     }
 
     override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray) {
-        onNestedPreScroll(target, dx, dy, consumed, ViewCompat.TYPE_TOUCH)
+        handleNestedPreScroll(dx, dy, consumed)
     }
 
     override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray, type: Int) {
-        when (scrollAxis) {
-            ViewCompat.SCROLL_AXIS_VERTICAL -> consumed[1] = handleNestedPreScroll(dy, type)
-            ViewCompat.SCROLL_AXIS_HORIZONTAL -> consumed[0] = handleNestedPreScroll(dx, type)
-            else -> return
-        }
-    }
-
-    private fun handleNestedPreScroll(scroll: Int, type: Int): Int {
-        val scrollSelfFirst = behavior?.scrollSelfFirst(this, scroll, type)
-        log("scrollSelfFirst $scrollSelfFirst")
-        return if (scrollSelfFirst == true) {
-            handleScrollSelf(scroll, type)
-        } else {
-            0
-        }
+        handleNestedPreScroll(dx, dy, consumed, type)
     }
 
     override fun onNestedScroll(
@@ -337,7 +324,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
         dxUnconsumed: Int,
         dyUnconsumed: Int
     ) {
-        onNestedScroll(target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, ViewCompat.TYPE_TOUCH)
+        handleNestedScroll(dxUnconsumed, dyUnconsumed)
     }
 
     override fun onNestedScroll(
@@ -348,7 +335,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
         dyUnconsumed: Int,
         type: Int
     ) {
-        onNestedScroll(target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, type, IntArray(2))
+        handleNestedScroll(dxUnconsumed, dyUnconsumed, type)
     }
 
     override fun onNestedScroll(
@@ -360,10 +347,11 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
         type: Int,
         consumed: IntArray
     ) {
-        when (scrollAxis) {
-            ViewCompat.SCROLL_AXIS_VERTICAL -> consumed[1] = handleScrollSelf(dyUnconsumed, type)
-            ViewCompat.SCROLL_AXIS_HORIZONTAL -> consumed[0] = handleScrollSelf(dxUnconsumed, type)
-        }
+        handleNestedScroll(dxUnconsumed, dyUnconsumed, type, consumed)
+    }
+
+    override fun onNestedPreFling(target: View, velocityX: Float, velocityY: Float): Boolean {
+        return super.onNestedPreFling(target, velocityX, velocityY)
     }
 
     override fun onNestedFling(
@@ -386,6 +374,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
     override fun onStopNestedScroll(target: View, type: Int) {
         parentHelper.onStopNestedScroll(target, type)
     }
+    // NestedScrollParent
 
     private fun fling(vx: Float, vy: Float) {
         log("fling $vx $vy")
@@ -430,6 +419,47 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
             invalidate()
         } else if (state == NestedScrollState.ANIMATION || state == NestedScrollState.FLING) {
             state = NestedScrollState.NONE
+        }
+    }
+
+    private fun handleNestedPreScroll(
+        dx: Int,
+        dy: Int,
+        consumed: IntArray,
+        type: Int = ViewCompat.TYPE_TOUCH
+    ) {
+        when (scrollAxis) {
+            ViewCompat.SCROLL_AXIS_VERTICAL -> {
+                val scrollSelfFirst = behavior?.scrollSelfFirst(this, dy, type)
+                log("scrollSelfFirst $scrollSelfFirst")
+                if (scrollSelfFirst == true) {
+                    consumed[1] = handleScrollSelf(dy, type)
+                }
+            }
+            ViewCompat.SCROLL_AXIS_HORIZONTAL -> {
+                val scrollSelfFirst = behavior?.scrollSelfFirst(this, dx, type)
+                log("scrollSelfFirst $scrollSelfFirst")
+                if (scrollSelfFirst == true) {
+                    consumed[0] = handleScrollSelf(dx, type)
+                }
+            }
+        }
+    }
+
+    private fun handleNestedScroll(
+        dxUnconsumed: Int,
+        dyUnconsumed: Int,
+        type: Int = ViewCompat.TYPE_TOUCH,
+        consumed: IntArray? = null
+    ) {
+
+        when (scrollAxis) {
+            ViewCompat.SCROLL_AXIS_VERTICAL -> handleScrollSelf(dyUnconsumed, type).also {
+                consumed?.set(1, it)
+            }
+            ViewCompat.SCROLL_AXIS_HORIZONTAL -> handleScrollSelf(dxUnconsumed, type).also {
+                consumed?.set(0, it)
+            }
         }
     }
 
@@ -538,6 +568,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
             Log.d(javaClass.simpleName, text)
         }
     }
+
 }
 
 /**
