@@ -17,7 +17,7 @@ class CollapsingHeaderBehavior(
     val enableOverScroll: Boolean = true
 ): NestedScrollBehavior {
 
-    override val scrollVertical: Boolean = true
+    override val scrollAxis: Int = ViewCompat.SCROLL_AXIS_VERTICAL
     override val prevView: View? = Space(headerView.context)
     override val midView: View = headerView
     override val nextView: View? = contentView

@@ -31,7 +31,7 @@ class BottomSheetBehavior(
      */
     private val midHeight: Int = minHeight
 ): NestedScrollBehavior {
-    override val scrollVertical: Boolean = true
+    override val scrollAxis: Int = ViewCompat.SCROLL_AXIS_VERTICAL
     override val prevView: View? = Space(contentView.context).also {
         val lp = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
         lp.topMargin = minHeight

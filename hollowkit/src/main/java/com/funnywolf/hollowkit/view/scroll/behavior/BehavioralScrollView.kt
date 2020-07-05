@@ -31,7 +31,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
      * false -> 水平滚动
      * null -> 不可滚动
      */
-    var scrollVertical: Boolean? = null
+    var scrollAxis: Int = ViewCompat.SCROLL_AXIS_NONE
         private set
 
     /**
@@ -102,7 +102,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
     fun setupBehavior(behavior: NestedScrollBehavior?) {
         removeAllViews()
         this.behavior = behavior
-        scrollVertical = behavior?.scrollVertical
+        scrollAxis = behavior?.scrollAxis ?: ViewCompat.SCROLL_AXIS_NONE
         children[0] = behavior?.prevView?.also { addView(it) }
         children[1] = behavior?.midView?.also { addView(it) }
         children[2] = behavior?.nextView?.also { addView(it) }
@@ -116,8 +116,8 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
      * 当前滚动的百分比
      */
     fun currProcess(): Float {
-        return when(scrollVertical) {
-            true -> if (scrollY > 0) {
+        return when(scrollAxis) {
+            ViewCompat.SCROLL_AXIS_VERTICAL -> if (scrollY > 0) {
                 if (maxScroll != 0) {
                     scrollY.toFloat() / maxScroll
                 } else {
@@ -130,7 +130,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
                     0F
                 }
             }
-            false -> if (scrollX > 0) {
+            ViewCompat.SCROLL_AXIS_HORIZONTAL -> if (scrollX > 0) {
                 if (maxScroll != 0) {
                     scrollX.toFloat() / maxScroll
                 } else {
@@ -151,9 +151,9 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
         super.onLayout(changed, left, top, right, bottom)
         minScroll = 0
         maxScroll = 0
-        when (scrollVertical) {
-            true -> layoutVertical()
-            false -> layoutHorizontal()
+        when (scrollAxis) {
+            ViewCompat.SCROLL_AXIS_VERTICAL -> layoutVertical()
+            ViewCompat.SCROLL_AXIS_HORIZONTAL -> layoutHorizontal()
         }
         behavior?.afterLayout(this)
     }
@@ -207,22 +207,22 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
                 lastX = e.x
                 lastY = e.y
                 // 如果子 view 有重叠的情况，这里记录的 target 并不完全准确，不过这里只做为是否拦截事件的判断
-                target = when (scrollVertical) {
-                    true -> findVerticalNestedScrollingTarget(e.rawX, e.rawY)
-                    false -> findHorizontalNestedScrollingTarget(e.rawX, e.rawY)
+                target = when (scrollAxis) {
+                    ViewCompat.SCROLL_AXIS_VERTICAL -> findVerticalNestedScrollingTarget(e.rawX, e.rawY)
+                    ViewCompat.SCROLL_AXIS_HORIZONTAL -> findHorizontalNestedScrollingTarget(e.rawX, e.rawY)
                     else -> null
                 }
                 false
             }
             // move 时如果移动，且没有 target 就自己拦截
-            MotionEvent.ACTION_MOVE -> when (scrollVertical) {
-                true -> if (abs(e.y - lastY) > abs(e.x - lastX) && target == null) {
+            MotionEvent.ACTION_MOVE -> when (scrollAxis) {
+                ViewCompat.SCROLL_AXIS_VERTICAL -> if (abs(e.y - lastY) > abs(e.x - lastX) && target == null) {
                     true
                 } else {
                     lastY = e.y
                     false
                 }
-                false -> if (abs(e.x - lastX) > abs(e.y - lastY) && target == null) {
+                ViewCompat.SCROLL_AXIS_HORIZONTAL -> if (abs(e.x - lastX) > abs(e.y - lastY) && target == null) {
                     true
                 } else {
                     lastX = e.x
@@ -255,15 +255,15 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
                     lastX = e.x
                     lastY = e.y
                     if (state == NestedScrollState.DRAGGING) {
-                        when (scrollVertical) {
-                            true -> handleScrollSelf(dy, ViewCompat.TYPE_TOUCH) != 0
-                            false -> handleScrollSelf(dx, ViewCompat.TYPE_TOUCH) != 0
+                        when (scrollAxis) {
+                            ViewCompat.SCROLL_AXIS_VERTICAL -> handleScrollSelf(dy, ViewCompat.TYPE_TOUCH) != 0
+                            ViewCompat.SCROLL_AXIS_HORIZONTAL -> handleScrollSelf(dx, ViewCompat.TYPE_TOUCH) != 0
                             else -> false
                         }
                     } else {
-                        when (scrollVertical) {
-                            true -> abs(dx) < abs(dy) && handleScrollSelf(dy, ViewCompat.TYPE_TOUCH) != 0
-                            false -> abs(dx) > abs(dy) && handleScrollSelf(dx, ViewCompat.TYPE_TOUCH) != 0
+                        when (scrollAxis) {
+                            ViewCompat.SCROLL_AXIS_VERTICAL -> abs(dx) < abs(dy) && handleScrollSelf(dy, ViewCompat.TYPE_TOUCH) != 0
+                            ViewCompat.SCROLL_AXIS_HORIZONTAL -> abs(dx) > abs(dy) && handleScrollSelf(dx, ViewCompat.TYPE_TOUCH) != 0
                             else -> false
                         }.also {
                             if (it) {
@@ -284,22 +284,38 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
             }
     }
 
+    override fun getNestedScrollAxes(): Int {
+        return super.getNestedScrollAxes()
+    }
+
+    override fun onStartNestedScroll(child: View, target: View, nestedScrollAxes: Int): Boolean {
+        return onStartNestedScroll(child, target, nestedScrollAxes, ViewCompat.TYPE_TOUCH)
+    }
+
     override fun onStartNestedScroll(child: View, target: View, axes: Int, type: Int): Boolean {
-        return when (scrollVertical) {
-            true -> (axes and ViewCompat.SCROLL_AXIS_VERTICAL) != 0
-            false -> (axes and ViewCompat.SCROLL_AXIS_HORIZONTAL) != 0
+        return when (scrollAxis) {
+            ViewCompat.SCROLL_AXIS_VERTICAL -> (axes and ViewCompat.SCROLL_AXIS_VERTICAL) != 0
+            ViewCompat.SCROLL_AXIS_HORIZONTAL -> (axes and ViewCompat.SCROLL_AXIS_HORIZONTAL) != 0
             else -> false
         }
+    }
+
+    override fun onNestedScrollAccepted(child: View, target: View, axes: Int) {
+        onNestedScrollAccepted(child, target, axes, ViewCompat.TYPE_TOUCH)
     }
 
     override fun onNestedScrollAccepted(child: View, target: View, axes: Int, type: Int) {
         parentHelper.onNestedScrollAccepted(child, target, axes, type)
     }
 
+    override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray) {
+        onNestedPreScroll(target, dx, dy, consumed, ViewCompat.TYPE_TOUCH)
+    }
+
     override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray, type: Int) {
-        when (scrollVertical) {
-            true -> consumed[1] = handleNestedPreScroll(dy, type)
-            false -> consumed[0] = handleNestedPreScroll(dx, type)
+        when (scrollAxis) {
+            ViewCompat.SCROLL_AXIS_VERTICAL -> consumed[1] = handleNestedPreScroll(dy, type)
+            ViewCompat.SCROLL_AXIS_HORIZONTAL -> consumed[0] = handleNestedPreScroll(dx, type)
             else -> return
         }
     }
@@ -319,14 +335,9 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
         dxConsumed: Int,
         dyConsumed: Int,
         dxUnconsumed: Int,
-        dyUnconsumed: Int,
-        type: Int,
-        consumed: IntArray
+        dyUnconsumed: Int
     ) {
-        when (scrollVertical) {
-            true -> consumed[1] = handleScrollSelf(dyUnconsumed, type)
-            false -> consumed[0] = handleScrollSelf(dxUnconsumed, type)
-        }
+        onNestedScroll(target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, ViewCompat.TYPE_TOUCH)
     }
 
     override fun onNestedScroll(
@@ -340,6 +351,21 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
         onNestedScroll(target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, type, IntArray(2))
     }
 
+    override fun onNestedScroll(
+        target: View,
+        dxConsumed: Int,
+        dyConsumed: Int,
+        dxUnconsumed: Int,
+        dyUnconsumed: Int,
+        type: Int,
+        consumed: IntArray
+    ) {
+        when (scrollAxis) {
+            ViewCompat.SCROLL_AXIS_VERTICAL -> consumed[1] = handleScrollSelf(dyUnconsumed, type)
+            ViewCompat.SCROLL_AXIS_HORIZONTAL -> consumed[0] = handleScrollSelf(dxUnconsumed, type)
+        }
+    }
+
     override fun onNestedFling(
         target: View,
         velocityX: Float,
@@ -351,6 +377,10 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
             return true
         }
         return false
+    }
+
+    override fun onStopNestedScroll(child: View) {
+        onStopNestedScroll(child, ViewCompat.TYPE_TOUCH)
     }
 
     override fun onStopNestedScroll(target: View, type: Int) {
@@ -392,9 +422,9 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
             val dy = (scroller.currY - lastY).toInt()
             lastX = scroller.currX.toFloat()
             lastY = scroller.currY.toFloat()
-            when (scrollVertical) {
-                true -> handleScrollSelf(dy, ViewCompat.TYPE_NON_TOUCH)
-                false -> handleScrollSelf(dx, ViewCompat.TYPE_NON_TOUCH)
+            when (scrollAxis) {
+                ViewCompat.SCROLL_AXIS_VERTICAL -> handleScrollSelf(dy, ViewCompat.TYPE_NON_TOUCH)
+                ViewCompat.SCROLL_AXIS_HORIZONTAL -> handleScrollSelf(dx, ViewCompat.TYPE_NON_TOUCH)
                 else -> scroller.abortAnimation()
             }
             invalidate()
@@ -428,16 +458,16 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
      * 根据当前方向判断自身是否可以滚动
      */
     private fun canScrollSelf(dir: Int): Boolean {
-        return when (scrollVertical) {
-            true -> canScrollVertically(dir)
-            false -> canScrollHorizontally(dir)
+        return when (scrollAxis) {
+            ViewCompat.SCROLL_AXIS_VERTICAL -> canScrollVertically(dir)
+            ViewCompat.SCROLL_AXIS_HORIZONTAL -> canScrollHorizontally(dir)
             else -> false
         }
     }
 
     override fun canScrollVertically(direction: Int): Boolean {
         return when {
-            scrollVertical != true -> false
+            scrollAxis != ViewCompat.SCROLL_AXIS_VERTICAL -> false
             direction > 0 -> scrollY < maxScroll
             direction < 0 -> scrollY > minScroll
             else -> true
@@ -446,7 +476,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
 
     override fun canScrollHorizontally(direction: Int): Boolean {
         return when {
-            scrollVertical != false -> false
+            scrollAxis != ViewCompat.SCROLL_AXIS_HORIZONTAL -> false
             direction > 0 -> scrollX < maxScroll
             direction < 0 -> scrollX > minScroll
             else -> true
@@ -466,7 +496,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
     private fun getScrollByX(dx: Int): Int {
         val newX = scrollX + dx
         return when {
-            scrollVertical != false -> scrollX
+            scrollAxis != ViewCompat.SCROLL_AXIS_HORIZONTAL -> scrollX
             scrollX > 0 -> newX.constrains(0, maxScroll)
             scrollX < 0 -> newX.constrains(minScroll, 0)
             else -> newX.constrains(minScroll, maxScroll)
@@ -479,7 +509,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
     private fun getScrollByY(dy: Int): Int {
         val newY = scrollY + dy
         return when {
-            scrollVertical != true -> scrollY
+            scrollAxis != ViewCompat.SCROLL_AXIS_VERTICAL -> scrollY
             scrollY > 0 -> newY.constrains(0, maxScroll)
             scrollY < 0 -> newY.constrains(minScroll, 0)
             else -> newY.constrains(minScroll, maxScroll)
@@ -495,9 +525,9 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
     override fun onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {
         super.onScrollChanged(l, t, oldl, oldt)
         // 更新滚动的方向
-        lastScrollDir = when (scrollVertical) {
-            true -> t - oldt
-            false -> l - oldl
+        lastScrollDir = when (scrollAxis) {
+            ViewCompat.SCROLL_AXIS_VERTICAL -> t - oldt
+            ViewCompat.SCROLL_AXIS_HORIZONTAL -> l - oldl
             else -> 0
         }
         onScrollChangedListeners.forEach { it(this) }
@@ -539,11 +569,9 @@ annotation class NestedScrollState {
 interface NestedScrollBehavior {
     /**
      * 当前的可滚动方向
-     * true -> 垂直滚动
-     * false -> 水平滚动
-     * null -> 不可滚动
      */
-    val scrollVertical: Boolean
+    @ViewCompat.ScrollAxis
+    val scrollAxis: Int
 
     val prevView: View?
     val midView: View

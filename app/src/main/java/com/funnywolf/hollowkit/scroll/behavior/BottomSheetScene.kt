@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bytedance.scene.group.UserVisibleHintGroupScene
@@ -148,7 +149,7 @@ class PicturesViewHolder(v: View): SimpleHolder<Pictures>(v) {
             it.orientation = LinearLayoutManager.HORIZONTAL
         }
         bsv?.enableLog = true
-        bsv?.setupBehavior(JellyBehavior(false, recyclerView, View(v.context), dragView))
+        bsv?.setupBehavior(JellyBehavior(ViewCompat.SCROLL_AXIS_HORIZONTAL, recyclerView, View(v.context), dragView))
         bsv?.onScrollChangedListeners?.add {
             dragView.process = it.currProcess()
         }

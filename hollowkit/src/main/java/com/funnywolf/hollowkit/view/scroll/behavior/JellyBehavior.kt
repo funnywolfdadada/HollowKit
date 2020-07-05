@@ -14,7 +14,7 @@ class JellyBehavior(
     /**
      * 当前的可滚动方向
      */
-    override val scrollVertical: Boolean,
+    override val scrollAxis: Int,
     /**
      * 内容视图
      */
@@ -29,10 +29,10 @@ class JellyBehavior(
     override val nextView: View? = null
 ) : NestedScrollBehavior {
 
-    private fun selfScrolled(v: BehavioralScrollView) = if (scrollVertical) {
-        v.scrollY != 0
-    } else {
-        v.scrollX != 0
+    private fun selfScrolled(v: BehavioralScrollView) = when (scrollAxis) {
+        ViewCompat.SCROLL_AXIS_VERTICAL -> v.scrollY != 0
+        ViewCompat.SCROLL_AXIS_HORIZONTAL -> v.scrollX != 0
+        else -> false
     }
 
     override fun handleDispatchTouchEvent(
@@ -54,20 +54,23 @@ class JellyBehavior(
         return when {
             type == ViewCompat.TYPE_NON_TOUCH && v.state != NestedScrollState.ANIMATION -> false
             type == ViewCompat.TYPE_TOUCH -> {
-                if (scrollVertical) {
-                    val s = if ((v.scrollY < 0 && scroll < 0) || (v.scrollY > 0 && scroll > 0)) {
-                        scroll / 2
-                    } else {
-                        scroll
+                when (scrollAxis) {
+                    ViewCompat.SCROLL_AXIS_VERTICAL -> {
+                        val s = if ((v.scrollY < 0 && scroll < 0) || (v.scrollY > 0 && scroll > 0)) {
+                            scroll / 2
+                        } else {
+                            scroll
+                        }
+                        v.scrollBy(0, s)
                     }
-                    v.scrollBy(0, s)
-                } else {
-                    val s = if ((v.scrollX < 0 && scroll < 0) || (v.scrollX > 0 && scroll > 0)) {
-                        scroll / 2
-                    } else {
-                        scroll
+                    ViewCompat.SCROLL_AXIS_HORIZONTAL -> {
+                        val s = if ((v.scrollX < 0 && scroll < 0) || (v.scrollX > 0 && scroll > 0)) {
+                            scroll / 2
+                        } else {
+                            scroll
+                        }
+                        v.scrollBy(s, 0)
                     }
-                    v.scrollBy(s, 0)
                 }
                 true
             }

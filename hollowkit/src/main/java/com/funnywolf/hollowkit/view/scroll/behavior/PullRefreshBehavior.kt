@@ -70,7 +70,7 @@ class PullRefreshBehavior(
         process = abs(it.currProcess())
     }
 
-    override val scrollVertical: Boolean = true
+    override val scrollAxis: Int = ViewCompat.SCROLL_AXIS_VERTICAL
     override val prevView: View? = refreshView
     override val nextView: View? = null
 

@@ -1,6 +1,7 @@
 package com.funnywolf.hollowkit.view.scroll.behavior
 
 import android.view.View
+import androidx.core.view.ViewCompat
 
 /**
  * 悬浮头部效果的 behavior
@@ -12,7 +13,7 @@ class FloatingHeaderBehavior(
     val contentView: View,
     val headerView: View
 ): NestedScrollBehavior {
-    override val scrollVertical: Boolean = true
+    override val scrollAxis: Int = ViewCompat.SCROLL_AXIS_VERTICAL
     override val prevView: View? = null
     override val midView: View = headerView
     override val nextView: View? = contentView
