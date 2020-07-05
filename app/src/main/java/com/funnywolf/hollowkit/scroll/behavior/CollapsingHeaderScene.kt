@@ -14,6 +14,7 @@ import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.douban.view.ToolbarView
 import com.funnywolf.hollowkit.utils.dp
 import com.funnywolf.hollowkit.utils.simpleInit
+import com.funnywolf.hollowkit.utils.toast
 import com.funnywolf.hollowkit.utils.westWorldHolderBackgroundColor
 import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollView
 import com.funnywolf.hollowkit.view.scroll.behavior.CollapsingHeaderBehavior
@@ -45,6 +46,9 @@ class CollapsingHeaderScene: UserVisibleHintGroupScene() {
             alpha = 0F
             setBackgroundColor(Color.BLACK)
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, headerHeight)
+            setOnClickListener {
+                context.toast("Click header!")
+            }
         }
         val rv = RecyclerView(context).apply {
             simpleInit(55, westWorldHolderBackgroundColor)

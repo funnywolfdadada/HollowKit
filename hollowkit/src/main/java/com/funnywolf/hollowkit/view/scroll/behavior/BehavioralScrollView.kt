@@ -13,6 +13,8 @@ import androidx.annotation.IntDef
 import androidx.core.view.NestedScrollingParent3
 import androidx.core.view.NestedScrollingParentHelper
 import androidx.core.view.ViewCompat
+import com.funnywolf.hollowkit.utils.findHorizontalNestedScrollingTarget
+import com.funnywolf.hollowkit.utils.findVerticalNestedScrollingTarget
 import kotlin.math.abs
 
 /**
@@ -55,7 +57,10 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
      */
     @NestedScrollState
     var state: Int = NestedScrollState.NONE
-        private set
+        private set(value) {
+            log("NestedScrollState $field -> $value")
+            field = value
+        }
 
     var enableLog = false
 
@@ -66,6 +71,8 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
 
     private var behavior: NestedScrollBehavior? = null
     private val children = arrayOfNulls<View>(3)
+
+    private var target: View? = null
 
     /**
      * 上次触摸事件的 x 值，或者 scroller.currX，用于处理自身的滑动事件或动画
@@ -193,6 +200,40 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
         return super.dispatchTouchEvent(e)
     }
 
+    override fun onInterceptTouchEvent(e: MotionEvent): Boolean {
+        return when (e.action) {
+            // down 时不拦截，但需要记录触点位置，寻找触点位置的 child 和垂直滚动的 target
+            MotionEvent.ACTION_DOWN -> {
+                lastX = e.x
+                lastY = e.y
+                // 如果子 view 有重叠的情况，这里记录的 target 并不完全准确，不过这里只做为是否拦截事件的判断
+                target = when (scrollVertical) {
+                    true -> findVerticalNestedScrollingTarget(e.rawX, e.rawY)
+                    false -> findHorizontalNestedScrollingTarget(e.rawX, e.rawY)
+                    else -> null
+                }
+                false
+            }
+            // move 时如果移动，且没有 target 就自己拦截
+            MotionEvent.ACTION_MOVE -> when (scrollVertical) {
+                true -> if (abs(e.y - lastY) > abs(e.x - lastX) && target == null) {
+                    true
+                } else {
+                    lastY = e.y
+                    false
+                }
+                false -> if (abs(e.x - lastX) > abs(e.y - lastY) && target == null) {
+                    true
+                } else {
+                    lastX = e.x
+                    false
+                }
+                else -> false
+            }
+            else -> super.onInterceptTouchEvent(e)
+        }
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(e: MotionEvent): Boolean {
         // behavior 优先处理，不处理时自己处理 touch 事件
@@ -213,15 +254,24 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
                     val dy = (lastY - e.y).toInt()
                     lastX = e.x
                     lastY = e.y
-                    val handled = when (scrollVertical) {
-                        true -> abs(dx) < abs(dy) && handleScrollSelf(dy, ViewCompat.TYPE_TOUCH) > 0
-                        false -> abs(dx) > abs(dy) && handleScrollSelf(dx, ViewCompat.TYPE_TOUCH) > 0
-                        else -> false
+                    if (state == NestedScrollState.DRAGGING) {
+                        when (scrollVertical) {
+                            true -> handleScrollSelf(dy, ViewCompat.TYPE_TOUCH) != 0
+                            false -> handleScrollSelf(dx, ViewCompat.TYPE_TOUCH) != 0
+                            else -> false
+                        }
+                    } else {
+                        when (scrollVertical) {
+                            true -> abs(dx) < abs(dy) && handleScrollSelf(dy, ViewCompat.TYPE_TOUCH) != 0
+                            false -> abs(dx) > abs(dy) && handleScrollSelf(dx, ViewCompat.TYPE_TOUCH) != 0
+                            else -> false
+                        }.also {
+                            if (it) {
+                                state = NestedScrollState.DRAGGING
+                                requestDisallowInterceptTouchEvent(true)
+                            }
+                        }
                     }
-                    if (handled) {
-                        requestDisallowInterceptTouchEvent(true)
-                    }
-                    handled
                 }
                 MotionEvent.ACTION_UP -> {
                     velocityTracker.addMovement(e)
@@ -348,7 +398,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
                 else -> scroller.abortAnimation()
             }
             invalidate()
-        } else {
+        } else if (state == NestedScrollState.ANIMATION || state == NestedScrollState.FLING) {
             state = NestedScrollState.NONE
         }
     }
@@ -463,7 +513,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
 /**
  * 用于描述 [BehavioralScrollView] 正处于的嵌套滚动状态，和滚动类型 [ViewCompat.NestedScrollType] 共同描述滚动量
  */
-@IntDef(NestedScrollState.NONE, NestedScrollState.FLING, NestedScrollState.ANIMATION)
+@IntDef(NestedScrollState.NONE, NestedScrollState.DRAGGING, NestedScrollState.ANIMATION, NestedScrollState.FLING)
 @Retention(AnnotationRetention.SOURCE)
 annotation class NestedScrollState {
     companion object {
@@ -472,13 +522,17 @@ annotation class NestedScrollState {
          */
         const val NONE = 0
         /**
-         * 正在 fling
+         * 正在拖拽
          */
-        const val FLING = 1
+        const val DRAGGING = 1
         /**
          * 正在动画
          */
         const val ANIMATION = 2
+        /**
+         * 正在 fling
+         */
+        const val FLING = 3
     }
 }
 
