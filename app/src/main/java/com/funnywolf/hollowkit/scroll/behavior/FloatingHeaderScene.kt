@@ -1,20 +1,20 @@
 package com.funnywolf.hollowkit.scroll.behavior
 
-import android.graphics.Color
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.TextView
+import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bytedance.scene.group.UserVisibleHintGroupScene
 import com.funnywolf.hollowkit.R
+import com.funnywolf.hollowkit.utils.dp
 import com.funnywolf.hollowkit.utils.simpleInit
-import com.funnywolf.hollowkit.utils.sp
 import com.funnywolf.hollowkit.utils.westWorldHolderBackgroundColor
 import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollView
 import com.funnywolf.hollowkit.view.scroll.behavior.FloatingHeaderBehavior
+import com.funnywolf.hollowkit.view.scroll.behavior.PullRefreshBehavior
 
 /**
  * @author https://github.com/funnywolfdadada
@@ -27,24 +27,25 @@ class FloatingHeaderScene: UserVisibleHintGroupScene() {
         savedInstanceState: Bundle?
     ): ViewGroup {
         val context = inflater.context
-        val height = context.resources.getDimension(R.dimen.toolbar_height).toInt()
-        val floatingHeader = TextView(context).apply {
-            text = "HEADER"
-            gravity = Gravity.CENTER
-            textSize = 16.sp.toFloat()
-            setTextColor(Color.WHITE)
-            setBackgroundColor(Color.BLACK)
+        val height = 200.dp
+        val floatingHeader = ImageView(context).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            setImageResource(R.drawable.poster_1917)
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, height)
         }
         val rv = RecyclerView(context).apply {
             simpleInit(55, westWorldHolderBackgroundColor)
         }
-        val rl = SwipeRefreshLayout(context).apply {
-            addView(rv)
+        val contentView = BehavioralScrollView(context).apply {
+            setupBehavior(PullRefreshBehavior(rv) {
+                postDelayed({ it.isRefreshing = false }, 2000)
+            }.apply {
+                refreshView.loadingView.colorFilter = PorterDuffColorFilter(westWorldHolderBackgroundColor, PorterDuff.Mode.SRC_IN)
+            })
         }
         return BehavioralScrollView(context).apply {
             enableLog = true
-            setupBehavior(FloatingHeaderBehavior(rl, floatingHeader))
+            setupBehavior(FloatingHeaderBehavior(contentView, floatingHeader))
         }
     }
 

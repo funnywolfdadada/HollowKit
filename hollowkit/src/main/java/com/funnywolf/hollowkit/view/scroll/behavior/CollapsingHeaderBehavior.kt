@@ -18,7 +18,11 @@ class CollapsingHeaderBehavior(
 ): NestedScrollBehavior {
 
     override val scrollAxis: Int = ViewCompat.SCROLL_AXIS_VERTICAL
-    override val prevView: View? = Space(headerView.context)
+    override val prevView: View? = if (enableOverScroll) {
+        Space(headerView.context)
+    } else {
+        null
+    }
     override val midView: View = headerView
     override val nextView: View? = contentView
 
@@ -32,17 +36,13 @@ class CollapsingHeaderBehavior(
     }
 
     override fun scrollSelfFirst(v: BehavioralScrollView, scroll: Int, type: Int): Boolean {
-        return scroll > 0
+        return isOverScroll(v, scroll) || scroll > 0
     }
 
     override fun handleScrollSelf(v: BehavioralScrollView, scroll: Int, type: Int): Boolean? {
         return when {
-            type == ViewCompat.TYPE_NON_TOUCH && v.state != NestedScrollState.ANIMATION -> if (v.scrollY <= 0 && scroll < 0) {
-                false
-            } else {
-                null
-            }
-            type == ViewCompat.TYPE_TOUCH && v.scrollY < 0 -> if (enableOverScroll) {
+            !isOverScroll(v, scroll) -> null
+            type == ViewCompat.TYPE_TOUCH -> if (enableOverScroll) {
                 val height = headerView.height
                 if (height > 0) {
                     v.scrollBy(0, scroll * (v.scrollY + height) / height)
@@ -51,8 +51,17 @@ class CollapsingHeaderBehavior(
             } else {
                 false
             }
+            type == ViewCompat.TYPE_NON_TOUCH -> if (v.state == NestedScrollState.ANIMATION) {
+                null
+            } else {
+                false
+            }
             else -> null
         }
+    }
+
+    private fun isOverScroll(v: BehavioralScrollView, scroll: Int): Boolean {
+        return v.scrollY < 0 || (v.scrollY == 0 && scroll < 0)
     }
 
 }

@@ -40,11 +40,8 @@ class ScrollBehaviorScene: GroupScene() {
             id = View.generateViewId()
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
-        return LinearLayout(context).apply {
-            id = View.generateViewId()
-            orientation = LinearLayout.VERTICAL
-            addView(tabLayout)
-            addView(viewPager)
+        return BehavioralScrollView(context).apply {
+            setupBehavior(FloatingHeaderBehavior(viewPager, tabLayout))
         }
     }
 

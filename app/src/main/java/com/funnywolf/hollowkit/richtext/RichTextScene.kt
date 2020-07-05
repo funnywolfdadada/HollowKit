@@ -13,8 +13,8 @@ import android.widget.SeekBar
 import android.widget.TextView
 import com.bytedance.scene.Scene
 import com.funnywolf.hollowkit.R
+import com.funnywolf.hollowkit.drawable.RoundRectDrawable
 import com.funnywolf.hollowkit.utils.dp
-import com.funnywolf.hollowkit.utils.roundRectDrawable
 
 /**
  * 富文本测试页面
@@ -83,10 +83,7 @@ class RichTextScene: Scene() {
                     padding.right = 10.dp
                     textProvider = SimpleTextProvider(textColor = Color.CYAN)
                     backgroundDrawable = SimpleDrawableProvider(
-                        roundRectDrawable(
-                            Color.BLUE,
-                            20.dp
-                        )
+                        RoundRectDrawable(Color.BLUE, 20.dp)
                     )
                     leftDrawable = SimpleDrawableProvider(
                         view.context.getDrawable(R.drawable.ic_camera)!!,

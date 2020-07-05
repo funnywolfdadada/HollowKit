@@ -27,14 +27,13 @@ class PullRefreshScene: UserVisibleHintGroupScene() {
         val rv = RecyclerView(context).apply {
             simpleInit(55, westWorldHolderBackgroundColor)
         }
-        val behavior = PullRefreshBehavior(rv).apply {
+        val behavior = PullRefreshBehavior(rv) {
+            postDelayed(Runnable {
+                context.toast("Refresh success")
+                it.isRefreshing = false
+            }, 3000)
+        }.apply {
             refreshView.loadingView.colorFilter = PorterDuffColorFilter(westWorldHolderBackgroundColor, PorterDuff.Mode.SRC_IN)
-            refreshListener = {
-                postDelayed(Runnable {
-                    context.toast("Refresh success")
-                    isRefreshing = false
-                }, 3000)
-            }
         }
         return BehavioralScrollView(context).apply {
             enableLog = true

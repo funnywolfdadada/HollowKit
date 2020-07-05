@@ -1,14 +1,16 @@
 package com.funnywolf.hollowkit.scroll.behavior
 
 import android.graphics.Color
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
+import androidx.core.view.postDelayed
 import androidx.recyclerview.widget.RecyclerView
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bytedance.scene.group.UserVisibleHintGroupScene
 import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.douban.view.ToolbarView
@@ -18,6 +20,7 @@ import com.funnywolf.hollowkit.utils.toast
 import com.funnywolf.hollowkit.utils.westWorldHolderBackgroundColor
 import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollView
 import com.funnywolf.hollowkit.view.scroll.behavior.CollapsingHeaderBehavior
+import com.funnywolf.hollowkit.view.scroll.behavior.PullRefreshBehavior
 
 /**
  * @author https://github.com/funnywolfdadada
@@ -53,13 +56,9 @@ class CollapsingHeaderScene: UserVisibleHintGroupScene() {
         val rv = RecyclerView(context).apply {
             simpleInit(55, westWorldHolderBackgroundColor)
         }
-        val rl = SwipeRefreshLayout(context).apply {
-            isEnabled = true
-            addView(rv)
-        }
-        val behavioralScrollView = BehavioralScrollView(context).apply {
-            enableLog = true
-            setupBehavior(CollapsingHeaderBehavior(rl, headerView))
+        val enableOverScroll = false
+        val collapsingHeader = BehavioralScrollView(context).apply {
+            setupBehavior(CollapsingHeaderBehavior(rv, headerView, enableOverScroll))
             onScrollChangedListeners.add {
                 val sy = it.scrollY.toFloat()
                 toolbar.process = sy / headerHeight
@@ -70,10 +69,21 @@ class CollapsingHeaderScene: UserVisibleHintGroupScene() {
                 }
             }
         }
-        return FrameLayout(context).apply {
+        val contentView = FrameLayout(context).apply {
             addView(headerBgView)
-            addView(behavioralScrollView)
+            addView(collapsingHeader)
             addView(toolbar)
+        }
+        return BehavioralScrollView(context).apply {
+            enableLog = true
+            isEnabled = !enableOverScroll
+            setupBehavior(PullRefreshBehavior(contentView) {
+                postDelayed(2000) {
+                    it.isRefreshing = false
+                }
+            }.apply {
+                refreshView.loadingView.colorFilter = PorterDuffColorFilter(westWorldHolderBackgroundColor, PorterDuff.Mode.SRC_IN)
+            })
         }
     }
 

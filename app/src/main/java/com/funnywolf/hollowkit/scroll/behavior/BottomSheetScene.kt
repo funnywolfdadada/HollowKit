@@ -15,6 +15,7 @@ import com.funnywolf.hollowkit.douban.*
 import com.funnywolf.hollowkit.recyclerview.LiveList
 import com.funnywolf.hollowkit.douban.view.RightDragToOpenView
 import com.funnywolf.hollowkit.douban.view.ToolbarView
+import com.funnywolf.hollowkit.drawable.RoundRectDrawable
 import com.funnywolf.hollowkit.utils.*
 import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollView
 import com.funnywolf.hollowkit.view.scroll.behavior.BottomSheetBehavior
@@ -90,13 +91,7 @@ class BottomSheetScene: UserVisibleHintGroupScene() {
                 )
         }
         val f = FrameLayout(context).apply {
-            background = roundRectDrawable(
-                westWorldHolderBackgroundColor,
-                20,
-                20,
-                0,
-                0
-            )
+            background = RoundRectDrawable(westWorldHolderBackgroundColor, 20, 20, 0, 0)
             addView(recyclerView)
             addView(toolBar)
             recyclerView.addOnScrollListener(object: RecyclerView.OnScrollListener() {
@@ -115,7 +110,7 @@ class BottomSheetScene: UserVisibleHintGroupScene() {
         }
         return BehavioralScrollView(context).apply {
             enableLog = true
-            setupBehavior(BottomSheetBehavior(f, BottomSheetBehavior.POSITION_MID, toolbarHeight, wh / 2))
+            setupBehavior(BottomSheetBehavior(f, BottomSheetBehavior.POSITION_MID, wh / 4, wh / 2))
         }
     }
 }

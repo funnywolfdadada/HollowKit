@@ -10,9 +10,7 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.Scroller
 import androidx.annotation.IntDef
-import androidx.core.view.NestedScrollingParent3
-import androidx.core.view.NestedScrollingParentHelper
-import androidx.core.view.ViewCompat
+import androidx.core.view.*
 import com.funnywolf.hollowkit.utils.findHorizontalNestedScrollingTarget
 import com.funnywolf.hollowkit.utils.findVerticalNestedScrollingTarget
 import kotlin.math.abs
@@ -23,13 +21,10 @@ import kotlin.math.abs
  * @author https://github.com/funnywolfdadada
  * @since 2020/5/8
  */
-open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
+open class BehavioralScrollView : FrameLayout, NestedScrollingParent3, NestedScrollingChild3 {
 
     /**
      * 当前的可滚动方向
-     * true -> 垂直滚动
-     * false -> 水平滚动
-     * null -> 不可滚动
      */
     var scrollAxis: Int = ViewCompat.SCROLL_AXIS_NONE
         private set
@@ -58,8 +53,10 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
     @NestedScrollState
     var state: Int = NestedScrollState.NONE
         private set(value) {
-            log("NestedScrollState $field -> $value")
-            field = value
+            if (field != value) {
+                log("NestedScrollState $field -> $value")
+                field = value
+            }
         }
 
     var enableLog = false
@@ -94,6 +91,11 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
     private val velocityTracker by lazy { VelocityTracker.obtain() }
 
     private val parentHelper by lazy { NestedScrollingParentHelper(this) }
+    private val childHelper by lazy { NestedScrollingChildHelper(this) }
+
+    init {
+        isNestedScrollingEnabled = true
+    }
 
     constructor(context: Context): super(context)
     constructor(context: Context, attrs: AttributeSet?): super(context, attrs)
@@ -117,19 +119,6 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
      */
     fun currProcess(): Float {
         return when(scrollAxis) {
-            ViewCompat.SCROLL_AXIS_VERTICAL -> if (scrollY > 0) {
-                if (maxScroll != 0) {
-                    scrollY.toFloat() / maxScroll
-                } else {
-                    0F
-                }
-            } else {
-                if (minScroll != 0) {
-                    scrollY.toFloat() / minScroll
-                } else {
-                    0F
-                }
-            }
             ViewCompat.SCROLL_AXIS_HORIZONTAL -> if (scrollX > 0) {
                 if (maxScroll != 0) {
                     scrollX.toFloat() / maxScroll
@@ -143,6 +132,19 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
                     0F
                 }
             }
+            ViewCompat.SCROLL_AXIS_VERTICAL -> if (scrollY > 0) {
+                if (maxScroll != 0) {
+                    scrollY.toFloat() / maxScroll
+                } else {
+                    0F
+                }
+            } else {
+                if (minScroll != 0) {
+                    scrollY.toFloat() / minScroll
+                } else {
+                    0F
+                }
+            }
             else -> 0F
         }
     }
@@ -152,8 +154,8 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
         minScroll = 0
         maxScroll = 0
         when (scrollAxis) {
-            ViewCompat.SCROLL_AXIS_VERTICAL -> layoutVertical()
             ViewCompat.SCROLL_AXIS_HORIZONTAL -> layoutHorizontal()
+            ViewCompat.SCROLL_AXIS_VERTICAL -> layoutVertical()
         }
         behavior?.afterLayout(this)
     }
@@ -185,10 +187,10 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
     }
 
     override fun dispatchTouchEvent(e: MotionEvent): Boolean {
-        val handle = behavior?.handleDispatchTouchEvent(this, e)
-        log("handleDispatchTouchEvent $handle")
-        if (handle != null) {
-            return handle
+        // behavior 优先处理，不处理走默认逻辑
+        behavior?.handleDispatchTouchEvent(this, e)?.also {
+            log("handleDispatchTouchEvent $it")
+            return it
         }
         // 在 down 时复位一些标志位，停掉 scroller 的动画
         if (e.action == MotionEvent.ACTION_DOWN) {
@@ -196,7 +198,6 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
             state = NestedScrollState.NONE
             scroller.abortAnimation()
         }
-        // behavior 优先处理，不处理走默认逻辑
         return super.dispatchTouchEvent(e)
     }
 
@@ -204,28 +205,29 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
         return when (e.action) {
             // down 时不拦截，但需要记录触点位置，寻找触点位置的 child 和垂直滚动的 target
             MotionEvent.ACTION_DOWN -> {
-                lastX = e.x
-                lastY = e.y
+                startNestedScroll(scrollAxis, ViewCompat.TYPE_TOUCH)
+                lastX = e.rawX
+                lastY = e.rawY
                 // 如果子 view 有重叠的情况，这里记录的 target 并不完全准确，不过这里只做为是否拦截事件的判断
                 target = when (scrollAxis) {
-                    ViewCompat.SCROLL_AXIS_VERTICAL -> findVerticalNestedScrollingTarget(e.rawX, e.rawY)
                     ViewCompat.SCROLL_AXIS_HORIZONTAL -> findHorizontalNestedScrollingTarget(e.rawX, e.rawY)
+                    ViewCompat.SCROLL_AXIS_VERTICAL -> findVerticalNestedScrollingTarget(e.rawX, e.rawY)
                     else -> null
                 }
                 false
             }
             // move 时如果移动，且没有 target 就自己拦截
             MotionEvent.ACTION_MOVE -> when (scrollAxis) {
-                ViewCompat.SCROLL_AXIS_VERTICAL -> if (abs(e.y - lastY) > abs(e.x - lastX) && target == null) {
+                ViewCompat.SCROLL_AXIS_HORIZONTAL -> if (abs(e.rawX - lastX) > abs(e.rawY - lastY) && target == null) {
                     true
                 } else {
-                    lastY = e.y
+                    lastX = e.rawX
                     false
                 }
-                ViewCompat.SCROLL_AXIS_HORIZONTAL -> if (abs(e.x - lastX) > abs(e.y - lastY) && target == null) {
+                ViewCompat.SCROLL_AXIS_VERTICAL -> if (abs(e.rawY - lastY) > abs(e.rawX - lastX) && target == null) {
                     true
                 } else {
-                    lastX = e.x
+                    lastY = e.rawY
                     false
                 }
                 else -> false
@@ -237,40 +239,39 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(e: MotionEvent): Boolean {
         // behavior 优先处理，不处理时自己处理 touch 事件
-        val handle = behavior?.handleTouchEvent(this, e)
-        log("handleTouchEvent $handle")
-        return handle ?: when (e.action) {
-                // down 不处理，之后的就无法处理
+        behavior?.handleTouchEvent(this, e)?.also {
+            log("handleTouchEvent $it")
+            return it
+        }
+        when (e.action) {
                 MotionEvent.ACTION_DOWN -> {
                     velocityTracker.addMovement(e)
-                    lastX = e.x
-                    lastY = e.y
-                    true
+                    lastX = e.rawX
+                    lastY = e.rawY
+                    // down 时分发开始 nested scroll
+                    startNestedScroll(scrollAxis, ViewCompat.TYPE_TOUCH)
                 }
-                // move 时计算并分发滚动量
                 MotionEvent.ACTION_MOVE -> {
                     velocityTracker.addMovement(e)
-                    val dx = (lastX - e.x).toInt()
-                    val dy = (lastY - e.y).toInt()
-                    lastX = e.x
-                    lastY = e.y
+                    val dx = (lastX - e.rawX).toInt()
+                    val dy = (lastY - e.rawY).toInt()
+                    lastX = e.rawX
+                    lastY = e.rawY
+                    // 不再 dragging 状态时判断是否要进行拖拽
+                    if (state != NestedScrollState.DRAGGING) {
+                        val canDrag = when (scrollAxis) {
+                            ViewCompat.SCROLL_AXIS_HORIZONTAL -> abs(dx) > abs(dy)
+                            ViewCompat.SCROLL_AXIS_VERTICAL -> abs(dx) < abs(dy)
+                            else -> false
+                        }
+                        if (canDrag) {
+                            state = NestedScrollState.DRAGGING
+                            parent?.requestDisallowInterceptTouchEvent(true)
+                        }
+                    }
+                    // move 时计算并分发滚动量
                     if (state == NestedScrollState.DRAGGING) {
-                        when (scrollAxis) {
-                            ViewCompat.SCROLL_AXIS_VERTICAL -> handleScrollSelf(dy, ViewCompat.TYPE_TOUCH) != 0
-                            ViewCompat.SCROLL_AXIS_HORIZONTAL -> handleScrollSelf(dx, ViewCompat.TYPE_TOUCH) != 0
-                            else -> false
-                        }
-                    } else {
-                        when (scrollAxis) {
-                            ViewCompat.SCROLL_AXIS_VERTICAL -> abs(dx) < abs(dy) && handleScrollSelf(dy, ViewCompat.TYPE_TOUCH) != 0
-                            ViewCompat.SCROLL_AXIS_HORIZONTAL -> abs(dx) > abs(dy) && handleScrollSelf(dx, ViewCompat.TYPE_TOUCH) != 0
-                            else -> false
-                        }.also {
-                            if (it) {
-                                state = NestedScrollState.DRAGGING
-                                requestDisallowInterceptTouchEvent(true)
-                            }
-                        }
+                        dispatchScrollFromSelf(dx, dy, ViewCompat.TYPE_TOUCH)
                     }
                 }
                 MotionEvent.ACTION_UP -> {
@@ -278,11 +279,108 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
                     velocityTracker.computeCurrentVelocity(1000)
                     fling(-velocityTracker.xVelocity, -velocityTracker.yVelocity)
                     velocityTracker.clear()
-                    true
                 }
-                else -> super.onTouchEvent(e)
             }
+        return true
     }
+
+    // NestedScrollChild
+    override fun isNestedScrollingEnabled(): Boolean {
+        return childHelper.isNestedScrollingEnabled
+    }
+
+    override fun setNestedScrollingEnabled(enabled: Boolean) {
+        childHelper.isNestedScrollingEnabled = enabled
+    }
+
+    override fun hasNestedScrollingParent(): Boolean {
+        return childHelper.hasNestedScrollingParent()
+    }
+
+    override fun hasNestedScrollingParent(type: Int): Boolean {
+        return childHelper.hasNestedScrollingParent(type)
+    }
+
+    override fun startNestedScroll(axes: Int): Boolean {
+        return childHelper.startNestedScroll(axes)
+    }
+
+    override fun startNestedScroll(axes: Int, type: Int): Boolean {
+        return childHelper.startNestedScroll(axes, type)
+    }
+
+    override fun dispatchNestedPreScroll(
+        dx: Int,
+        dy: Int,
+        consumed: IntArray?,
+        offsetInWindow: IntArray?
+    ): Boolean {
+        return childHelper.dispatchNestedPreScroll(dx, dy, consumed, offsetInWindow)
+    }
+
+    override fun dispatchNestedPreScroll(
+        dx: Int,
+        dy: Int,
+        consumed: IntArray?,
+        offsetInWindow: IntArray?,
+        type: Int
+    ): Boolean {
+        return childHelper.dispatchNestedPreScroll(dx, dy, consumed, offsetInWindow, type)
+    }
+
+    override fun dispatchNestedScroll(
+        dxConsumed: Int,
+        dyConsumed: Int,
+        dxUnconsumed: Int,
+        dyUnconsumed: Int,
+        offsetInWindow: IntArray?
+    ): Boolean {
+        return childHelper.dispatchNestedScroll(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, offsetInWindow)
+    }
+
+    override fun dispatchNestedScroll(
+        dxConsumed: Int,
+        dyConsumed: Int,
+        dxUnconsumed: Int,
+        dyUnconsumed: Int,
+        offsetInWindow: IntArray?,
+        type: Int
+    ): Boolean {
+        return childHelper.dispatchNestedScroll(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, offsetInWindow, type)
+    }
+
+    override fun dispatchNestedScroll(
+        dxConsumed: Int,
+        dyConsumed: Int,
+        dxUnconsumed: Int,
+        dyUnconsumed: Int,
+        offsetInWindow: IntArray?,
+        type: Int,
+        consumed: IntArray
+    ) {
+        return childHelper.dispatchNestedScroll(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, offsetInWindow, type, consumed)
+    }
+
+    override fun dispatchNestedPreFling(velocityX: Float, velocityY: Float): Boolean {
+        return childHelper.dispatchNestedPreFling(velocityX, velocityY)
+    }
+
+    override fun dispatchNestedFling(
+        velocityX: Float,
+        velocityY: Float,
+        consumed: Boolean
+    ): Boolean {
+        return childHelper.dispatchNestedFling(velocityX, velocityY, consumed)
+    }
+
+    override fun stopNestedScroll() {
+        childHelper.stopNestedScroll()
+    }
+
+    override fun stopNestedScroll(type: Int) {
+        childHelper.stopNestedScroll(type)
+    }
+    // NestedScrollChild
 
     // NestedScrollParent
     override fun getNestedScrollAxes(): Int {
@@ -295,8 +393,8 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
 
     override fun onStartNestedScroll(child: View, target: View, axes: Int, type: Int): Boolean {
         return when (scrollAxis) {
-            ViewCompat.SCROLL_AXIS_VERTICAL -> (axes and ViewCompat.SCROLL_AXIS_VERTICAL) != 0
             ViewCompat.SCROLL_AXIS_HORIZONTAL -> (axes and ViewCompat.SCROLL_AXIS_HORIZONTAL) != 0
+            ViewCompat.SCROLL_AXIS_VERTICAL -> (axes and ViewCompat.SCROLL_AXIS_VERTICAL) != 0
             else -> false
         }
     }
@@ -307,14 +405,15 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
 
     override fun onNestedScrollAccepted(child: View, target: View, axes: Int, type: Int) {
         parentHelper.onNestedScrollAccepted(child, target, axes, type)
+        startNestedScroll(axes, type)
     }
 
     override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray) {
-        handleNestedPreScroll(dx, dy, consumed)
+        dispatchNestedPreScrollFromChild(dx, dy, consumed)
     }
 
     override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray, type: Int) {
-        handleNestedPreScroll(dx, dy, consumed, type)
+        dispatchNestedPreScrollFromChild(dx, dy, consumed, type)
     }
 
     override fun onNestedScroll(
@@ -324,7 +423,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
         dxUnconsumed: Int,
         dyUnconsumed: Int
     ) {
-        handleNestedScroll(dxUnconsumed, dyUnconsumed)
+        dispatchNestedScrollFromChild(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed)
     }
 
     override fun onNestedScroll(
@@ -335,7 +434,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
         dyUnconsumed: Int,
         type: Int
     ) {
-        handleNestedScroll(dxUnconsumed, dyUnconsumed, type)
+        dispatchNestedScrollFromChild(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, type)
     }
 
     override fun onNestedScroll(
@@ -347,11 +446,11 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
         type: Int,
         consumed: IntArray
     ) {
-        handleNestedScroll(dxUnconsumed, dyUnconsumed, type, consumed)
+        dispatchNestedScrollFromChild(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, type, consumed)
     }
 
     override fun onNestedPreFling(target: View, velocityX: Float, velocityY: Float): Boolean {
-        return super.onNestedPreFling(target, velocityX, velocityY)
+        return dispatchNestedPreFling(velocityX, velocityY)
     }
 
     override fun onNestedFling(
@@ -361,6 +460,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
         consumed: Boolean
     ): Boolean {
         if (!consumed) {
+            dispatchNestedFling(velocityX, velocityY, true)
             fling(velocityX, velocityY)
             return true
         }
@@ -373,6 +473,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
 
     override fun onStopNestedScroll(target: View, type: Int) {
         parentHelper.onStopNestedScroll(target, type)
+        stopNestedScroll(type)
     }
     // NestedScrollParent
 
@@ -411,54 +512,109 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
             val dy = (scroller.currY - lastY).toInt()
             lastX = scroller.currX.toFloat()
             lastY = scroller.currY.toFloat()
-            when (scrollAxis) {
-                ViewCompat.SCROLL_AXIS_VERTICAL -> handleScrollSelf(dy, ViewCompat.TYPE_NON_TOUCH)
-                ViewCompat.SCROLL_AXIS_HORIZONTAL -> handleScrollSelf(dx, ViewCompat.TYPE_NON_TOUCH)
-                else -> scroller.abortAnimation()
-            }
+            dispatchScrollFromSelf(dx, dy, ViewCompat.TYPE_NON_TOUCH)
             invalidate()
         } else if (state == NestedScrollState.ANIMATION || state == NestedScrollState.FLING) {
             state = NestedScrollState.NONE
         }
     }
 
-    private fun handleNestedPreScroll(
+    /**
+     * 分发来自自身 touch 事件、fling 或动画的滚动量
+     * -> dispatchNestedPreScroll
+     * -> handleScrollSelf
+     * -> dispatchNestedScroll
+     */
+    private fun dispatchScrollFromSelf(dx: Int, dy: Int, type: Int) {
+        log("dispatchScrollFromSelf: type=$type, x=$dx, y=$dy")
+        val consumed = IntArray(2)
+        // 滚动自己前，向父级分发 pre scroll
+        dispatchNestedPreScroll(dx, dy, consumed, null, type)
+        when (scrollAxis) {
+            ViewCompat.SCROLL_AXIS_HORIZONTAL -> {
+                // 计算消耗的滚动量
+                val parentUnconsumedX = dx - consumed[0]
+                val consumedX = consumed[0] + handleScrollSelf(parentUnconsumedX, type)
+                // 复用 consumed 数组
+                consumed[0] = 0
+                // 滚动自己后，向父级分发 nested scroll
+                dispatchNestedScroll(consumedX, 0, dx - consumedX, 0, null, type, consumed)
+            }
+            ViewCompat.SCROLL_AXIS_VERTICAL -> {
+                // 计算消耗的滚动量
+                val parentUnconsumedY = dy - consumed[1]
+                val consumedY = consumed[1] + handleScrollSelf(parentUnconsumedY, type)
+                // 复用 consumed 数组
+                consumed[1] = 0
+                // 滚动自己后，向父级分发 nested scroll
+                dispatchNestedScroll(0, consumedY, 0, dy - consumedY, null, type, consumed)
+            }
+        }
+    }
+
+    /**
+     * 分发来自子 view pre scroll 的滚动量
+     * -> dispatchNestedPreScroll
+     * -> scrollSelfFirst
+     */
+    private fun dispatchNestedPreScrollFromChild(
         dx: Int,
         dy: Int,
         consumed: IntArray,
         type: Int = ViewCompat.TYPE_TOUCH
     ) {
+        log("dispatchNestedPreScrollFromChild: type=$type, x=$dx, y=$dy")
+        // 向父级分发 pre scroll
+        dispatchNestedPreScroll(dx, dy, consumed, null, type)
+        // 判断自己是否需要处理，并计算消耗的滚动量
         when (scrollAxis) {
-            ViewCompat.SCROLL_AXIS_VERTICAL -> {
-                val scrollSelfFirst = behavior?.scrollSelfFirst(this, dy, type)
-                log("scrollSelfFirst $scrollSelfFirst")
+            ViewCompat.SCROLL_AXIS_HORIZONTAL -> {
+                val parentUnconsumedX = dx - consumed[0]
+                val scrollSelfFirst = behavior?.scrollSelfFirst(this, parentUnconsumedX, type)
+                log("parentUnconsumedX = $parentUnconsumedX, scrollSelfFirst = $scrollSelfFirst")
                 if (scrollSelfFirst == true) {
-                    consumed[1] = handleScrollSelf(dy, type)
+                    consumed[0] += handleScrollSelf(parentUnconsumedX, type)
                 }
             }
-            ViewCompat.SCROLL_AXIS_HORIZONTAL -> {
-                val scrollSelfFirst = behavior?.scrollSelfFirst(this, dx, type)
-                log("scrollSelfFirst $scrollSelfFirst")
+            ViewCompat.SCROLL_AXIS_VERTICAL ->{
+                val parentUnconsumedY = dy - consumed[1]
+                val scrollSelfFirst = behavior?.scrollSelfFirst(this, parentUnconsumedY, type)
+                log("parentUnconsumedY = $parentUnconsumedY, scrollSelfFirst = $scrollSelfFirst")
                 if (scrollSelfFirst == true) {
-                    consumed[0] = handleScrollSelf(dx, type)
+                    consumed[1] += handleScrollSelf(parentUnconsumedY, type)
                 }
             }
         }
+        // dispatchNestedScroll 会在 onNestedScroll 时分发
     }
 
-    private fun handleNestedScroll(
+    /**
+     * 分发来自子 view nested scroll 的滚动量
+     * -> handleScrollSelf
+     * -> dispatchNestedScroll
+     */
+    private fun dispatchNestedScrollFromChild(
+        dxConsumed: Int,
+        dyConsumed: Int,
         dxUnconsumed: Int,
         dyUnconsumed: Int,
         type: Int = ViewCompat.TYPE_TOUCH,
         consumed: IntArray? = null
     ) {
-
+        log("dispatchNestedPreScrollFromChild: type=$type, x=$dxUnconsumed, y=$dyUnconsumed")
+        // dispatchNestedPreScroll 已经在 onNestedPreScroll 分发过了
         when (scrollAxis) {
-            ViewCompat.SCROLL_AXIS_VERTICAL -> handleScrollSelf(dyUnconsumed, type).also {
-                consumed?.set(1, it)
+            ViewCompat.SCROLL_AXIS_HORIZONTAL -> {
+                val consumedX = handleScrollSelf(dxUnconsumed, type)
+                consumed?.set(0, consumedX)
+                // 滚动自己后，向父级分发 nested scroll
+                dispatchNestedScroll(dxConsumed + consumedX, 0, dxUnconsumed - consumedX, 0, null, type)
             }
-            ViewCompat.SCROLL_AXIS_HORIZONTAL -> handleScrollSelf(dxUnconsumed, type).also {
-                consumed?.set(0, it)
+            ViewCompat.SCROLL_AXIS_VERTICAL -> {
+                val consumedY = handleScrollSelf(dyUnconsumed, type)
+                consumed?.set(1, consumedY)
+                // 滚动自己后，向父级分发 nested scroll
+                dispatchNestedScroll(0, dyConsumed + consumedY, 0, dyUnconsumed - consumedY, null, type)
             }
         }
     }
@@ -467,21 +623,21 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
      * 处理自身滚动
      */
     private fun handleScrollSelf(scroll: Int, @ViewCompat.NestedScrollType type: Int): Int {
-        // behavior 优先决定滚动多少
+        // behavior 优先决定是否滚动自身
         val handle = behavior?.handleScrollSelf(this, scroll, type)
-        log("handleScrollSelf $scroll -> $handle")
-        when(handle) {
-            true -> return scroll
-            false -> return 0
+        val consumed = when(handle) {
+            true -> scroll
+            false -> 0
+            else -> if (canScrollSelf(scroll)) {
+                log("canScrollSelf")
+                scrollBy(scroll, scroll)
+                scroll
+            } else {
+                0
+            }
         }
-        val canSelfScroll = canScrollSelf(scroll)
-        log("canScrollSelf $canSelfScroll")
-        return if (canSelfScroll) {
-            scrollBy(scroll, scroll)
-            scroll
-        } else {
-            0
-        }
+        log("handleScrollSelf: type=$type, $handle $scroll -> $consumed")
+        return consumed
     }
 
     /**
@@ -489,8 +645,8 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
      */
     private fun canScrollSelf(dir: Int): Boolean {
         return when (scrollAxis) {
-            ViewCompat.SCROLL_AXIS_VERTICAL -> canScrollVertically(dir)
             ViewCompat.SCROLL_AXIS_HORIZONTAL -> canScrollHorizontally(dir)
+            ViewCompat.SCROLL_AXIS_VERTICAL -> canScrollVertically(dir)
             else -> false
         }
     }
@@ -556,8 +712,8 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
         super.onScrollChanged(l, t, oldl, oldt)
         // 更新滚动的方向
         lastScrollDir = when (scrollAxis) {
-            ViewCompat.SCROLL_AXIS_VERTICAL -> t - oldt
             ViewCompat.SCROLL_AXIS_HORIZONTAL -> l - oldl
+            ViewCompat.SCROLL_AXIS_VERTICAL -> t - oldt
             else -> 0
         }
         onScrollChangedListeners.forEach { it(this) }
@@ -565,7 +721,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3 {
 
     fun log(text: String) {
         if (enableLog) {
-            Log.d(javaClass.simpleName, text)
+            Log.d(javaClass.simpleName, "${behavior?.javaClass} $text")
         }
     }
 
