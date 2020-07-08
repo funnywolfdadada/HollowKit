@@ -51,9 +51,9 @@ class JellyBehavior(
     }
 
     override fun handleScrollSelf(v: BehavioralScrollView, scroll: Int, type: Int): Boolean? {
-        return when {
-            type == ViewCompat.TYPE_NON_TOUCH && v.state != NestedScrollState.ANIMATION -> false
-            type == ViewCompat.TYPE_TOUCH -> {
+        return when (type) {
+            ViewCompat.TYPE_NON_TOUCH -> false
+            ViewCompat.TYPE_TOUCH -> {
                 when (scrollAxis) {
                     ViewCompat.SCROLL_AXIS_VERTICAL -> {
                         val s = if ((v.scrollY < 0 && scroll < 0) || (v.scrollY > 0 && scroll > 0)) {

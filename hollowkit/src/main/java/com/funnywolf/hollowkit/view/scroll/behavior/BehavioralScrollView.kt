@@ -26,6 +26,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3, NestedScr
     /**
      * 当前的可滚动方向
      */
+    @ViewCompat.ScrollAxis
     var scrollAxis: Int = ViewCompat.SCROLL_AXIS_NONE
         private set
 
@@ -205,7 +206,6 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3, NestedScr
         return when (e.action) {
             // down 时不拦截，但需要记录触点位置，寻找触点位置的 child 和垂直滚动的 target
             MotionEvent.ACTION_DOWN -> {
-                startNestedScroll(scrollAxis, ViewCompat.TYPE_TOUCH)
                 lastX = e.rawX
                 lastY = e.rawY
                 // 如果子 view 有重叠的情况，这里记录的 target 并不完全准确，不过这里只做为是否拦截事件的判断
@@ -244,43 +244,48 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3, NestedScr
             return it
         }
         when (e.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    velocityTracker.addMovement(e)
-                    lastX = e.rawX
-                    lastY = e.rawY
-                    // down 时分发开始 nested scroll
-                    startNestedScroll(scrollAxis, ViewCompat.TYPE_TOUCH)
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    velocityTracker.addMovement(e)
-                    val dx = (lastX - e.rawX).toInt()
-                    val dy = (lastY - e.rawY).toInt()
-                    lastX = e.rawX
-                    lastY = e.rawY
-                    // 不再 dragging 状态时判断是否要进行拖拽
-                    if (state != NestedScrollState.DRAGGING) {
-                        val canDrag = when (scrollAxis) {
-                            ViewCompat.SCROLL_AXIS_HORIZONTAL -> abs(dx) > abs(dy)
-                            ViewCompat.SCROLL_AXIS_VERTICAL -> abs(dx) < abs(dy)
-                            else -> false
-                        }
-                        if (canDrag) {
-                            state = NestedScrollState.DRAGGING
-                            parent?.requestDisallowInterceptTouchEvent(true)
-                        }
+            MotionEvent.ACTION_DOWN -> {
+                velocityTracker.addMovement(e)
+                lastX = e.rawX
+                lastY = e.rawY
+            }
+            MotionEvent.ACTION_MOVE -> {
+                velocityTracker.addMovement(e)
+                val dx = (lastX - e.rawX).toInt()
+                val dy = (lastY - e.rawY).toInt()
+                lastX = e.rawX
+                lastY = e.rawY
+                // 不再 dragging 状态时判断是否要进行拖拽
+                if (state != NestedScrollState.DRAGGING) {
+                    val canDrag = when (scrollAxis) {
+                        ViewCompat.SCROLL_AXIS_HORIZONTAL -> abs(dx) > abs(dy)
+                        ViewCompat.SCROLL_AXIS_VERTICAL -> abs(dx) < abs(dy)
+                        else -> false
                     }
-                    // move 时计算并分发滚动量
-                    if (state == NestedScrollState.DRAGGING) {
-                        dispatchScrollFromSelf(dx, dy, ViewCompat.TYPE_TOUCH)
+                    if (canDrag) {
+                        startNestedScroll(scrollAxis, ViewCompat.TYPE_TOUCH)
+                        state = NestedScrollState.DRAGGING
+                        parent?.requestDisallowInterceptTouchEvent(true)
                     }
                 }
-                MotionEvent.ACTION_UP -> {
-                    velocityTracker.addMovement(e)
-                    velocityTracker.computeCurrentVelocity(1000)
-                    fling(-velocityTracker.xVelocity, -velocityTracker.yVelocity)
-                    velocityTracker.clear()
+                // dragging 时计算并分发滚动量
+                if (state == NestedScrollState.DRAGGING) {
+                    dispatchScrollFromSelf(dx, dy, ViewCompat.TYPE_TOUCH)
                 }
             }
+            MotionEvent.ACTION_UP -> {
+                stopNestedScroll(ViewCompat.TYPE_TOUCH)
+                velocityTracker.addMovement(e)
+                velocityTracker.computeCurrentVelocity(1000)
+                val vx = -velocityTracker.xVelocity
+                val vy = -velocityTracker.yVelocity
+                if (!dispatchNestedPreFling(vx, vy)) {
+                    dispatchNestedFling(vx, vy, true)
+                    fling(vx, vy)
+                }
+                velocityTracker.clear()
+            }
+        }
         return true
     }
 
@@ -392,11 +397,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3, NestedScr
     }
 
     override fun onStartNestedScroll(child: View, target: View, axes: Int, type: Int): Boolean {
-        return when (scrollAxis) {
-            ViewCompat.SCROLL_AXIS_HORIZONTAL -> (axes and ViewCompat.SCROLL_AXIS_HORIZONTAL) != 0
-            ViewCompat.SCROLL_AXIS_VERTICAL -> (axes and ViewCompat.SCROLL_AXIS_VERTICAL) != 0
-            else -> false
-        }
+        return (axes and scrollAxis) != 0
     }
 
     override fun onNestedScrollAccepted(child: View, target: View, axes: Int) {
@@ -498,6 +499,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3, NestedScr
         lastY = 0F
         // 这里不区分滚动方向，在分发滚动量的时候会处理
         scroller.abortAnimation()
+        stopNestedScroll(ViewCompat.TYPE_NON_TOUCH)
         scroller.startScroll(
             lastX.toInt(), lastY.toInt(),
             scroll - scrollX, scroll - scrollY,
@@ -507,20 +509,32 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3, NestedScr
     }
 
     override fun computeScroll() {
-        if (scroller.computeScrollOffset()) {
-            val dx = (scroller.currX - lastX).toInt()
-            val dy = (scroller.currY - lastY).toInt()
-            lastX = scroller.currX.toFloat()
-            lastY = scroller.currY.toFloat()
-            dispatchScrollFromSelf(dx, dy, ViewCompat.TYPE_NON_TOUCH)
-            invalidate()
-        } else if (state == NestedScrollState.ANIMATION || state == NestedScrollState.FLING) {
-            state = NestedScrollState.NONE
+        when {
+            scroller.computeScrollOffset() -> {
+                val dx = (scroller.currX - lastX).toInt()
+                val dy = (scroller.currY - lastY).toInt()
+                lastX = scroller.currX.toFloat()
+                lastY = scroller.currY.toFloat()
+                // 不分发来自动画的滚动
+                if (state == NestedScrollState.ANIMATION) {
+                    scrollBy(dx, dy)
+                } else {
+                    dispatchScrollFromSelf(dx, dy, ViewCompat.TYPE_NON_TOUCH)
+                }
+                invalidate()
+            }
+            state == NestedScrollState.ANIMATION -> {
+                state = NestedScrollState.NONE
+            }
+            state == NestedScrollState.FLING -> {
+                state = NestedScrollState.NONE
+                stopNestedScroll(ViewCompat.TYPE_NON_TOUCH)
+            }
         }
     }
 
     /**
-     * 分发来自自身 touch 事件、fling 或动画的滚动量
+     * 分发来自自身 touch 事件或 fling 的滚动量
      * -> dispatchNestedPreScroll
      * -> handleScrollSelf
      * -> dispatchNestedScroll
@@ -556,6 +570,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3, NestedScr
      * 分发来自子 view pre scroll 的滚动量
      * -> dispatchNestedPreScroll
      * -> scrollSelfFirst
+     * -> handleScrollSelf
      */
     private fun dispatchNestedPreScrollFromChild(
         dx: Int,
@@ -743,7 +758,7 @@ annotation class NestedScrollState {
          */
         const val DRAGGING = 1
         /**
-         * 正在动画
+         * 正在动画，动画产生的滚动不会被分发
          */
         const val ANIMATION = 2
         /**

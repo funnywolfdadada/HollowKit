@@ -87,10 +87,10 @@ class BottomSheetBehavior(
     }
 
     override fun handleTouchEvent(v: BehavioralScrollView, e: MotionEvent): Boolean? {
-        return if (prevView?.isUnder(e.rawX, e.rawY) != true) {
-            null
-        } else {
+        return if (prevView?.isUnder(e.rawX, e.rawY) == true) {
             false
+        } else {
+            null
         }
     }
 
@@ -107,7 +107,7 @@ class BottomSheetBehavior(
         scroll: Int,
         @ViewCompat.NestedScrollType type: Int
     ): Boolean? {
-        return if (type == ViewCompat.TYPE_NON_TOUCH && v.state != NestedScrollState.ANIMATION) {
+        return if (type == ViewCompat.TYPE_NON_TOUCH) {
             true
         } else {
             null

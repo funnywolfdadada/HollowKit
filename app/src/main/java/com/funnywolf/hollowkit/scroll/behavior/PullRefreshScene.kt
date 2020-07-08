@@ -25,7 +25,7 @@ class PullRefreshScene: UserVisibleHintGroupScene() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): ViewGroup {
         val context = inflater.context
         val rv = RecyclerView(context).apply {
-            simpleInit(55, westWorldHolderBackgroundColor)
+            simpleInit(555, westWorldHolderBackgroundColor)
         }
         val behavior = PullRefreshBehavior(rv) {
             postDelayed(Runnable {

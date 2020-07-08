@@ -85,7 +85,9 @@ class PullRefreshBehavior(
             // 防止动画被打断
             v.state == NestedScrollState.ANIMATION -> false
             // 抬手时，如果头部已经滚出来了，且未刷新，则根据滚出的距离设置刷新状态
-            e.action == MotionEvent.ACTION_UP && v.scrollY != 0 && !isRefreshing -> {
+            (e.action == MotionEvent.ACTION_UP || e.action == MotionEvent.ACTION_CANCEL)
+                    && v.scrollY != 0
+                    && !isRefreshing -> {
                 isRefreshing = abs(v.scrollY) > refreshView.refreshHeight
                 true
             }
@@ -96,10 +98,8 @@ class PullRefreshBehavior(
     override fun scrollSelfFirst(v: BehavioralScrollView, scroll: Int, type: Int): Boolean {
         val handle = when {
             !enable -> false
-            // 动画造成的滚动，自己优先处理
-            v.state == NestedScrollState.ANIMATION -> type == ViewCompat.TYPE_NON_TOUCH
-            // 不在动画过程中，只在自身发生滚动，且不在刷新过程中，即拖拽头部 view 的过程中，优先自己处理
-            type == ViewCompat.TYPE_TOUCH -> v.scrollY != 0 && !isRefreshing
+            // 只在自身发生滚动，且不在刷新过程中，即拖拽头部 view 的过程中，优先自己处理
+            type == ViewCompat.TYPE_TOUCH && v.scrollY != 0 && !isRefreshing -> true
             else -> false
         }
         v.log("scrollSelfFirst $handle, state = ${v.state}, type = $type, isRefreshing = $isRefreshing")
@@ -109,12 +109,8 @@ class PullRefreshBehavior(
     override fun handleScrollSelf(v: BehavioralScrollView, scroll: Int, type: Int): Boolean? {
         val handle = when {
             !enable -> false
-            // 不拦截动画中的 non touch 滚动量
-            v.state == NestedScrollState.ANIMATION -> if (type == ViewCompat.TYPE_NON_TOUCH) {
-                null
-            } else {
-                false
-            }
+            // 不处理 non touch 滚动量
+            type == ViewCompat.TYPE_NON_TOUCH -> false
             // touch 类型的滚动都要拦下来
             type == ViewCompat.TYPE_TOUCH -> if (isRefreshing) {
                 // 刷新中就不再滚动自身

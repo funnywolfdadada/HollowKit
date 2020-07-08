@@ -51,11 +51,7 @@ class CollapsingHeaderBehavior(
             } else {
                 false
             }
-            type == ViewCompat.TYPE_NON_TOUCH -> if (v.state == NestedScrollState.ANIMATION) {
-                null
-            } else {
-                false
-            }
+            type == ViewCompat.TYPE_NON_TOUCH -> false
             else -> null
         }
     }
