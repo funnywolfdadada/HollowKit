@@ -94,7 +94,7 @@ class BottomSheetBehavior(
         }
     }
 
-    override fun scrollSelfFirst(
+    override fun handleNestedPreScrollFirst(
         v: BehavioralScrollView,
         scroll: Int,
         @ViewCompat.NestedScrollType type: Int

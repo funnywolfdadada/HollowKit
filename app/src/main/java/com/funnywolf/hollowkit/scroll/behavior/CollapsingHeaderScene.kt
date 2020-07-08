@@ -57,33 +57,44 @@ class CollapsingHeaderScene: UserVisibleHintGroupScene() {
             simpleInit(55, westWorldHolderBackgroundColor)
         }
         val enableOverScroll = false
-        val collapsingHeader = BehavioralScrollView(context).apply {
-            setupBehavior(CollapsingHeaderBehavior(rv, headerView, enableOverScroll))
-            onScrollChangedListeners.add {
-                val sy = it.scrollY.toFloat()
-                toolbar.process = sy / headerHeight
-                headerView.alpha = if (sy < 0) { 0F } else { sy / headerHeight }
-                headerBgView.layoutParams?.also { lp ->
-                    lp.height = headerBgHeight - it.scrollY
-                    headerBgView.requestLayout()
-                }
-            }
-        }
-        val contentView = FrameLayout(context).apply {
-            addView(headerBgView)
-            addView(collapsingHeader)
-            addView(toolbar)
-        }
-        return BehavioralScrollView(context).apply {
+
+        val refresh = BehavioralScrollView(context)
+
+        val collapsingHeader = BehavioralScrollView(context)
+
+        refresh.apply {
             enableLog = true
             isEnabled = !enableOverScroll
-            setupBehavior(PullRefreshBehavior(contentView) {
+            setupBehavior(PullRefreshBehavior(rv) {
                 postDelayed(2000) {
                     it.isRefreshing = false
                 }
             }.apply {
                 refreshView.loadingView.colorFilter = PorterDuffColorFilter(westWorldHolderBackgroundColor, PorterDuff.Mode.SRC_IN)
             })
+            onScrollChangedListeners.add {
+                headerBgView.layoutParams?.also { lp ->
+                    lp.height = headerBgHeight - collapsingHeader.scrollY - refresh.scrollY
+                    headerBgView.requestLayout()
+                }
+            }
+        }
+        collapsingHeader.apply {
+            setupBehavior(CollapsingHeaderBehavior(refresh, headerView, enableOverScroll))
+            onScrollChangedListeners.add {
+                val sy = it.scrollY.toFloat()
+                toolbar.process = sy / headerHeight
+                headerView.alpha = if (sy < 0) { 0F } else { sy / headerHeight }
+                headerBgView.layoutParams?.also { lp ->
+                    lp.height = headerBgHeight - collapsingHeader.scrollY - refresh.scrollY
+                    headerBgView.requestLayout()
+                }
+            }
+        }
+        return FrameLayout(context).apply {
+            addView(headerBgView)
+            addView(collapsingHeader)
+            addView(toolbar)
         }
     }
 

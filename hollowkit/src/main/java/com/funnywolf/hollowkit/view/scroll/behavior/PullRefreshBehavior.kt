@@ -95,15 +95,23 @@ class PullRefreshBehavior(
         }
     }
 
-    override fun scrollSelfFirst(v: BehavioralScrollView, scroll: Int, type: Int): Boolean {
+    override fun handleNestedPreScrollFirst(v: BehavioralScrollView, scroll: Int, type: Int): Boolean? {
         val handle = when {
-            !enable -> false
+            !enable -> null
             // 只在自身发生滚动，且不在刷新过程中，即拖拽头部 view 的过程中，优先自己处理
             type == ViewCompat.TYPE_TOUCH && v.scrollY != 0 && !isRefreshing -> true
-            else -> false
+            else -> null
         }
-        v.log("scrollSelfFirst $handle, state = ${v.state}, type = $type, isRefreshing = $isRefreshing")
+        v.log("handleNestedPreScrollFirst $handle, state = ${v.state}, type = $type, isRefreshing = $isRefreshing")
         return handle
+    }
+
+    override fun handleNestedScrollFirst(
+        v: BehavioralScrollView,
+        scroll: Int,
+        type: Int
+    ): Boolean? {
+        return false
     }
 
     override fun handleScrollSelf(v: BehavioralScrollView, scroll: Int, type: Int): Boolean? {

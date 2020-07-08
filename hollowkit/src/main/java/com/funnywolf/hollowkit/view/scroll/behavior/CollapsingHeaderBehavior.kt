@@ -35,8 +35,20 @@ class CollapsingHeaderBehavior(
         return super.handleDispatchTouchEvent(v, e)
     }
 
-    override fun scrollSelfFirst(v: BehavioralScrollView, scroll: Int, type: Int): Boolean {
-        return isOverScroll(v, scroll) || scroll > 0
+    override fun handleNestedPreScrollFirst(v: BehavioralScrollView, scroll: Int, type: Int): Boolean? {
+        return if (isOverScroll(v, scroll) || scroll > 0) {
+            false
+        } else {
+            null
+        }
+    }
+
+    override fun handleNestedScrollFirst(
+        v: BehavioralScrollView,
+        scroll: Int,
+        type: Int
+    ): Boolean? {
+        return true
     }
 
     override fun handleScrollSelf(v: BehavioralScrollView, scroll: Int, type: Int): Boolean? {
