@@ -6,14 +6,13 @@ import android.util.AttributeSet
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.Space
 import androidx.core.view.ViewCompat
 import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.utils.dp
 import java.lang.ref.WeakReference
-import kotlin.math.abs
 
 /**
  * 下拉刷新
@@ -22,7 +21,7 @@ import kotlin.math.abs
  * @since 2020/6/14
  */
 class PullRefreshBehavior(
-    override val midView: View,
+    contentView: View,
     private var refreshListener: ((PullRefreshBehavior)->Unit)? = null
 ) : NestedScrollBehavior {
 
@@ -40,7 +39,9 @@ class PullRefreshBehavior(
                 refreshListener?.invoke(this)
             }
             field = value
-            bsvRef?.get()?.smoothScrollTo(if (value) { -refreshView.height / 2 } else { 0 })
+            bsvRef?.get()?.also {
+                it.smoothScrollTo(if (value) { 0 } else { it.maxScroll })
+            }
             if (value) {
                 refreshView.loadingView.alpha = 1F
                 refreshView.animator.start()
@@ -48,6 +49,16 @@ class PullRefreshBehavior(
                 refreshView.animator.cancel()
             }
         }
+
+    private val refreshHeight = 72.dp
+
+    val refreshView = RefreshView(contentView.context).also {
+        it.layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, refreshHeight)
+        it.loadingView.layoutParams?.also { lp ->
+            lp.height = refreshHeight / 2
+            lp.width = refreshHeight / 2
+        }
+    }
 
     private var process: Float = 0F
         set(value) {
@@ -60,21 +71,21 @@ class PullRefreshBehavior(
             refreshView.loadingView.rotation = process * 3 * 360
         }
 
-    val refreshView = RefreshView(midView.context).also {
-        it.layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT)
-    }
-
     private var bsvRef: WeakReference<BehavioralScrollView>? = null
     private val onScrollChanged: (BehavioralScrollView)->Unit = {
-        process = abs(it.currProcess())
+        process = (it.maxScroll - it.scrollY) / refreshHeight.toFloat()
     }
 
     override val scrollAxis: Int = ViewCompat.SCROLL_AXIS_VERTICAL
-    override val prevView: View? = refreshView
-    override val nextView: View? = null
+    override val prevView: View? = Space(contentView.context).also {
+        it.layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, refreshHeight)
+    }
+    override val midView: View = refreshView
+    override val nextView: View? = contentView
 
     override fun afterLayout(v: BehavioralScrollView) {
         super.afterLayout(v)
+        v.scrollTo(0, v.maxScroll)
         bsvRef = WeakReference(v)
         v.onScrollChangedListeners.add(onScrollChanged)
     }
@@ -86,9 +97,9 @@ class PullRefreshBehavior(
             v.state == NestedScrollState.ANIMATION -> false
             // 抬手时，如果头部已经滚出来了，且未刷新，则根据滚出的距离设置刷新状态
             (e.action == MotionEvent.ACTION_UP || e.action == MotionEvent.ACTION_CANCEL)
-                    && v.scrollY != 0
+                    && v.scrollY < v.maxScroll
                     && !isRefreshing -> {
-                isRefreshing = abs(v.scrollY) > refreshView.refreshHeight
+                isRefreshing = v.scrollY < 0
                 true
             }
             else -> null
@@ -99,7 +110,7 @@ class PullRefreshBehavior(
         val handle = when {
             !enable -> null
             // 只在自身发生滚动，且不在刷新过程中，即拖拽头部 view 的过程中，优先自己处理
-            type == ViewCompat.TYPE_TOUCH && v.scrollY != 0 && !isRefreshing -> true
+            v.scrollY < v.maxScroll -> true
             else -> null
         }
         v.log("handleNestedPreScrollFirst $handle, state = ${v.state}, type = $type, isRefreshing = $isRefreshing")
@@ -117,13 +128,15 @@ class PullRefreshBehavior(
     override fun handleScrollSelf(v: BehavioralScrollView, scroll: Int, type: Int): Boolean? {
         val handle = when {
             !enable -> false
+            isRefreshing -> if (v.scrollY < 0 || (v.scrollY == 0 && scroll < 0)) {
+                false
+            } else {
+                null
+            }
             // 不处理 non touch 滚动量
             type == ViewCompat.TYPE_NON_TOUCH -> false
             // touch 类型的滚动都要拦下来
-            type == ViewCompat.TYPE_TOUCH -> if (isRefreshing) {
-                // 刷新中就不再滚动自身
-                false
-            } else {
+            type == ViewCompat.TYPE_TOUCH -> {
                 // 不再刷新中的就滚动自身，根据滚动方向决定是否添加阻尼效果
                 v.scrollBy(0, scroll / if (scroll < 0) { 2 } else { 1 })
                 true
@@ -143,8 +156,6 @@ class RefreshView @JvmOverloads constructor(
 
     val loadingView = ImageView(context)
 
-    val refreshHeight = (36 * 2).dp
-
     val animator: ValueAnimator = ValueAnimator.ofFloat(0F, 360F).apply {
         repeatCount = ValueAnimator.INFINITE
         repeatMode = ValueAnimator.RESTART
@@ -154,12 +165,9 @@ class RefreshView @JvmOverloads constructor(
     }
 
     init {
-        layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, refreshHeight * 2)
-        setPadding(0, refreshHeight, 0, 0)
         loadingView.setImageResource(R.drawable.ic_loading)
-        loadingView.setPadding(refreshHeight / 4, refreshHeight / 4, refreshHeight / 4, refreshHeight / 4)
-        addView(loadingView, LayoutParams(refreshHeight, refreshHeight).also {
-            it.gravity = Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM
+        addView(loadingView, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).also {
+            it.gravity = Gravity.CENTER
         })
     }
 

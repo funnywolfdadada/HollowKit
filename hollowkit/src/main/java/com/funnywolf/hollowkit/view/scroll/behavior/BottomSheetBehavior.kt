@@ -98,8 +98,20 @@ class BottomSheetBehavior(
         v: BehavioralScrollView,
         scroll: Int,
         @ViewCompat.NestedScrollType type: Int
-    ): Boolean {
-        return v.scrollY != 0
+    ): Boolean? {
+        return if (v.scrollY != 0) {
+            true
+        } else {
+            null
+        }
+    }
+
+    override fun handleNestedScrollFirst(
+        v: BehavioralScrollView,
+        scroll: Int,
+        type: Int
+    ): Boolean? {
+        return true
     }
 
     override fun handleScrollSelf(

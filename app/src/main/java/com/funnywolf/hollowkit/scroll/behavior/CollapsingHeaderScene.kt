@@ -56,11 +56,19 @@ class CollapsingHeaderScene: UserVisibleHintGroupScene() {
         val rv = RecyclerView(context).apply {
             simpleInit(55, westWorldHolderBackgroundColor)
         }
+
         val enableOverScroll = false
 
         val refresh = BehavioralScrollView(context)
 
         val collapsingHeader = BehavioralScrollView(context)
+
+        val combinedListener: (BehavioralScrollView)->Unit = {
+            headerBgView.layoutParams?.also { lp ->
+                lp.height = headerBgHeight - collapsingHeader.scrollY + (refresh.maxScroll - refresh.scrollY)
+                headerBgView.requestLayout()
+            }
+        }
 
         refresh.apply {
             enableLog = true
@@ -70,14 +78,9 @@ class CollapsingHeaderScene: UserVisibleHintGroupScene() {
                     it.isRefreshing = false
                 }
             }.apply {
-                refreshView.loadingView.colorFilter = PorterDuffColorFilter(westWorldHolderBackgroundColor, PorterDuff.Mode.SRC_IN)
+                refreshView.loadingView.colorFilter = PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN)
             })
-            onScrollChangedListeners.add {
-                headerBgView.layoutParams?.also { lp ->
-                    lp.height = headerBgHeight - collapsingHeader.scrollY - refresh.scrollY
-                    headerBgView.requestLayout()
-                }
-            }
+            onScrollChangedListeners.add(combinedListener)
         }
         collapsingHeader.apply {
             setupBehavior(CollapsingHeaderBehavior(refresh, headerView, enableOverScroll))
@@ -85,10 +88,7 @@ class CollapsingHeaderScene: UserVisibleHintGroupScene() {
                 val sy = it.scrollY.toFloat()
                 toolbar.process = sy / headerHeight
                 headerView.alpha = if (sy < 0) { 0F } else { sy / headerHeight }
-                headerBgView.layoutParams?.also { lp ->
-                    lp.height = headerBgHeight - collapsingHeader.scrollY - refresh.scrollY
-                    headerBgView.requestLayout()
-                }
+                combinedListener(it)
             }
         }
         return FrameLayout(context).apply {

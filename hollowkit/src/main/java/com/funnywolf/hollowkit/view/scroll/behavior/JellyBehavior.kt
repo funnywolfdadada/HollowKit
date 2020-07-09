@@ -46,8 +46,20 @@ class JellyBehavior(
         return super.handleDispatchTouchEvent(v, e)
     }
 
-    override fun handleNestedPreScrollFirst(v: BehavioralScrollView, scroll: Int, type: Int): Boolean {
-        return selfScrolled(v)
+    override fun handleNestedPreScrollFirst(v: BehavioralScrollView, scroll: Int, type: Int): Boolean? {
+        return if(selfScrolled(v)) {
+            true
+        } else {
+            null
+        }
+    }
+
+    override fun handleNestedScrollFirst(
+        v: BehavioralScrollView,
+        scroll: Int,
+        type: Int
+    ): Boolean? {
+        return false
     }
 
     override fun handleScrollSelf(v: BehavioralScrollView, scroll: Int, type: Int): Boolean? {

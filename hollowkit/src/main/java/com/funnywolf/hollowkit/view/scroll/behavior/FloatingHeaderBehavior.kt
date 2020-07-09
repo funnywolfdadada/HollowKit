@@ -19,7 +19,7 @@ class FloatingHeaderBehavior(
     override val nextView: View? = contentView
 
     override fun handleNestedPreScrollFirst(v: BehavioralScrollView, scroll: Int, type: Int): Boolean? {
-        return false
+        return scroll < 0
     }
 
 }

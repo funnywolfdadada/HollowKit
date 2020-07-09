@@ -558,7 +558,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3, NestedScr
                 var consumedY = 0
                 dispatchNestedPreScrollInternal(dx, dy, consumed, type)
                 consumedY += consumed[1]
-                consumedY += handleScrollSelf(dx - consumedY, type)
+                consumedY += handleScrollSelf(dy - consumedY, type)
                 val consumedX = consumed[0]
                 // 复用数组
                 consumed[0] = 0
