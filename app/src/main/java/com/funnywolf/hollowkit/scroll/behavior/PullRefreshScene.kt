@@ -1,5 +1,6 @@
 package com.funnywolf.hollowkit.scroll.behavior
 
+import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
@@ -13,6 +14,7 @@ import com.funnywolf.hollowkit.utils.toast
 import com.funnywolf.hollowkit.utils.westWorldHolderBackgroundColor
 import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollView
 import com.funnywolf.hollowkit.view.scroll.behavior.PullRefreshBehavior
+import com.funnywolf.hollowkit.view.scroll.behavior.SwipeRefreshBehavior
 
 /**
  * 下拉刷新 demo
@@ -27,13 +29,13 @@ class PullRefreshScene: UserVisibleHintGroupScene() {
         val rv = RecyclerView(context).apply {
             simpleInit(555, westWorldHolderBackgroundColor)
         }
-        val behavior = PullRefreshBehavior(rv) {
+        val behavior = SwipeRefreshBehavior(rv) {
             postDelayed(Runnable {
                 context.toast("Refresh success")
                 it.isRefreshing = false
             }, 3000)
         }.apply {
-            refreshView.loadingView.colorFilter = PorterDuffColorFilter(westWorldHolderBackgroundColor, PorterDuff.Mode.SRC_IN)
+            refreshView.loadingView.colorFilter = PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC_IN)
         }
         return BehavioralScrollView(context).apply {
             enableLog = true

@@ -15,7 +15,7 @@ import com.funnywolf.hollowkit.utils.dp
 import java.lang.ref.WeakReference
 
 /**
- * 下拉刷新
+ * 有位移的下拉刷新
  *
  * @author https://github.com/funnywolfdadada
  * @since 2020/6/14
@@ -93,8 +93,6 @@ class PullRefreshBehavior(
     override fun handleDispatchTouchEvent(v: BehavioralScrollView, e: MotionEvent): Boolean? {
         return when {
             !enable -> null
-            // 防止动画被打断
-            v.state == NestedScrollState.ANIMATION -> false
             // 抬手时，如果头部已经滚出来了，且未刷新，则根据滚出的距离设置刷新状态
             (e.action == MotionEvent.ACTION_UP || e.action == MotionEvent.ACTION_CANCEL)
                     && v.scrollY < v.maxScroll
@@ -109,6 +107,7 @@ class PullRefreshBehavior(
     override fun handleNestedPreScrollFirst(v: BehavioralScrollView, scroll: Int, type: Int): Boolean? {
         val handle = when {
             !enable -> null
+            v.state == NestedScrollState.ANIMATION -> null
             // 只在自身发生滚动，且不在刷新过程中，即拖拽头部 view 的过程中，优先自己处理
             v.scrollY < v.maxScroll -> true
             else -> null
@@ -122,12 +121,17 @@ class PullRefreshBehavior(
         scroll: Int,
         type: Int
     ): Boolean? {
-        return false
+        return if (v.state == NestedScrollState.ANIMATION) {
+            null
+        } else {
+            false
+        }
     }
 
     override fun handleScrollSelf(v: BehavioralScrollView, scroll: Int, type: Int): Boolean? {
         val handle = when {
             !enable -> false
+            v.state == NestedScrollState.ANIMATION -> null
             isRefreshing -> if (v.scrollY < 0 || (v.scrollY == 0 && scroll < 0)) {
                 false
             } else {

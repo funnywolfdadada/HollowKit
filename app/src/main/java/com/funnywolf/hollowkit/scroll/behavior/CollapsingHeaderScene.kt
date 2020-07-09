@@ -21,6 +21,7 @@ import com.funnywolf.hollowkit.utils.westWorldHolderBackgroundColor
 import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollView
 import com.funnywolf.hollowkit.view.scroll.behavior.CollapsingHeaderBehavior
 import com.funnywolf.hollowkit.view.scroll.behavior.PullRefreshBehavior
+import com.funnywolf.hollowkit.view.scroll.behavior.SwipeRefreshBehavior
 
 /**
  * @author https://github.com/funnywolfdadada
