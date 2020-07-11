@@ -87,7 +87,7 @@ class BottomSheetBehavior(
     }
 
     override fun handleTouchEvent(v: BehavioralScrollView, e: MotionEvent): Boolean? {
-        return if (prevView?.isUnder(e.rawX, e.rawY) == true) {
+        return if (e.action ==MotionEvent.ACTION_DOWN && prevView?.isUnder(e.rawX, e.rawY) == true) {
             false
         } else {
             null
