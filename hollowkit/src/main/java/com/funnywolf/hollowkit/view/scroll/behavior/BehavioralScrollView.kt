@@ -11,6 +11,7 @@ import android.widget.FrameLayout
 import android.widget.Scroller
 import androidx.annotation.IntDef
 import androidx.core.view.*
+import com.funnywolf.hollowkit.utils.findChildUnder
 import com.funnywolf.hollowkit.utils.findHorizontalNestedScrollingTarget
 import com.funnywolf.hollowkit.utils.findVerticalNestedScrollingTarget
 import kotlin.math.abs
@@ -60,6 +61,19 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3, NestedScr
             }
         }
 
+
+    /**
+     * 当前发生嵌套滚动的直接子 view
+     */
+    var nestedScrollChild: View? = null
+        private set
+
+    /**
+     * 当前发生嵌套滚动的目标 view
+     */
+    var nestedScrollTarget: View? = null
+        private set
+
     var enableLog = false
 
     /**
@@ -69,8 +83,6 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3, NestedScr
 
     private var behavior: NestedScrollBehavior? = null
     private val children = arrayOfNulls<View>(3)
-
-    private var target: View? = null
 
     /**
      * 上次触摸事件的 x 值，或者 scroller.currX，用于处理自身的滑动事件或动画
@@ -208,8 +220,9 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3, NestedScr
             MotionEvent.ACTION_DOWN -> {
                 lastX = e.rawX
                 lastY = e.rawY
+                nestedScrollChild = findChildUnder(e.rawX, e.rawY)
                 // 如果子 view 有重叠的情况，这里记录的 target 并不完全准确，不过这里只做为是否拦截事件的判断
-                target = when (scrollAxis) {
+                nestedScrollTarget = when (scrollAxis) {
                     ViewCompat.SCROLL_AXIS_HORIZONTAL -> findHorizontalNestedScrollingTarget(e.rawX, e.rawY)
                     ViewCompat.SCROLL_AXIS_VERTICAL -> findVerticalNestedScrollingTarget(e.rawX, e.rawY)
                     else -> null
@@ -218,13 +231,13 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3, NestedScr
             }
             // move 时如果移动，且没有 target 就自己拦截
             MotionEvent.ACTION_MOVE -> when (scrollAxis) {
-                ViewCompat.SCROLL_AXIS_HORIZONTAL -> if (abs(e.rawX - lastX) > abs(e.rawY - lastY) && target == null) {
+                ViewCompat.SCROLL_AXIS_HORIZONTAL -> if (abs(e.rawX - lastX) > abs(e.rawY - lastY) && nestedScrollTarget == null) {
                     true
                 } else {
                     lastX = e.rawX
                     false
                 }
-                ViewCompat.SCROLL_AXIS_VERTICAL -> if (abs(e.rawY - lastY) > abs(e.rawX - lastX) && target == null) {
+                ViewCompat.SCROLL_AXIS_VERTICAL -> if (abs(e.rawY - lastY) > abs(e.rawX - lastX) && nestedScrollTarget == null) {
                     true
                 } else {
                     lastY = e.rawY
@@ -407,6 +420,8 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3, NestedScr
     override fun onNestedScrollAccepted(child: View, target: View, axes: Int, type: Int) {
         parentHelper.onNestedScrollAccepted(child, target, axes, type)
         startNestedScroll(axes, type)
+        nestedScrollChild = child
+        nestedScrollTarget = target
     }
 
     override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray) {
@@ -468,8 +483,8 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3, NestedScr
         return false
     }
 
-    override fun onStopNestedScroll(child: View) {
-        onStopNestedScroll(child, ViewCompat.TYPE_TOUCH)
+    override fun onStopNestedScroll(target: View) {
+        onStopNestedScroll(target, ViewCompat.TYPE_TOUCH)
     }
 
     override fun onStopNestedScroll(target: View, type: Int) {

@@ -1,15 +1,12 @@
 package com.funnywolf.hollowkit.scroll.behavior
 
 import android.graphics.Color
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
-import androidx.core.view.postDelayed
 import androidx.recyclerview.widget.RecyclerView
 import com.bytedance.scene.group.UserVisibleHintGroupScene
 import com.funnywolf.hollowkit.R
@@ -20,8 +17,6 @@ import com.funnywolf.hollowkit.utils.toast
 import com.funnywolf.hollowkit.utils.westWorldHolderBackgroundColor
 import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollView
 import com.funnywolf.hollowkit.view.scroll.behavior.CollapsingHeaderBehavior
-import com.funnywolf.hollowkit.view.scroll.behavior.PullRefreshBehavior
-import com.funnywolf.hollowkit.view.scroll.behavior.SwipeRefreshBehavior
 
 /**
  * @author https://github.com/funnywolfdadada
@@ -58,38 +53,19 @@ class CollapsingHeaderScene: UserVisibleHintGroupScene() {
             simpleInit(55, westWorldHolderBackgroundColor)
         }
 
-        val enableOverScroll = false
-
-        val refresh = BehavioralScrollView(context)
-
         val collapsingHeader = BehavioralScrollView(context)
 
-        val combinedListener: (BehavioralScrollView)->Unit = {
-            headerBgView.layoutParams?.also { lp ->
-                lp.height = headerBgHeight - collapsingHeader.scrollY + (refresh.maxScroll - refresh.scrollY)
-                headerBgView.requestLayout()
-            }
-        }
-
-        refresh.apply {
-            enableLog = true
-            isEnabled = !enableOverScroll
-            setupBehavior(PullRefreshBehavior(rv) {
-                postDelayed(2000) {
-                    it.isRefreshing = false
-                }
-            }.apply {
-                refreshView.loadingView.colorFilter = PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN)
-            })
-            onScrollChangedListeners.add(combinedListener)
-        }
         collapsingHeader.apply {
-            setupBehavior(CollapsingHeaderBehavior(refresh, headerView, enableOverScroll))
+            setupBehavior(CollapsingHeaderBehavior(rv, headerView))
             onScrollChangedListeners.add {
                 val sy = it.scrollY.toFloat()
                 toolbar.process = sy / headerHeight
                 headerView.alpha = if (sy < 0) { 0F } else { sy / headerHeight }
-                combinedListener(it)
+
+                headerBgView.layoutParams?.also { lp ->
+                    lp.height = headerBgHeight - collapsingHeader.scrollY
+                    headerBgView.requestLayout()
+                }
             }
         }
         return FrameLayout(context).apply {

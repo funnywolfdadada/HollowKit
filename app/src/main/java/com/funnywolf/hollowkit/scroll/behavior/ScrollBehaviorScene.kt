@@ -4,13 +4,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.LinearLayout
 import androidx.viewpager.widget.ViewPager
 import com.bytedance.scene.group.GroupScene
 import com.bytedance.scene.group.UserVisibleHintGroupScene
 import com.bytedance.scene.ui.GroupSceneUIUtility
-import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollView
 import com.funnywolf.hollowkit.view.scroll.behavior.FloatingHeaderBehavior
 import com.google.android.material.tabs.TabLayout
@@ -49,6 +46,8 @@ class ScrollBehaviorScene: GroupScene() {
         super.onViewCreated(view, savedInstanceState)
 
         val list = LinkedHashMap<String, UserVisibleHintGroupScene>().apply {
+            put("五级嵌套", ComplexBehaviorScene())
+            put("联动滚动", LinkedScrollScene())
             put("折叠头部", CollapsingHeaderScene())
             put("悬浮头部", FloatingHeaderScene())
             put("下拉刷新", PullRefreshScene())
