@@ -7,7 +7,7 @@ import android.widget.RatingBar
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
+import coil.api.load
 import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.douban.view.JellyLayout
 import com.funnywolf.hollowkit.utils.HolderInfo
@@ -76,7 +76,7 @@ class ActorViewHolder(v: View): SimpleHolder<Actor>(v) {
 
     override fun onBind(data: Actor) {
         super.onBind(data)
-        Glide.with(ivAvatar).load(data.avatar).into(ivAvatar)
+        ivAvatar.load(data.avatar)
         tvName?.text = data.name
         tvInfo?.text = data.info
     }
@@ -128,7 +128,7 @@ class PictureViewHolder(v: View): SimpleHolder<Picture>(v) {
 
     override fun onBind(data: Picture) {
         super.onBind(data)
-        Glide.with(imageView).load(data.pictureRes).into(imageView)
+        imageView.load(data.pictureRes)
         imageView.requestLayout()
     }
 }

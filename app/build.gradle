@@ -47,9 +47,7 @@ dependencies {
     implementation "com.bytedance.scene:scene-ui:${versions.scene}"
     implementation "com.bytedance.scene:scene-shared-element-animation:${versions.scene}"
     implementation "com.bytedance.scene:scene-ktx:${versions.scene}"
-
-    implementation "com.github.bumptech.glide:glide:${versions.glide}"
-    annotationProcessor "com.github.bumptech.glide:compiler:${versions.glide}"
+    implementation "io.coil-kt:coil:${versions.coil}"
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.0'
