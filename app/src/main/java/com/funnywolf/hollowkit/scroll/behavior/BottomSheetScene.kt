@@ -108,9 +108,13 @@ class BottomSheetScene: UserVisibleHintGroupScene() {
             requireActivity().windowManager.defaultDisplay.getRealSize(it)
             it.y
         }
-        return BehavioralScrollView(context).apply {
+        val bottomSheet = BehavioralScrollView(context).apply {
             enableLog = true
             setupBehavior(BottomSheetBehavior(f, BottomSheetBehavior.POSITION_MID, wh / 4, wh / 2))
+        }
+        return FrameLayout(context).apply {
+            addView(RecyclerView(context).apply { simpleInit(111) })
+            addView(bottomSheet)
         }
     }
 }

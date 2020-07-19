@@ -22,15 +22,9 @@ class LinkedScrollScene: UserVisibleHintGroupScene() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): ViewGroup {
         val context = inflater.context
         val rvTop = RecyclerView(context).apply {
-            layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT).apply {
-                bottomMargin = 100.dp
-            }
             simpleInit(55, westWorldHolderBackgroundColor)
         }
         val rvBottom = RecyclerView(context).apply {
-            layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT).apply {
-                bottomMargin = 100.dp
-            }
             simpleInit(55, defaultHolderBackgroundColor)
         }
         val content = BehavioralScrollView(context).apply {

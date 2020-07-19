@@ -35,6 +35,7 @@ class ScrollBehaviorScene: GroupScene() {
         }
         tabLayout = TabLayout(context).apply {
             id = View.generateViewId()
+            tabMode = TabLayout.MODE_SCROLLABLE
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
         return BehavioralScrollView(context).apply {
@@ -46,7 +47,7 @@ class ScrollBehaviorScene: GroupScene() {
         super.onViewCreated(view, savedInstanceState)
 
         val list = LinkedHashMap<String, UserVisibleHintGroupScene>().apply {
-            put("五级嵌套", ComplexBehaviorScene())
+            put("多级嵌套", ComplexBehaviorScene())
             put("联动滚动", LinkedScrollScene())
             put("折叠头部", CollapsingHeaderScene())
             put("悬浮头部", FloatingHeaderScene())

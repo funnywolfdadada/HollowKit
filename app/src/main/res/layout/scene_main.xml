@@ -31,7 +31,7 @@
 
     <Button
         android:id="@+id/bt_nested_scroll_behavior"
-        android:text="万能嵌套滚动"
+        android:text="嵌套滚动"
         android:background="#8FFF"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

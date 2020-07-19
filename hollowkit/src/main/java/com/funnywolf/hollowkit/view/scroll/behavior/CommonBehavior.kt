@@ -71,6 +71,6 @@ inline fun BehavioralScrollView.commonBehavior(
     midView: View,
     nextView: View?,
     init: CommonBehavior.()->Unit
-) {
-    setupBehavior(CommonBehavior(scrollAxis, prevView, midView, nextView).apply(init))
+): BehavioralScrollView {
+    return setupBehavior(CommonBehavior(scrollAxis, prevView, midView, nextView).apply(init))
 }

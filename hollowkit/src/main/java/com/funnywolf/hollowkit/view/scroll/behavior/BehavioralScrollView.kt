@@ -11,6 +11,7 @@ import android.widget.FrameLayout
 import android.widget.Scroller
 import androidx.annotation.IntDef
 import androidx.core.view.*
+import com.funnywolf.hollowkit.utils.constrains
 import com.funnywolf.hollowkit.utils.findChildUnder
 import com.funnywolf.hollowkit.utils.findHorizontalNestedScrollingTarget
 import com.funnywolf.hollowkit.utils.findVerticalNestedScrollingTarget
@@ -82,7 +83,9 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3, NestedScr
     var onScrollChangedListeners = HashSet<((BehavioralScrollView)->Unit)>()
 
     private var behavior: NestedScrollBehavior? = null
-    private val children = arrayOfNulls<View>(3)
+    private var prevView: View? = null
+    private var midView: View? = null
+    private var nextView: View? = null
 
     /**
      * 上次触摸事件的 x 值，或者 scroller.currX，用于处理自身的滑动事件或动画
@@ -114,13 +117,14 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3, NestedScr
     constructor(context: Context, attrs: AttributeSet?): super(context, attrs)
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int): super(context, attrs, defStyleAttr)
 
-    fun setupBehavior(behavior: NestedScrollBehavior?) {
+    fun setupBehavior(behavior: NestedScrollBehavior?): BehavioralScrollView {
         removeAllViews()
         this.behavior = behavior
         scrollAxis = behavior?.scrollAxis ?: ViewCompat.SCROLL_AXIS_NONE
-        children[0] = behavior?.prevView?.also { addView(it) }
-        children[1] = behavior?.midView?.also { addView(it) }
-        children[2] = behavior?.nextView?.also { addView(it) }
+        prevView = behavior?.prevView?.also { addView(it) }
+        midView = behavior?.midView?.also { addView(it) }
+        nextView = behavior?.nextView?.also { addView(it) }
+        return this
     }
 
     fun smoothScrollTo(dest: Int, duration: Int = 300) {
@@ -174,26 +178,29 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3, NestedScr
     }
 
     private fun layoutVertical() {
-        val t = children[1]?.top ?: 0
-        val b = children[1]?.bottom ?: 0
-        children[0]?.also {
+        // midView 位置不变
+        val t = midView?.top ?: 0
+        val b = midView?.bottom ?: 0
+        // prevView 移动到 midView 之上，bottom 和 midView 的 top 对齐
+        prevView?.also {
             it.offsetTopAndBottom(t - it.bottom)
             minScroll = it.top
         }
-        children[2]?.also {
+        // nextView 移动到 midView 之下，top 和 midView 的 bottom 对齐
+        nextView?.also {
             it.offsetTopAndBottom(b - it.top)
             maxScroll = it.bottom - height
         }
     }
 
     private fun layoutHorizontal() {
-        val l = children[1]?.left ?: 0
-        val r = children[1]?.right ?: 0
-        children[0]?.also {
+        val l = midView?.left ?: 0
+        val r = midView?.right ?: 0
+        prevView?.also {
             it.offsetLeftAndRight(l - it.right)
             minScroll = it.left
         }
-        children[2]?.also {
+        nextView?.also {
             it.offsetLeftAndRight(r - it.left)
             maxScroll = it.right - width
         }
@@ -216,7 +223,7 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3, NestedScr
 
     override fun onInterceptTouchEvent(e: MotionEvent): Boolean {
         return when (e.action) {
-            // down 时不拦截，但需要记录触点位置，寻找触点位置的 child 和垂直滚动的 target
+            // down 时不拦截，但需要记录触点位置，寻找触点位置的 child 和支持嵌套滚动的 target
             MotionEvent.ACTION_DOWN -> {
                 lastX = e.rawX
                 lastY = e.rawY
@@ -763,12 +770,6 @@ open class BehavioralScrollView : FrameLayout, NestedScrollingParent3, NestedScr
             scrollY < 0 -> newY.constrains(minScroll, 0)
             else -> newY.constrains(minScroll, maxScroll)
         } - scrollY
-    }
-
-    private fun Int.constrains(min: Int, max: Int): Int = when {
-        this < min -> min
-        this > max -> max
-        else -> this
     }
 
     override fun onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {

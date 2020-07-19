@@ -1,5 +1,6 @@
 package com.funnywolf.hollowkit.view.scroll.behavior
 
+import android.view.MotionEvent
 import android.view.View
 import androidx.core.view.ViewCompat
 
@@ -25,6 +26,15 @@ class LinkedScrollBehavior(
     private fun isChildTotalShowing(v: BehavioralScrollView): Boolean {
         val c = v.nestedScrollChild
         return c == null || (c.y - v.scrollY >= 0 && c.y + c.height - v.scrollY <= v.height)
+    }
+
+    override fun handleDispatchTouchEvent(v: BehavioralScrollView, e: MotionEvent): Boolean? {
+        // down 时需要把之前可能的 fling 停掉，这里通过分发一个 down 事件解决
+        if (e.action == MotionEvent.ACTION_DOWN) {
+            midView.dispatchTouchEvent(e)
+            nextView?.dispatchTouchEvent(e)
+        }
+        return super.handleDispatchTouchEvent(v, e)
     }
 
     override fun handleNestedPreScrollFirst(

@@ -32,6 +32,10 @@ class BottomSheetBehavior(
     private val midHeight: Int = minHeight
 ): NestedScrollBehavior {
     override val scrollAxis: Int = ViewCompat.SCROLL_AXIS_VERTICAL
+
+    /**
+     * 用于控制滚动范围
+     */
     override val prevView: View? = Space(contentView.context).also {
         val lp = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
         lp.topMargin = minHeight
@@ -41,11 +45,16 @@ class BottomSheetBehavior(
     override val midView: View = contentView
     override val nextView: View? = null
 
+    /**
+     * 中间高度 [POSITION_MID] 时 scrollY 的值
+     */
     private var midScroll = 0
     private var firstLayout = true
 
     override fun afterLayout(v: BehavioralScrollView) {
+        // 计算中间高度时的 scrollY
         midScroll = v.minScroll + midHeight - minHeight
+        // 第一次 layout 滚动到初始位置
         if (firstLayout) {
             firstLayout = false
             v.scrollTo(
@@ -64,8 +73,8 @@ class BottomSheetBehavior(
         e: MotionEvent
     ): Boolean? {
         if ((e.action == MotionEvent.ACTION_CANCEL || e.action == MotionEvent.ACTION_UP)
-            && v.scrollY != 0
-            && v.lastScrollDir != 0) {
+            && v.scrollY != 0) {
+            // 在 up 或 cancel 时，根据当前滚动位置和上次滚动的方向，决定动画的目标位置
             v.smoothScrollTo(
                 if (v.scrollY > midScroll) {
                     if (v.lastScrollDir > 0) {
@@ -87,7 +96,8 @@ class BottomSheetBehavior(
     }
 
     override fun handleTouchEvent(v: BehavioralScrollView, e: MotionEvent): Boolean? {
-        return if (e.action ==MotionEvent.ACTION_DOWN && prevView?.isUnder(e.rawX, e.rawY) == true) {
+        // down 事件触点在 prevView 上时不做处理
+        return if (e.action == MotionEvent.ACTION_DOWN && prevView?.isUnder(e.rawX, e.rawY) == true) {
             false
         } else {
             null
@@ -99,6 +109,7 @@ class BottomSheetBehavior(
         scroll: Int,
         @ViewCompat.NestedScrollType type: Int
     ): Boolean? {
+        // 只要 contentView 没有完全展开，就在子 View 滚动前处理
         return if (v.scrollY != 0) {
             true
         } else {
@@ -119,6 +130,7 @@ class BottomSheetBehavior(
         scroll: Int,
         @ViewCompat.NestedScrollType type: Int
     ): Boolean? {
+        // 只允许 touch 类型用于自身的滚动
         return if (type == ViewCompat.TYPE_NON_TOUCH) {
             true
         } else {
