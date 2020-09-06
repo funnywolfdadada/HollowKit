@@ -6,7 +6,7 @@ buildscript {
     repositories {
         google()
         jcenter()
-
+        mavenLocal()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.5.3'
@@ -15,6 +15,7 @@ buildscript {
         // in the individual module build.gradle files
 
         classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
+        classpath "com.funnywolf.plugin:classfilter:0.0.1"
     }
 }
 
@@ -22,7 +23,7 @@ allprojects {
     repositories {
         google()
         jcenter()
-
+        mavenLocal()
     }
 }
 

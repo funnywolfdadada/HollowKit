@@ -6,6 +6,8 @@ apply plugin: 'kotlin-android-extensions'
 
 apply from: '../version.gradle'
 
+apply plugin: 'classfilter'
+
 android {
     compileSdkVersion versions.compileSdk
     defaultConfig {

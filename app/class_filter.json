@@ -1,0 +1,6 @@
+{
+  "com.bytedance.scene:scene": [
+    "com/bytedance/scene/Scene.class",
+    "com/bytedance/scene/Scene$"
+  ]
+}

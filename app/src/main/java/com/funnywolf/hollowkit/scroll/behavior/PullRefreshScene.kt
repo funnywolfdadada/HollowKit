@@ -30,10 +30,11 @@ class PullRefreshScene: UserVisibleHintGroupScene() {
             simpleInit(555, westWorldHolderBackgroundColor)
         }
         val behavior = SwipeRefreshBehavior(rv) {
-            postDelayed(Runnable {
-                context.toast("Refresh success")
-                it.isRefreshing = false
-            }, 3000)
+//            postDelayed(Runnable {
+//                context.toast("Refresh success")
+//                it.isRefreshing = false
+//            }, 3000)
+//            Unit
         }.apply {
             refreshView.loadingView.colorFilter = PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.SRC_IN)
         }

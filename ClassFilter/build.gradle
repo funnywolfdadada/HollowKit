@@ -1,0 +1,21 @@
+apply plugin: 'java-library'
+apply plugin: 'kotlin'
+apply plugin: 'maven'
+
+dependencies {
+    implementation gradleApi()
+    implementation "com.android.tools.build:gradle:4.0.1"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.4.0"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9"
+}
+
+install {
+    repositories.mavenInstaller {
+        // 配置插件版本号
+        pom.version = '0.0.1'
+        // 配置插件标识
+        pom.artifactId = 'classfilter'
+        // 配置插件组织
+        pom.groupId = 'com.funnywolf.plugin'
+    }
+}
