@@ -21,15 +21,8 @@ class TestScene: Scene() {
         savedInstanceState: Bundle?
     ): View {
         val context = inflater.context
-        val list = ArrayList<Any>()
-        list.addAll(smallDemoCards(11))
-        list.addAll(middleDemoCards(11))
         val rv = RecyclerView(context).apply {
-            layoutManager = LinearLayoutManager(context)
-            adapter = SimpleAdapter(list)
-                .addHolderInfo(smallDemoCardInfo)
-                .addHolderInfo(middleDemoCardInfo)
-            setBackgroundColor(westWorldHolderBackgroundColor)
+
         }
         return rv
     }

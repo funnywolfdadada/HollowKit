@@ -96,9 +96,8 @@ interface LiveListSource<T> {
     fun clearAddAll(c: Collection<T>)
 }
 
-class LiveList<T>: LiveListSource<T> {
+class LiveList<T>(private val rawList: MutableList<T> = ArrayList()): LiveListSource<T> {
 
-    private val rawList: MutableList<T> = ArrayList()
     private var adapterRef: WeakReference<RecyclerView.Adapter<out RecyclerView.ViewHolder>>? = null
 
     override fun get(): List<T> = rawList

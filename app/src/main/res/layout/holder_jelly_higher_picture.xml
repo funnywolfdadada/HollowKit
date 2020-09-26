@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.funnywolf.hollowkit.view.scroll.behavior.JellyLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="100dp"
+    android:layout_height="150dp"
+    android:id="@+id/jelly"
+    >
+
+    <Space
+        android:layout_width="100dp"
+        android:layout_height="00dp"
+        />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <ImageView
+            android:id="@+id/image_view"
+            android:src="@drawable/poster_1917"
+            android:scaleType="centerCrop"
+            android:elevation="5dp"
+            android:layout_marginHorizontal="5dp"
+            android:layout_marginVertical="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/tv_delete"
+        android:text="删除"
+        android:gravity="top|center_horizontal"
+        android:paddingTop="10dp"
+        android:textSize="24sp"
+        android:textColor="#FFFF"
+        android:background="#FF00"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        />
+
+</com.funnywolf.hollowkit.view.scroll.behavior.JellyLayout>
