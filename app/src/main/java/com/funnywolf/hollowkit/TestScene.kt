@@ -4,16 +4,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Space
-import androidx.core.view.ViewCompat
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bytedance.scene.Scene
-import com.funnywolf.hollowkit.utils.dp
-import com.funnywolf.hollowkit.utils.simpleInit
-import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollView
-import com.funnywolf.hollowkit.view.scroll.behavior.SwipeRefreshBehavior
-import com.funnywolf.hollowkit.view.scroll.behavior.commonBehavior
+import com.funnywolf.hollowkit.utils.*
 
 /**
  * @author https://github.com/funnywolfdadada
@@ -27,33 +21,17 @@ class TestScene: Scene() {
         savedInstanceState: Bundle?
     ): View {
         val context = inflater.context
+        val list = ArrayList<Any>()
+        list.addAll(smallDemoCards(11))
+        list.addAll(middleDemoCards(11))
         val rv = RecyclerView(context).apply {
-            simpleInit()
+            layoutManager = LinearLayoutManager(context)
+            adapter = SimpleAdapter(list)
+                .addHolderInfo(smallDemoCardInfo)
+                .addHolderInfo(middleDemoCardInfo)
+            setBackgroundColor(westWorldHolderBackgroundColor)
         }
-//        val contentView = SwipeRefreshLayout(context).apply {
-//            addView(rv)
-//        }
-        val contentView = BehavioralScrollView(context)
-            .setupBehavior(SwipeRefreshBehavior(rv))
-        return BehavioralScrollView(context)
-            .commonBehavior(
-                ViewCompat.SCROLL_AXIS_VERTICAL,
-                Space(context).apply {
-                    layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 200.dp)
-                },
-                contentView,
-                null
-            ) {
-                handleNestedScrollFirst = { v, s, t -> true }
-                handleScrollSelf = { v, s, t ->
-                    if (v.canScrollVertically(s)) {
-                        v.scrollBy(0, s / 2)
-                        true
-                    } else {
-                        false
-                    }
-                }
-            }
+        return rv
     }
 
 }
