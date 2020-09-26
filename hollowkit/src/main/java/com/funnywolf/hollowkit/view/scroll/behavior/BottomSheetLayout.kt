@@ -1,103 +1,103 @@
 package com.funnywolf.hollowkit.view.scroll.behavior
 
+import android.content.Context
+import android.util.AttributeSet
 import android.view.MotionEvent
-import android.view.View
-import android.widget.Space
-import android.widget.FrameLayout.LayoutParams
 import androidx.core.view.ViewCompat
 import com.funnywolf.hollowkit.utils.isUnder
 
 /**
- * 底部浮层的 [NestedScrollBehavior]
+ * 底部弹层
  *
  * @author https://github.com/funnywolfdadada
- * @since 2020/5/17
+ * @since 2020/9/26
  */
-class BottomSheetBehavior(
-    /**
-     * 浮层的内容视图
-     */
-    contentView: View,
-    /**
-     * 初始位置，最低高度 [POSITION_MIN]、中间高度 [POSITION_MID] 或最大高度 [POSITION_MAX]
-     */
-    private val initPosition: Int,
-    /**
-     * 内容视图的最低显示高度
-     */
-    private val minHeight: Int,
-    /**
-     * 内容视图中间停留的显示高度，默认等于最低高度
-     */
-    private val midHeight: Int = minHeight
-): NestedScrollBehavior {
-    override val scrollAxis: Int = ViewCompat.SCROLL_AXIS_VERTICAL
+class BottomSheetLayout @JvmOverloads constructor(
+    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : BehavioralScrollView(context, attrs, defStyleAttr), NestedScrollBehavior {
 
-    /**
-     * 用于控制滚动范围
-     */
-    override val prevView: View? = Space(contentView.context).also {
-        val lp = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
-        lp.topMargin = minHeight
-        it.layoutParams = lp
-    }
-
-    override val midView: View = contentView
-    override val nextView: View? = null
+    private var firstLayout = true
 
     /**
      * 中间高度 [POSITION_MID] 时 scrollY 的值
      */
     private var midScroll = 0
-    private var firstLayout = true
 
-    override fun afterLayout(v: BehavioralScrollView) {
+    /**
+     * 初始位置，最低高度 [POSITION_MIN]、中间高度 [POSITION_MID] 或最大高度 [POSITION_MAX]
+     */
+    private var initPosition: Int = POSITION_MAX
+
+    /**
+     * 内容视图的最低显示高度
+     */
+    private var minHeight: Int = 0
+
+    /**
+     * 内容视图中间停留的显示高度，默认等于最低高度
+     */
+    private var midHeight: Int = 0
+
+    override var behavior: NestedScrollBehavior? = this
+
+    fun setup(initPosition: Int = POSITION_MAX, minHeight: Int = 0, midHeight: Int = minHeight) {
+        this.initPosition = initPosition
+        this.minHeight = minHeight
+        this.midHeight = midHeight
+        firstLayout = true
+        requestLayout()
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        midView = getChildAt(0)
+        super.onLayout(changed, left, top, right, bottom)
+    }
+
+    override fun afterLayout() {
+        minScroll = minHeight - height
         // 计算中间高度时的 scrollY
-        midScroll = v.minScroll + midHeight - minHeight
+        midScroll = minScroll + midHeight - minHeight
         // 第一次 layout 滚动到初始位置
         if (firstLayout) {
             firstLayout = false
-            v.scrollTo(
-                v.scrollX,
+            scrollTo(
+                scrollX,
                 when (initPosition) {
-                    POSITION_MIN -> v.minScroll
-                    POSITION_MAX -> v.maxScroll
+                    POSITION_MIN -> minScroll
+                    POSITION_MAX -> maxScroll
                     else -> midScroll
                 }
             )
         }
     }
 
-    override fun handleDispatchTouchEvent(
-        v: BehavioralScrollView,
-        e: MotionEvent
-    ): Boolean? {
+    override fun handleDispatchTouchEvent(e: MotionEvent): Boolean? {
         if ((e.action == MotionEvent.ACTION_CANCEL || e.action == MotionEvent.ACTION_UP)
-            && v.scrollY != 0) {
+            && lastScrollDir != 0) {
             // 在 up 或 cancel 时，根据当前滚动位置和上次滚动的方向，决定动画的目标位置
-            v.smoothScrollTo(
-                if (v.scrollY > midScroll) {
-                    if (v.lastScrollDir > 0) {
-                        v.maxScroll
+            smoothScrollTo(
+                if (scrollY > midScroll) {
+                    if (lastScrollDir > 0) {
+                        maxScroll
                     } else {
                         midScroll
                     }
                 } else {
-                    if (v.lastScrollDir > 0) {
+                    if (lastScrollDir > 0) {
                         midScroll
                     } else {
-                        v.minScroll
+                        minScroll
                     }
                 }
             )
             return true
         }
-        return super.handleDispatchTouchEvent(v, e)
+        return super.handleDispatchTouchEvent(e)
     }
 
-    override fun handleTouchEvent(v: BehavioralScrollView, e: MotionEvent): Boolean? {
-        // down 事件触点在 prevView 上时不做处理
-        return if (e.action == MotionEvent.ACTION_DOWN && prevView?.isUnder(e.rawX, e.rawY) == true) {
+    override fun handleTouchEvent(e: MotionEvent): Boolean? {
+        // down 事件触点不在 midView 上时不做处理
+        return if (e.action == MotionEvent.ACTION_DOWN && midView?.isUnder(e.rawX, e.rawY) != true) {
             false
         } else {
             null
@@ -105,12 +105,11 @@ class BottomSheetBehavior(
     }
 
     override fun handleNestedPreScrollFirst(
-        v: BehavioralScrollView,
         scroll: Int,
         @ViewCompat.NestedScrollType type: Int
     ): Boolean? {
         // 只要 contentView 没有完全展开，就在子 View 滚动前处理
-        return if (v.scrollY != 0) {
+        return if (scrollY != 0) {
             true
         } else {
             null
@@ -118,7 +117,6 @@ class BottomSheetBehavior(
     }
 
     override fun handleNestedScrollFirst(
-        v: BehavioralScrollView,
         scroll: Int,
         type: Int
     ): Boolean? {
@@ -126,7 +124,6 @@ class BottomSheetBehavior(
     }
 
     override fun handleScrollSelf(
-        v: BehavioralScrollView,
         scroll: Int,
         @ViewCompat.NestedScrollType type: Int
     ): Boolean? {
@@ -143,4 +140,5 @@ class BottomSheetBehavior(
         const val POSITION_MID = 2
         const val POSITION_MAX = 3
     }
+
 }
