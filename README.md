@@ -7,13 +7,13 @@
 `BehaviorScrollView` 是对嵌套滚动共性逻辑的封装，实现了对 touch 事件、嵌套滚动和 fling 的拦截和处理的通用逻辑，支持多级嵌套和水平垂直切换。方便复用和扩展，可以十分轻松地实现底部弹层、下拉刷新、下拉二楼、划动删除等嵌套滚动场景。  
 
 - 底部弹层和联动：  
-![image](https://github.com/funnywolfdadada/HollowKit/blob/master/screenshot/linkage.gif)  
+![底部弹层和联动](https://gitee.com/funnywolfdadada/HollowKit/blob/master/screenshot/linkage.gif)  
 
 - 下拉二楼：  
-![image](https://github.com/funnywolfdadada/HollowKit/blob/master/screenshot/second_floor.gif)  
+![下拉二楼](https://gitee.com/funnywolfdadada/HollowKit/blob/master/screenshot/second_floor.gif)  
 
 - 滑动展开和删除：  
-![image](https://github.com/funnywolfdadada/HollowKit/blob/master/screenshot/jelly.gif)  
+![滑动展开和删除](https://gitee.com/funnywolfdadada/HollowKit/blob/master/screenshot/jelly.gif)  
 
 
 ### 2、[仿写豆瓣详情页](https://juejin.im/post/6844904137713270797)
