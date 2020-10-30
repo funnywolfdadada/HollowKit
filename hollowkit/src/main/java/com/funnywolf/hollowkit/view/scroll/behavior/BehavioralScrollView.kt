@@ -169,6 +169,10 @@ abstract class BehavioralScrollView @JvmOverloads constructor(
             else -> {}
         }
         behavior?.afterLayout()
+
+        // 重新 layout 后，滚动范围可能已经变了，当前的滚动量可能超范围了
+        // 需要重新矫正，scrollBy 内部会进行滚动范围的矫正
+        scrollBy(0, 0)
     }
 
     private fun layoutVertical() {
