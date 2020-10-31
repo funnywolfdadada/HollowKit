@@ -17,3 +17,5 @@ versions.rxjava = '2.2.8'
 versions.rxandroid = '2.1.1'
 versions.scene = '1.0.4'
 versions.coil = '0.11.0'
+
+versions.coroutines = '1.3.9'

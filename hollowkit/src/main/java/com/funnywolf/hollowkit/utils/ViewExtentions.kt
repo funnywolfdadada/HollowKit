@@ -132,6 +132,12 @@ fun View.setRoundRect(radius: Float) {
     }
 }
 
+fun View.setLayoutSize(layoutWidth: Int, layoutHeight: Int) {
+    layoutParams?.width = layoutWidth
+    layoutParams?.height = layoutHeight
+    requestLayout()
+}
+
 fun Int.constrains(min: Int, max: Int): Int = when {
     this < min -> min
     this > max -> max

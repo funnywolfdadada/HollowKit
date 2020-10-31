@@ -49,6 +49,8 @@ dependencies {
     implementation "com.bytedance.scene:scene-ktx:${versions.scene}"
     implementation "io.coil-kt:coil:${versions.coil}"
 
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${versions.coroutines}"
+
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
