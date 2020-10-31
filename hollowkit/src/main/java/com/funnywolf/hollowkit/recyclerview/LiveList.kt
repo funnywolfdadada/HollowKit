@@ -98,11 +98,11 @@ interface LiveListSource<T> {
 
 class LiveList<T>(private val rawList: MutableList<T> = ArrayList()): LiveListSource<T> {
 
-    private var adapterRef: WeakReference<RecyclerView.Adapter<out RecyclerView.ViewHolder>>? = null
+    private var adapterRef: WeakReference<RecyclerView.Adapter<*>>? = null
 
     override fun get(): List<T> = rawList
 
-    override fun bind(adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>) {
+    override fun bind(adapter: RecyclerView.Adapter<*>) {
         adapterRef = WeakReference(adapter)
     }
 

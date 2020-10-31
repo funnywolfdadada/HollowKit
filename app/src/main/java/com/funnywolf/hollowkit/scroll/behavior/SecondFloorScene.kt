@@ -3,6 +3,7 @@ package com.funnywolf.hollowkit.scroll.behavior
 import android.content.Context
 import android.os.Bundle
 import android.util.AttributeSet
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -14,6 +15,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bytedance.scene.group.UserVisibleHintGroupScene
 
 import com.funnywolf.hollowkit.R
+import com.funnywolf.hollowkit.recyclerview.onReachEnd
+import com.funnywolf.hollowkit.recyclerview.onReachStart
 import com.funnywolf.hollowkit.utils.*
 import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollView
 import com.funnywolf.hollowkit.view.scroll.behavior.NestedScrollBehavior
@@ -39,6 +42,14 @@ class SecondFloorScene: UserVisibleHintGroupScene() {
 
         val rv1 = view.findViewById<RecyclerView>(R.id.rv1)
         val rv2 = view.findViewById<RecyclerView>(R.id.rv2)
+
+        rv2.overScrollMode = View.OVER_SCROLL_NEVER
+        rv2.onReachStart {
+            Log.d("BoundaryCallback", "onReachStart")
+        }
+        rv2.onReachEnd {
+            Log.d("BoundaryCallback", "onReachEnd")
+        }
 
         rv1.initPictures(true)
         rv2.initPictures()
