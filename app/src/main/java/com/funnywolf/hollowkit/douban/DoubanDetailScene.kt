@@ -7,6 +7,8 @@ import android.util.SparseArray
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.PagerAdapter
@@ -14,8 +16,6 @@ import androidx.viewpager.widget.ViewPager
 import com.bytedance.scene.group.GroupScene
 import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.douban.view.BOTTOM_SHEET_STATE_EXTENDED
-import com.funnywolf.hollowkit.utils.HolderInfo
-import com.funnywolf.hollowkit.utils.SimpleAdapter
 import com.funnywolf.hollowkit.utils.*
 import com.funnywolf.hollowkit.douban.view.DoubanDetailView
 
@@ -206,4 +206,18 @@ class DoubanDetailScene : GroupScene() {
         }
     }
 
+}
+
+fun createSimpleStringHolderInfo(color: Int = 0xFFF89798.toInt()): HolderInfo<String> {
+    return HolderInfo(String::class.java,
+            R.layout.holder_simple_view,
+            onCreate = { holder ->
+                holder.itemView.setBackgroundColor(color)
+                holder.itemView.setOnClickListener {
+                    Toast.makeText(it.context, "Clicked ${holder.data}", Toast.LENGTH_SHORT).show()
+                }
+            },
+            onBind = { holder, data ->
+                holder.v<TextView>(R.id.content)?.text = data
+            })
 }

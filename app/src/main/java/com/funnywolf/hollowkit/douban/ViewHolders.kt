@@ -10,13 +10,9 @@ import androidx.recyclerview.widget.RecyclerView
 import coil.api.load
 import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.douban.view.JellyLayout
-import com.funnywolf.hollowkit.utils.HolderInfo
 import com.funnywolf.hollowkit.recyclerview.LiveList
-import com.funnywolf.hollowkit.utils.SimpleAdapter
-import com.funnywolf.hollowkit.utils.SimpleHolder
 import com.funnywolf.hollowkit.utils.dp
 import com.funnywolf.hollowkit.douban.view.RightDragToOpenView
-import com.funnywolf.hollowkit.recyclerview.AdapterListener
 import com.funnywolf.hollowkit.recyclerview.bind
 
 /**

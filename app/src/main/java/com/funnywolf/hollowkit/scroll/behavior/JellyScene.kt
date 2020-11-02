@@ -33,7 +33,7 @@ class JellyScene: UserVisibleHintGroupScene() {
         val rvTop = view.findViewById<RecyclerView>(R.id.rv_jelly_top)
         val rvBottom = view.findViewById<RecyclerView>(R.id.rv_jelly_bottom)
 
-        rvTop.initHorizontalPictures(true)
+        rvTop.initHorizontalPictures()
         rvBottom.initPictures(true)
 
         jelly.scrollAxis = ViewCompat.SCROLL_AXIS_VERTICAL

@@ -1,4 +1,4 @@
-package com.funnywolf.hollowkit.utils
+package com.funnywolf.hollowkit.douban
 
 import android.util.SparseArray
 import android.view.LayoutInflater
@@ -133,37 +133,37 @@ open class SimpleHolder<T: Any>(v: View) : RecyclerView.ViewHolder(v) {
 }
 
 data class HolderInfo<T: Any> (
-    /**
+        /**
      * 所支持的数据类型
      */
     val dataClass: Class<T>,
 
-    /**
+        /**
      * 布局文件
      */
     @LayoutRes val layoutRes: Int,
 
-    /**
+        /**
      * 自定义的 SimpleHolder 类型
      */
     val holderClass: Class<out SimpleHolder<T>>? = null,
 
-    /**
+        /**
      * 是否支持该数据，用于同一数据类型的区分，不设置就默认支持
      */
     val isSupport: ((T)->Boolean) = { true },
 
-    /**
+        /**
      * 就是 Adapter 用的那个 viewType，这里暴露出来方便做缓存优化
      */
     val viewType: Int = Objects.hash(dataClass, layoutRes, holderClass),
 
-    /**
+        /**
      * 该 viewType 类型的 ViewHolder 在 onCreateViewHolder 时的回调
      */
     val onCreate: OnCreateHolder<T>? = null,
 
-    /**
+        /**
      * 该 viewType 类型的 ViewHolder 在 onBindViewHolder 时的回调
      */
     val onBind: OnBindHolder<T>? = null
