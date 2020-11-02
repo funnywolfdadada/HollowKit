@@ -96,6 +96,11 @@ abstract class BehavioralScrollView @JvmOverloads constructor(
     private var lastY = 0F
 
     /**
+     * 拦截事件的最小位移量
+     */
+    private val touchInterceptSlop = 8
+
+    /**
      * 用来处理松手时的连续滚动
      */
     private val scroller = Scroller(context)
@@ -238,16 +243,24 @@ abstract class BehavioralScrollView @JvmOverloads constructor(
             }
             // move 时如果移动，且没有 target 就自己拦截
             MotionEvent.ACTION_MOVE -> when (nestedScrollAxes) {
-                ViewCompat.SCROLL_AXIS_HORIZONTAL -> if (abs(e.rawX - lastX) > abs(e.rawY - lastY) && nestedScrollTarget == null) {
+                ViewCompat.SCROLL_AXIS_HORIZONTAL -> if (
+                        abs(e.rawX - lastX) > touchInterceptSlop
+                        && abs(e.rawX - lastX) > abs(e.rawY - lastY)
+                        && nestedScrollTarget == null
+                ) {
+                    lastX = e.rawX
                     true
                 } else {
-                    lastX = e.rawX
                     false
                 }
-                ViewCompat.SCROLL_AXIS_VERTICAL -> if (abs(e.rawY - lastY) > abs(e.rawX - lastX) && nestedScrollTarget == null) {
+                ViewCompat.SCROLL_AXIS_VERTICAL -> if (
+                        abs(e.rawY - lastY) > touchInterceptSlop
+                        && abs(e.rawY - lastY) > abs(e.rawX - lastX)
+                        && nestedScrollTarget == null
+                ) {
+                    lastY = e.rawY
                     true
                 } else {
-                    lastY = e.rawY
                     false
                 }
                 else -> false

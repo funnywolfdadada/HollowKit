@@ -33,8 +33,9 @@ open class StatefulLayout @JvmOverloads constructor(
                 post { state = value }
                 return
             }
-            updateState(field, value)
+            val from = field
             field = value
+            updateState(from, value)
         }
 
     /**
@@ -71,6 +72,11 @@ open class StatefulLayout @JvmOverloads constructor(
         // 先把 toV 添加进去
         if (toV != null && indexOfChild(toV) < 0) {
             addView(toV)
+        }
+        // 不可见不需要动画
+        if (!isShown) {
+            onUpdateEnd(from, to)
+            return
         }
         // 在 onLayout 时可以拿到 toV 的尺寸，方便做动画
         oneShotOnLayout = {
