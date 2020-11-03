@@ -16,6 +16,8 @@ import com.funnywolf.hollowkit.utils.SimpleAdapter
 import com.funnywolf.hollowkit.utils.SimpleHolder
 import com.funnywolf.hollowkit.utils.dp
 import com.funnywolf.hollowkit.douban.view.RightDragToOpenView
+import com.funnywolf.hollowkit.recyclerview.AdapterListener
+import com.funnywolf.hollowkit.recyclerview.bind
 
 /**
  * @author https://github.com/funnywolfdadada
@@ -102,16 +104,14 @@ class ActorsViewHolder(v: View): SimpleHolder<Actors>(v) {
         jelly?.onScrollChangedListener = {
             dragView.process = it.currProcess
         }
-        recyclerView?.adapter = SimpleAdapter(
-            liveList.get()
-        )
+        recyclerView?.adapter = SimpleAdapter(liveList)
             .addHolderInfo(
                 HolderInfo(
                     Actor::class.java,
                     R.layout.holder_douban_actor,
                     ActorViewHolder::class.java
                 )
-            )
+            ).also { liveList.bind(it) }
         recyclerView?.layoutManager = LinearLayoutManager(v.context).also {
             it.orientation = LinearLayoutManager.HORIZONTAL
         }
@@ -119,7 +119,8 @@ class ActorsViewHolder(v: View): SimpleHolder<Actors>(v) {
 
     override fun onBind(data: Actors) {
         super.onBind(data)
-        liveList.clearAddAll(data)
+        liveList.clear()
+        liveList.addAll(data)
     }
 }
 
@@ -153,16 +154,14 @@ class PicturesViewHolder(v: View): SimpleHolder<Pictures>(v) {
         jelly?.onScrollChangedListener = {
             dragView.process = it.currProcess
         }
-        recyclerView?.adapter = SimpleAdapter(
-            liveList.get()
-        )
+        recyclerView?.adapter = SimpleAdapter(liveList)
             .addHolderInfo(
                 HolderInfo(
                     Picture::class.java,
                     R.layout.holder_douban_picture,
                     PictureViewHolder::class.java
                 )
-            )
+            ).also { liveList.bind(it) }
         recyclerView?.layoutManager = LinearLayoutManager(v.context).also {
             it.orientation = LinearLayoutManager.HORIZONTAL
         }
@@ -170,6 +169,7 @@ class PicturesViewHolder(v: View): SimpleHolder<Pictures>(v) {
 
     override fun onBind(data: Pictures) {
         super.onBind(data)
-        liveList.clearAddAll(data)
+        liveList.clear()
+        liveList.addAll(data)
     }
 }

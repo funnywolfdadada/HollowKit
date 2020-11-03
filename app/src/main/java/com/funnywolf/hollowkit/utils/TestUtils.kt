@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import coil.api.load
 import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.recyclerview.LiveList
+import com.funnywolf.hollowkit.recyclerview.bind
 import com.funnywolf.hollowkit.view.scroll.behavior.JellyLayout
 import kotlin.math.round
 import kotlin.random.Random
@@ -109,8 +110,9 @@ val higherPictures = listOf(
 
 fun RecyclerView.initPictures(enableDelete: Boolean = false) {
     layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
-    val liveList = LiveList<Any>(ArrayList(widerPictures))
-    val simpleAdapter = SimpleAdapter(liveList.get())
+    val liveList = LiveList<Any>()
+    liveList.addAll(widerPictures)
+    val simpleAdapter = SimpleAdapter(liveList)
     liveList.bind(simpleAdapter)
     adapter = simpleAdapter
         .addHolderInfo(HolderInfo(
@@ -124,7 +126,7 @@ fun RecyclerView.initPictures(enableDelete: Boolean = false) {
                 h.v<JellyLayout>(R.id.jelly)?.onTouchRelease = { jl ->
                     jl.smoothScrollTo(if (jl.lastScrollDir > 0) { jl.maxScroll } else { 0 }) {
                         if (jl.scrollX == jl.maxScroll) {
-                            liveList.remove(h.data)
+                            h.data?.also { liveList.remove(it) }
                         }
                     }
                 }
@@ -137,8 +139,9 @@ fun RecyclerView.initPictures(enableDelete: Boolean = false) {
 
 fun RecyclerView.initHorizontalPictures(enableDelete: Boolean = false) {
     layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false)
-    val liveList = LiveList<Any>(ArrayList(higherPictures))
-    val simpleAdapter = SimpleAdapter(liveList.get())
+    val liveList = LiveList<Any>()
+    liveList.addAll(higherPictures)
+    val simpleAdapter = SimpleAdapter(liveList)
     liveList.bind(simpleAdapter)
     adapter = simpleAdapter
         .addHolderInfo(HolderInfo(
@@ -152,11 +155,11 @@ fun RecyclerView.initHorizontalPictures(enableDelete: Boolean = false) {
                 h.v<JellyLayout>(R.id.jelly)?.scrollAxis = ViewCompat.SCROLL_AXIS_VERTICAL
                 h.v<JellyLayout>(R.id.jelly)?.onTouchRelease = { jl ->
                     if (jl.scrollY == jl.maxScroll) {
-                        liveList.remove(h.data)
+                        h.data?.also { liveList.remove(it) }
                     } else {
                         jl.smoothScrollTo(if (jl.lastScrollDir > 0) { jl.maxScroll } else { 0 }) {
                             if (jl.scrollY == jl.maxScroll) {
-                                liveList.remove(h.data)
+                                h.data?.also { liveList.remove(it) }
                             }
                         }
                     }

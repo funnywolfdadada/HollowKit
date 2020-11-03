@@ -1,200 +1,150 @@
 package com.funnywolf.hollowkit.recyclerview
 
 
+import android.database.Observable
 import androidx.recyclerview.widget.RecyclerView
 import java.lang.ref.WeakReference
+import kotlin.collections.ArrayList
 
 /**
- * Updates of the list will notify [RecyclerView.Adapter]
+ * 提供监听数据变化能力的 ArrayList
  *
  * @author https://github.com/funnywolfdadada
- * @since 2020/2/16
+ * @since 2020/11/02
  */
+class LiveList<E>: ArrayList<E>() {
 
-interface LiveListSource<T> {
-    /**
-     * Raw list.
-     */
-    fun get(): List<T>
+    var listener: Listener? = null
 
-    /**
-     * Bind/Unbind adapter for notify.
-     */
-    fun bind(adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>)
-    fun unbind()
-
-    /**
-     * Appends [data] to the end of list.
-     * Will not execute when [data] is null.
-     */
-    fun add(data: T?)
-
-    /**
-     * Inserts [data] at the specified position [index] in list.
-     * Will not execute when [data] is null.
-     */
-    fun addAt(index: Int, data: T?)
-
-    /**
-     * Appends all the elements in [c] to the end of list, in the order that they are returned by the specified collection's Iterator.
-     */
-    fun addAll(c: Collection<T>)
-
-    /**
-     * Inserts all of the elements in [c] into the list, starting at the specified position [index].
-     */
-    fun addAllAt(index: Int, c: Collection<T>)
-
-    /**
-     * Removes the first occurrence of [data] from the list, if it is present.
-     */
-    fun remove(data: T?)
-
-    /**
-     * Removes the element at the specified position [index] in the list.
-     */
-    fun removeAt(index: Int)
-
-    /**
-     * Removes from the list all of its elements that are contained in [c].
-     */
-    fun removeAll(c: Collection<T>)
-
-    /**
-     * Update [data] if it is in the list.
-     */
-    fun update(data: T?)
-
-    /**
-     * Update data in the specified position [index], and replace it if [data] is not null.
-     */
-    fun updateAt(index: Int, data: T? = null)
-
-    /**
-     * Update data in the specified position [index] after invoke [func].
-     */
-    fun updateAtBy(index: Int, func: ((T)->Unit)? = null)
-
-    /**
-     * Update the whole list after invoke [func].
-     */
-    fun updateAll(func: ((MutableList<T>)->Unit)? = null)
-
-    /**
-     * Remove all the elements from this list.
-     */
-    fun clear()
-
-    /**
-     * After removing all the elements from the list, add [data] into it.
-     */
-    fun clearAdd(data: T?)
-
-    /**
-     * After removing all the elements from the list, Add all the elements in [c] into it.
-     */
-    fun clearAddAll(c: Collection<T>)
-}
-
-class LiveList<T>(private val rawList: MutableList<T> = ArrayList()): LiveListSource<T> {
-
-    private var adapterRef: WeakReference<RecyclerView.Adapter<*>>? = null
-
-    override fun get(): List<T> = rawList
-
-    override fun bind(adapter: RecyclerView.Adapter<*>) {
-        adapterRef = WeakReference(adapter)
+    override fun set(index: Int, element: E): E {
+        val ret = super.set(index, element)
+        listener?.onRangeChanged(index, 1)
+        return ret
     }
 
-    override fun unbind() {
-        adapterRef?.clear()
-        adapterRef = null
-    }
-
-    override fun add(data: T?) {
-        addAt(rawList.size, data)
-    }
-
-    override fun addAt(index: Int, data: T?) {
-        if (data != null && safeAddIndex(index)) {
-            rawList.add(index, data)
-            adapterRef?.get()?.notifyItemInserted(index)
+    override fun add(element: E): Boolean {
+        return if(super.add(element)) {
+            listener?.onRangeInserted(size - 1, 1)
+            true
+        } else {
+            false
         }
     }
 
-    override fun addAll(c: Collection<T>) {
-        addAllAt(rawList.size, c)
+    override fun add(index: Int, element: E) {
+        super.add(index, element)
+        listener?.onRangeInserted(index, 1)
     }
 
-    override fun addAllAt(index: Int, c: Collection<T>) {
-        if (safeAddIndex(index) && c.isNotEmpty()) {
-            rawList.addAll(index, c)
-            adapterRef?.get()?.notifyItemRangeInserted(index, c.size)
+    override fun addAll(elements: Collection<E>): Boolean {
+        val start = size
+        return if (super.addAll(elements)) {
+            listener?.onRangeInserted(start, elements.size)
+            true
+        } else {
+            false
         }
     }
 
-    override fun remove(data: T?) {
-        removeAt(rawList.indexOf(data ?: return))
-    }
-
-    override fun removeAt(index: Int) {
-        if (safeIndex(index)) {
-            rawList.removeAt(index)
-            adapterRef?.get()?.notifyItemRemoved(index)
+    override fun addAll(index: Int, elements: Collection<E>): Boolean {
+        return if (super.addAll(index, elements)) {
+            listener?.onRangeInserted(index, elements.size)
+            true
+        } else {
+            false
         }
     }
 
-    override fun removeAll(c: Collection<T>) {
-        if (c.isNotEmpty()) {
-            rawList.removeAll(c)
-            adapterRef?.get()?.notifyDataSetChanged()
+    override fun remove(element: E): Boolean {
+        val index = indexOf(element)
+        return if (index >= 0) {
+            removeAt(index)
+            true
+        } else {
+            false
         }
     }
 
-    override fun update(data: T?) {
-        updateAt(rawList.indexOf(data ?: return))
+    override fun removeAt(index: Int): E {
+        val ret = super.removeAt(index)
+        listener?.onRangeRemoved(index, 1)
+        return ret
     }
 
-    override fun updateAt(index: Int, data: T?) {
-        if (safeIndex(index)) {
-            if (data != null) {
-                rawList[index] = data
-            }
-            adapterRef?.get()?.notifyItemChanged(index)
+    override fun removeAll(elements: Collection<E>): Boolean {
+        return if (super.removeAll(elements)) {
+            listener?.onChanged()
+            true
+        } else {
+            false
         }
     }
 
-    override fun updateAtBy(index: Int, func: ((T) -> Unit)?) {
-        if (safeIndex(index)) {
-            func?.invoke(rawList[index])
-            adapterRef?.get()?.notifyItemChanged(index)
+    override fun retainAll(elements: Collection<E>): Boolean {
+        return if (super.retainAll(elements)) {
+            listener?.onChanged()
+            true
+        } else {
+            false
         }
-    }
-
-    override fun updateAll(func: ((MutableList<T>) -> Unit)?) {
-        func?.invoke(rawList)
-        adapterRef?.get()?.notifyDataSetChanged()
     }
 
     override fun clear() {
-        rawList.clear()
-        adapterRef?.get()?.notifyDataSetChanged()
+        super.clear()
+        listener?.onChanged()
     }
 
-    override fun clearAdd(data: T?) {
-        data ?: return
-        rawList.clear()
-        rawList.add(data)
-        adapterRef?.get()?.notifyDataSetChanged()
+    interface Listener {
+
+        fun onChanged() {
+            // Do nothing
+        }
+
+        fun onRangeChanged(start: Int, count: Int) {
+            // do nothing
+        }
+
+        fun onRangeInserted(start: Int, count: Int) {
+            // do nothing
+        }
+
+        fun onRangeRemoved(start: Int, count: Int) {
+            // do nothing
+        }
+
     }
 
-    override fun clearAddAll(c: Collection<T>) {
-        rawList.clear()
-        rawList.addAll(c)
-        adapterRef?.get()?.notifyDataSetChanged()
+}
+
+class LiveListObserver: Observable<LiveList.Listener>(), LiveList.Listener {
+    override fun onChanged() { mObservers.forEach { it.onChanged() } }
+    override fun onRangeChanged(start: Int, count: Int) { mObservers.forEach { it.onRangeChanged(start, count) } }
+    override fun onRangeInserted(start: Int, count: Int) { mObservers.forEach { it.onRangeInserted(start, count) } }
+    override fun onRangeRemoved(start: Int, count: Int) { mObservers.forEach { it.onRangeRemoved(start, count) } }
+}
+
+class AdapterListener(adapter: RecyclerView.Adapter<*>): LiveList.Listener {
+
+    private var adapterRef = WeakReference<RecyclerView.Adapter<*>>(adapter)
+
+    override fun onChanged() {
+        adapterRef.get()?.notifyDataSetChanged()
     }
 
-    private fun safeIndex(index: Int) = index >= 0 && index < rawList.size
+    override fun onRangeChanged(start: Int, count: Int) {
+        adapterRef.get()?.notifyItemRangeChanged(start, count)
+    }
 
-    private fun safeAddIndex(index: Int) = index >= 0 && index <= rawList.size
+    override fun onRangeInserted(start: Int, count: Int) {
+        adapterRef.get()?.notifyItemRangeInserted(start, count)
+    }
+
+    override fun onRangeRemoved(start: Int, count: Int) {
+        adapterRef.get()?.notifyItemRangeRemoved(start, count)
+    }
+
+}
+
+fun LiveList<*>.bind(adapter: RecyclerView.Adapter<*>? = null) {
+    listener = adapter?.let { AdapterListener(it) }
 }
