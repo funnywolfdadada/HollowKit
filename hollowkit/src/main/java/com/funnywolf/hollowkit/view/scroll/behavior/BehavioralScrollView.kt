@@ -1,5 +1,8 @@
 package com.funnywolf.hollowkit.view.scroll.behavior
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
@@ -11,10 +14,10 @@ import android.widget.FrameLayout
 import android.widget.Scroller
 import androidx.annotation.IntDef
 import androidx.core.view.*
-import com.funnywolf.hollowkit.utils.constrains
-import com.funnywolf.hollowkit.utils.findChildUnder
-import com.funnywolf.hollowkit.utils.findHorizontalNestedScrollingTarget
-import com.funnywolf.hollowkit.utils.findVerticalNestedScrollingTarget
+import com.funnywolf.hollowkit.view.constrains
+import com.funnywolf.hollowkit.view.findChildUnder
+import com.funnywolf.hollowkit.view.findHorizontalNestedScrollingTarget
+import com.funnywolf.hollowkit.view.findVerticalNestedScrollingTarget
 import kotlin.math.abs
 
 /**
@@ -101,12 +104,17 @@ abstract class BehavioralScrollView @JvmOverloads constructor(
     private val touchInterceptSlop = 8
 
     /**
+     * 当前的滚动动画
+     */
+    private var scrollAnimator: Animator? = null
+
+    /**
      * 用来处理松手时的连续滚动
      */
     private val scroller = Scroller(context)
 
     /**
-     * scroller fling/动画结束时的回调
+     * scroller fling结束时的回调
      */
     private var onEndListener: ((BehavioralScrollView)->Unit)? = null
 
@@ -128,21 +136,45 @@ abstract class BehavioralScrollView @JvmOverloads constructor(
     /**
      * 动画移动到某个滚动量，动画过程中滚动量不会进行分发
      */
-    fun smoothScrollTo(scroll: Int, duration: Int = 300, onEnd: ((BehavioralScrollView)->Unit)? = null) {
-        log("smoothScrollSelf $scroll")
+    fun smoothScrollTo(scroll: Int, duration: Long = 300, onEnd: ((BehavioralScrollView)->Unit)? = null) {
+        smoothScroll(intArrayOf(scroll), duration, onEnd)
+    }
+
+    /**
+     * 动画滚动经过某几个位置，动画过程中滚动量不会进行分发
+     */
+    fun smoothScroll(scrolls: IntArray, duration: Long = 300, onEnd: ((BehavioralScrollView)->Unit)? = null) {
+        log("smoothScrollSelf $scrolls")
+        if (scrolls.isEmpty()) {
+            return
+        }
+        // 构造动画
+        val animator = when (nestedScrollAxes) {
+            ViewCompat.SCROLL_AXIS_HORIZONTAL -> if (scrolls.size == 1 && scrollX == scrolls[0]) {
+                null
+            } else {
+                ObjectAnimator.ofInt(this, "scrollX" , *scrolls)
+            }
+            ViewCompat.SCROLL_AXIS_VERTICAL -> if (scrolls.size == 1 && scrollY == scrolls[0]) {
+                null
+            } else {
+                ObjectAnimator.ofInt(this, "scrollY" , *scrolls)
+            }
+            else -> null
+        } ?: return
+        // 停止当前的所有动画
+        scrollAnimator?.cancel()
+        scrollAnimator = animator
+        scroller.forceFinished(true)
+        // 更改状态，开始动画
         state = ScrollState.ANIMATION
-        lastX = 0F
-        lastY = 0F
-        // 这里不区分滚动方向，在分发滚动量的时候会处理
-        scroller.abortAnimation()
-        stopNestedScroll(ViewCompat.TYPE_NON_TOUCH)
-        scroller.startScroll(
-            lastX.toInt(), lastY.toInt(),
-            scroll - scrollX, scroll - scrollY,
-            duration
-        )
-        onEndListener = onEnd
-        invalidate()
+        animator.duration = duration
+        animator.addListener(object: AnimatorListenerAdapter() {
+            override fun onAnimationEnd(animation: Animator?) {
+                onEnd?.invoke(this@BehavioralScrollView)
+            }
+        })
+        animator.start()
     }
 
     /**
@@ -150,11 +182,14 @@ abstract class BehavioralScrollView @JvmOverloads constructor(
      */
     fun fling(vx: Float, vy: Float, onEnd: ((BehavioralScrollView)->Unit)? = null) {
         log("fling $vx $vy")
+        // 停止当前的所有动画
+        scrollAnimator?.cancel()
+        scrollAnimator = null
+        scroller.forceFinished(true)
+        // 这里不区分滚动方向，在分发滚动量的时候会处理
         state = ScrollState.FLING
         lastX = 0F
         lastY = 0F
-        // 这里不区分滚动方向，在分发滚动量的时候会处理
-        scroller.abortAnimation()
         scroller.fling(
             lastX.toInt(), lastY.toInt(), vx.toInt(), vy.toInt(),
             Int.MIN_VALUE, Int.MAX_VALUE, Int.MIN_VALUE, Int.MAX_VALUE
@@ -515,31 +550,19 @@ abstract class BehavioralScrollView @JvmOverloads constructor(
     // endregion
 
     override fun computeScroll() {
-        when {
-            scroller.computeScrollOffset() -> {
-                val dx = (scroller.currX - lastX).toInt()
-                val dy = (scroller.currY - lastY).toInt()
-                lastX = scroller.currX.toFloat()
-                lastY = scroller.currY.toFloat()
-                // 不分发来自动画的滚动
-                if (state == ScrollState.ANIMATION) {
-                    scrollBy(dx, dy)
-                } else {
-                    dispatchScrollInternal(dx, dy, ViewCompat.TYPE_NON_TOUCH)
-                }
-                invalidate()
-            }
-            state == ScrollState.ANIMATION -> {
-                state = ScrollState.NONE
-                onEndListener?.invoke(this)
-                onEndListener = null
-            }
-            state == ScrollState.FLING -> {
-                state = ScrollState.NONE
-                stopNestedScroll(ViewCompat.TYPE_NON_TOUCH)
-                onEndListener?.invoke(this)
-                onEndListener = null
-            }
+        // computeScroll 只用于 fling
+        if(scroller.computeScrollOffset()) {
+            val dx = (scroller.currX - lastX).toInt()
+            val dy = (scroller.currY - lastY).toInt()
+            lastX = scroller.currX.toFloat()
+            lastY = scroller.currY.toFloat()
+            dispatchScrollInternal(dx, dy, ViewCompat.TYPE_NON_TOUCH)
+            invalidate()
+        } else {
+            state = ScrollState.NONE
+            stopNestedScroll(ViewCompat.TYPE_NON_TOUCH)
+            onEndListener?.invoke(this)
+            onEndListener = null
         }
     }
 
@@ -691,6 +714,10 @@ abstract class BehavioralScrollView @JvmOverloads constructor(
      * 处理自身滚动
      */
     private fun dispatchScrollSelf(scroll: Int, @ViewCompat.NestedScrollType type: Int): Int {
+        // 没有滚动量就不用回调 behavior 了
+        if (scroll == 0) {
+            return 0
+        }
         // behavior 优先决定是否滚动自身
         val handle = behavior?.handleScrollSelf(scroll, type)
         val consumed = when(handle) {

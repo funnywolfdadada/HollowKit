@@ -1,12 +1,25 @@
-package com.funnywolf.hollowkit.utils
+package com.funnywolf.hollowkit.view
 
 import android.graphics.Outline
+import android.os.SystemClock
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewOutlineProvider
 import androidx.core.view.NestedScrollingChild
 
 /**
+ * [isUnder] 判断 View 是否在某个点下
+ * [findFirst] 寻找 ViewGroup 中某个符合条件的子 View，支持递归遍历其子 View
+ * [findChildUnder] 寻找 ViewGroup 在某个点下的子 View
+ * [findScrollableTarget] 寻找在某个点下，可以处理滚动量的子 View
+ * [canNestedScrollVertically] 是否支持垂直方向的嵌套滚动
+ * [canNestedScrollHorizontally] 是否支持水平方向的嵌套滚动
+ * [findHorizontalNestedScrollingTarget] 寻找 ViewGroup 在某个点下，且支持水平嵌套滚动的子 View
+ * [findVerticalNestedScrollingTarget] 寻找 ViewGroup 在某个点下，且支持垂直嵌套滚动的子 View
+ * [setRoundRect] 设置圆角矩形进行裁切
+ * [setLayoutSize] 设置布局尺寸
+ *
  * @author https://github.com/funnywolfdadada
  * @since 2020/3/31
  */
@@ -16,15 +29,21 @@ fun View.isUnder(rawX: Float, rawY: Float): Boolean {
     return rawX.toInt() in xy[0]..(xy[0] + width) && rawY.toInt() in xy[1]..(xy[1] + height)
 }
 
-fun ViewGroup.findChildUnder(rawX: Float, rawY: Float): View? {
-    return findFirst(false) { it.isUnder(rawX, rawY) }
+fun ViewGroup.findFirst(recursively: Boolean, predict: (View)->Boolean): View? {
+    for (i in 0 until childCount) {
+        val v = getChildAt(i)
+        if (predict(v)) {
+            return v
+        }
+        if (recursively) {
+            return (v as? ViewGroup)?.findFirst(recursively, predict) ?: continue
+        }
+    }
+    return null
 }
 
-fun ViewGroup.findVerticalScrollableTarget(dScrollY: Int, includeSelf: Boolean): View? {
-    if (includeSelf && this.canScrollVertically(dScrollY)) {
-        return this
-    }
-    return findFirst(true) { it.canScrollVertically(dScrollY) }
+fun ViewGroup.findChildUnder(rawX: Float, rawY: Float): View? {
+    return findFirst(false) { it.isUnder(rawX, rawY) }
 }
 
 fun View.findScrollableTarget(rawX: Float, rawY: Float, dScrollY: Int): View? {
@@ -45,15 +64,19 @@ fun View.findScrollableTarget(rawX: Float, rawY: Float, dScrollY: Int): View? {
     }
 }
 
+fun View.canNestedScrollVertically(): Boolean = this is NestedScrollingChild
+        && (this.canScrollVertically(1) || this.canScrollVertically(-1))
+
+fun View.canNestedScrollHorizontally(): Boolean = this is NestedScrollingChild
+        && (this.canScrollHorizontally(1) || this.canScrollHorizontally(-1))
+
 fun ViewGroup.findHorizontalNestedScrollingTarget(rawX: Float, rawY: Float): View? {
     for (i in 0 until childCount) {
         val v = getChildAt(i)
         if (!v.isUnder(rawX, rawY)) {
             continue
         }
-        if (v is NestedScrollingChild
-            && (v.canScrollHorizontally(1)
-                    || v.canScrollHorizontally(-1))) {
+        if (v.canNestedScrollHorizontally()) {
             return v
         }
         if (v !is ViewGroup) {
@@ -73,8 +96,7 @@ fun ViewGroup.findVerticalNestedScrollingTarget(rawX: Float, rawY: Float): View?
         if (!v.isUnder(rawX, rawY)) {
             continue
         }
-        if (v is NestedScrollingChild
-            && (v.canScrollVertically(1) || v.canScrollVertically(-1))) {
+        if (v.canNestedScrollVertically()) {
             return v
         }
         if (v !is ViewGroup) {
@@ -86,41 +108,6 @@ fun ViewGroup.findVerticalNestedScrollingTarget(rawX: Float, rawY: Float): View?
         }
     }
     return null
-}
-
-fun View.canNestedScrollVertically(): Boolean = this is NestedScrollingChild
-        && (this.canScrollVertically(1) || this.canScrollVertically(-1))
-
-fun View.canNestedScrollHorizontally(): Boolean = this is NestedScrollingChild
-        && (this.canScrollHorizontally(1) || this.canScrollHorizontally(-1))
-
-fun ViewGroup.findFirst(recursively: Boolean, predict: (View)->Boolean): View? {
-    for (i in 0 until childCount) {
-        val v = getChildAt(i)
-        if (predict(v)) {
-            return v
-        }
-        if (recursively) {
-            val t = (v as? ViewGroup)?.findFirst(recursively, predict) ?: continue
-            return t
-        }
-    }
-    return null
-}
-
-fun ViewGroup.containsChild(v: View?): Boolean {
-    v ?: return false
-    return if (indexOfChild(v) >= 0) {
-        true
-    } else {
-        repeat(childCount) {
-            val child = getChildAt(it)
-            if (child is ViewGroup && child.containsChild(v)) {
-                return true
-            }
-        }
-        false
-    }
 }
 
 fun View.setRoundRect(radius: Float) {
@@ -136,6 +123,15 @@ fun View.setLayoutSize(layoutWidth: Int, layoutHeight: Int) {
     layoutParams?.width = layoutWidth
     layoutParams?.height = layoutHeight
     requestLayout()
+}
+
+fun View.stopScroll() {
+    val e = MotionEvent.obtain(
+            SystemClock.uptimeMillis(), SystemClock.uptimeMillis(),
+            MotionEvent.ACTION_CANCEL, (left + right) / 2F, (top + bottom) / 2F, 0
+    )
+    dispatchTouchEvent(e)
+    e.recycle()
 }
 
 fun Int.constrains(min: Int, max: Int): Int = when {

@@ -1,4 +1,4 @@
-package com.funnywolf.hollowkit.utils
+package com.funnywolf.hollowkit.view
 
 import android.util.SparseArray
 import android.view.View

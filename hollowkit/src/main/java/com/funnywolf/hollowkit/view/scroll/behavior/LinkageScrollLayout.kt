@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.view.ViewCompat
+import com.funnywolf.hollowkit.view.stopScroll
 
 /**
  * 联动滚动布局
@@ -35,11 +36,11 @@ class LinkageScrollLayout @JvmOverloads constructor(
     }
 
     override fun handleDispatchTouchEvent(e: MotionEvent): Boolean? {
-        // down 时需要把之前可能的 fling 停掉，这里通过分发一个 down 事件解决
+        // down 时需要把之前可能的 fling 停掉
         if (e.action == MotionEvent.ACTION_DOWN) {
-            prevView?.dispatchTouchEvent(e)
-            midView?.dispatchTouchEvent(e)
-            nextView?.dispatchTouchEvent(e)
+            prevView?.stopScroll()
+            midView?.stopScroll()
+            nextView?.stopScroll()
         }
         return super.handleDispatchTouchEvent(e)
     }
@@ -57,16 +58,25 @@ class LinkageScrollLayout @JvmOverloads constructor(
     }
 
     override fun handleScrollSelf(scroll: Int, type: Int): Boolean? {
-        // 拦截了 fling 后，就需要在自己滚动时进行分发
-        // fling 的滚动优先分发给触发嵌套滚动的 nestedScrollTarget
-        if (type == ViewCompat.TYPE_NON_TOUCH
-            && isScrollChildTotalShowing()
-            && nestedScrollTarget?.canScrollVertically(scroll) == true) {
+        return if (type == ViewCompat.TYPE_TOUCH) {
+            handleDrag(scroll)
+        } else {
+            handleFling(scroll)
+        }
+    }
+
+    private fun handleDrag(scroll: Int): Boolean? {
+        scrollBy(0, if (scrollY > 0) { scroll } else { scroll / 2 })
+        return true
+    }
+
+    private fun handleFling(scroll: Int): Boolean? {
+        if (isScrollChildTotalShowing() && nestedScrollTarget?.canScrollVertically(scroll) == true) {
             nestedScrollTarget?.scrollBy(0, scroll)
             return true
         }
         // 自己可以滚动时，默认处理
-        if (type != ViewCompat.TYPE_NON_TOUCH || canScrollVertically(scroll)) {
+        if (canScrollVertically(scroll)) {
             return null
         }
         // 自己无法滚动时根据方向确定滚动传递的目标
@@ -75,12 +85,15 @@ class LinkageScrollLayout @JvmOverloads constructor(
         } else {
             bottomScrollTarget?.invoke()
         }
-        return if (target != null && target.canScrollVertically(scroll)) {
+        if (target != null && target.canScrollVertically(scroll)) {
             target.scrollBy(0, scroll)
-            true
-        } else {
-            false
+            return true
         }
+        // 滚动到边界时执行弹性滚动
+        if (overScrollMode != View.OVER_SCROLL_NEVER && (scrollY == maxScroll || scrollY == minScroll)) {
+            smoothScroll(intArrayOf(scrollY + scroll, scrollY))
+        }
+        return false
     }
 
 }

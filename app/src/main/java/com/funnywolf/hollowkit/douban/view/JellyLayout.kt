@@ -12,9 +12,9 @@ import androidx.annotation.IntDef
 import androidx.core.view.NestedScrollingParent2
 import androidx.core.view.NestedScrollingParentHelper
 import androidx.core.view.ViewCompat
-import com.funnywolf.hollowkit.utils.constrains
-import com.funnywolf.hollowkit.utils.findHorizontalNestedScrollingTarget
-import com.funnywolf.hollowkit.utils.findVerticalNestedScrollingTarget
+import com.funnywolf.hollowkit.view.constrains
+import com.funnywolf.hollowkit.view.findHorizontalNestedScrollingTarget
+import com.funnywolf.hollowkit.view.findVerticalNestedScrollingTarget
 import kotlin.math.abs
 
 /**

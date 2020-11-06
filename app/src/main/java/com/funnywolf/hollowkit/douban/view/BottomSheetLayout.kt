@@ -9,8 +9,8 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.Scroller
 import androidx.annotation.FloatRange
-import com.funnywolf.hollowkit.utils.findScrollableTarget
-import com.funnywolf.hollowkit.utils.isUnder
+import com.funnywolf.hollowkit.view.findScrollableTarget
+import com.funnywolf.hollowkit.view.isUnder
 import kotlin.math.abs
 
 /**

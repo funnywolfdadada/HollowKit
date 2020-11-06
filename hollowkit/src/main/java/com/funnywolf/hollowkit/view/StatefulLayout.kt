@@ -11,7 +11,6 @@ import android.util.SparseArray
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.FrameLayout.LayoutParams
-import com.funnywolf.hollowkit.utils.setLayoutSize
 
 /**
  * 根据状态切换视图的布局，提供了状态切换时的动画

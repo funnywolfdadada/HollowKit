@@ -10,7 +10,7 @@ import androidx.annotation.FloatRange
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.utils.dp
-import com.funnywolf.hollowkit.utils.setRoundRect
+import com.funnywolf.hollowkit.view.setRoundRect
 
 /**
  * 豆瓣详情页的标题栏

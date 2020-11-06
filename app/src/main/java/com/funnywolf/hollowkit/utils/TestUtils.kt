@@ -9,7 +9,9 @@ import androidx.recyclerview.widget.RecyclerView
 import coil.api.load
 import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.recyclerview.*
+import com.funnywolf.hollowkit.view.find
 import com.funnywolf.hollowkit.view.scroll.behavior.JellyLayout
+import com.funnywolf.hollowkit.view.setRoundRect
 import kotlin.math.round
 import kotlin.random.Random
 

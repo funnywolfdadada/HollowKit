@@ -8,8 +8,8 @@ import android.view.VelocityTracker
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.Scroller
-import com.funnywolf.hollowkit.utils.findChildUnder
-import com.funnywolf.hollowkit.utils.findScrollableTarget
+import com.funnywolf.hollowkit.view.findChildUnder
+import com.funnywolf.hollowkit.view.findScrollableTarget
 import kotlin.math.abs
 
 /**
