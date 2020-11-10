@@ -17,9 +17,6 @@ class JellyLayout @JvmOverloads constructor(
 
     override var behavior: NestedScrollBehavior? = this
 
-    @ViewCompat.ScrollAxis
-    var scrollAxis = ViewCompat.SCROLL_AXIS_HORIZONTAL
-
     /**
      * 滚动阻尼，参数为当前的滚动量，返回值未阻尼系数
      */
@@ -29,15 +26,6 @@ class JellyLayout @JvmOverloads constructor(
      * 手指抬起时的回调
      */
     var onTouchRelease: ((JellyLayout)->Unit)? = null
-
-    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        prevView = getChildAt(0)
-        midView = getChildAt(1)
-        nextView = getChildAt(2)
-        super.onLayout(changed, left, top, right, bottom)
-    }
-
-    override fun scrollAxis(): Int = scrollAxis
 
     override fun handleDispatchTouchEvent(e: MotionEvent): Boolean? {
         if ((e.action == MotionEvent.ACTION_CANCEL || e.action == MotionEvent.ACTION_UP) && !inStablePosition()) {

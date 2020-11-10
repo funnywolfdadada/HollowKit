@@ -36,7 +36,6 @@ class JellyScene: UserVisibleHintGroupScene() {
         rvTop.initHorizontalPictures()
         rvBottom.initPictures(true)
 
-        jelly.scrollAxis = ViewCompat.SCROLL_AXIS_VERTICAL
         jelly.resistance = { _, _ -> 0.5F }
         jelly.onTouchRelease = {
             it.smoothScrollTo(if (it.lastScrollDir < 0) { it.minScroll } else { 0 })

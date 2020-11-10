@@ -128,8 +128,10 @@ fun View.setLayoutSize(layoutWidth: Int, layoutHeight: Int) {
 fun View.stopScroll() {
     val e = MotionEvent.obtain(
             SystemClock.uptimeMillis(), SystemClock.uptimeMillis(),
-            MotionEvent.ACTION_CANCEL, (left + right) / 2F, (top + bottom) / 2F, 0
+            MotionEvent.ACTION_DOWN, (left + right) / 2F, (top + bottom) / 2F, 0
     )
+    dispatchTouchEvent(e)
+    e.action = MotionEvent.ACTION_CANCEL
     dispatchTouchEvent(e)
     e.recycle()
 }

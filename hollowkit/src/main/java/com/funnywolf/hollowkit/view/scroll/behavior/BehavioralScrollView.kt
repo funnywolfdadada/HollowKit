@@ -1,8 +1,5 @@
 package com.funnywolf.hollowkit.view.scroll.behavior
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
-import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
@@ -10,25 +7,32 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.VelocityTracker
 import android.view.View
-import android.widget.FrameLayout
 import android.widget.Scroller
 import androidx.annotation.IntDef
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.*
-import com.funnywolf.hollowkit.view.constrains
-import com.funnywolf.hollowkit.view.findChildUnder
-import com.funnywolf.hollowkit.view.findHorizontalNestedScrollingTarget
-import com.funnywolf.hollowkit.view.findVerticalNestedScrollingTarget
+import com.funnywolf.hollowkit.view.*
 import kotlin.math.abs
 
 /**
- * 基础的嵌套滚动布局，处理嵌套滚动相关的通用逻辑
+ * 可以方便控制嵌套滚动优先级的布局，处理嵌套滚动相关的通用逻辑
+ *
+ * 1、不关心内部视图如何布局，继承 [ConstraintLayout] 只是为了方便构建布局
+ * 2、布局完成后，会自动根据布局的上下左右边界，确定滚动范围，并支持子类修改
+ * 3、处理 touch 事件的拦截和分发，支持随手指滚动和 fling
+ * 4、实现了 [NestedScrollingParent3] 和 [NestedScrollingChild3]，支持多级嵌套
+ * 5、对子类暴露 [NestedScrollBehavior]，只用实现很少的方法，就可以控制嵌套滚动各个阶段的优先级问题
+ * 6、推荐继承而不是组合的方式是因为，嵌套滚动的功能性比较垂直，而且会和自身有很多交互
  *
  * @author https://github.com/funnywolfdadada
  * @since 2020/9/26
  */
-abstract class BehavioralScrollView @JvmOverloads constructor(
+open class BehavioralScrollView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-): FrameLayout(context, attrs, defStyleAttr), NestedScrollingParent3, NestedScrollingChild3 {
+): ConstraintLayout(context, attrs, defStyleAttr), NestedScrollingParent3, NestedScrollingChild3 {
+
+    @ViewCompat.ScrollAxis
+    var scrollAxis: Int = ViewCompat.SCROLL_AXIS_VERTICAL
 
     /**
      * 滚动的最小值
@@ -80,14 +84,7 @@ abstract class BehavioralScrollView @JvmOverloads constructor(
 
     var enableLog = false
 
-    var prevView: View? = null
-        protected set
-    var midView: View? = null
-        protected set
-    var nextView: View? = null
-        protected set
-
-    protected abstract var behavior: NestedScrollBehavior?
+    protected open var behavior: NestedScrollBehavior? = object: NestedScrollBehavior {}
 
     /**
      * 上次触摸事件的 x 值，或者 scroller.currX，用于处理自身的滑动事件或动画
@@ -104,17 +101,12 @@ abstract class BehavioralScrollView @JvmOverloads constructor(
     private val touchInterceptSlop = 8
 
     /**
-     * 当前的滚动动画
-     */
-    private var scrollAnimator: Animator? = null
-
-    /**
-     * 用来处理松手时的连续滚动
+     * 用来处理松手时的连续滚动和动画
      */
     private val scroller = Scroller(context)
 
     /**
-     * scroller fling结束时的回调
+     * scroller 结束时的回调
      */
     private var onEndListener: ((BehavioralScrollView)->Unit)? = null
 
@@ -136,45 +128,21 @@ abstract class BehavioralScrollView @JvmOverloads constructor(
     /**
      * 动画移动到某个滚动量，动画过程中滚动量不会进行分发
      */
-    fun smoothScrollTo(scroll: Int, duration: Long = 300, onEnd: ((BehavioralScrollView)->Unit)? = null) {
-        smoothScroll(intArrayOf(scroll), duration, onEnd)
-    }
-
-    /**
-     * 动画滚动经过某几个位置，动画过程中滚动量不会进行分发
-     */
-    fun smoothScroll(scrolls: IntArray, duration: Long = 300, onEnd: ((BehavioralScrollView)->Unit)? = null) {
-        log("smoothScrollSelf $scrolls")
-        if (scrolls.isEmpty()) {
-            return
-        }
-        // 构造动画
-        val animator = when (nestedScrollAxes) {
-            ViewCompat.SCROLL_AXIS_HORIZONTAL -> if (scrolls.size == 1 && scrollX == scrolls[0]) {
-                null
-            } else {
-                ObjectAnimator.ofInt(this, "scrollX" , *scrolls)
-            }
-            ViewCompat.SCROLL_AXIS_VERTICAL -> if (scrolls.size == 1 && scrollY == scrolls[0]) {
-                null
-            } else {
-                ObjectAnimator.ofInt(this, "scrollY" , *scrolls)
-            }
-            else -> null
-        } ?: return
-        // 停止当前的所有动画
-        scrollAnimator?.cancel()
-        scrollAnimator = animator
-        scroller.forceFinished(true)
+    fun smoothScrollTo(scroll: Int, duration: Int = 300, onEnd: ((BehavioralScrollView)->Unit)? = null) {
+        log("smoothScrollSelf $scroll")
+        stopScroll()
         // 更改状态，开始动画
         state = ScrollState.ANIMATION
-        animator.duration = duration
-        animator.addListener(object: AnimatorListenerAdapter() {
-            override fun onAnimationEnd(animation: Animator?) {
-                onEnd?.invoke(this@BehavioralScrollView)
-            }
-        })
-        animator.start()
+        lastX = 0F
+        lastY = 0F
+        onEndListener = onEnd
+        // 这里不区分滚动方向，在分发滚动量的时候会处理
+        scroller.startScroll(
+                lastX.toInt(), lastY.toInt(),
+                scroll - scrollX, scroll - scrollY,
+                duration
+        )
+        invalidate()
     }
 
     /**
@@ -182,70 +150,78 @@ abstract class BehavioralScrollView @JvmOverloads constructor(
      */
     fun fling(vx: Float, vy: Float, onEnd: ((BehavioralScrollView)->Unit)? = null) {
         log("fling $vx $vy")
-        // 停止当前的所有动画
-        scrollAnimator?.cancel()
-        scrollAnimator = null
-        scroller.forceFinished(true)
-        // 这里不区分滚动方向，在分发滚动量的时候会处理
+        stopScroll()
         state = ScrollState.FLING
         lastX = 0F
         lastY = 0F
+        onEndListener = onEnd
+        // 这里不区分滚动方向，在分发滚动量的时候会处理
         scroller.fling(
             lastX.toInt(), lastY.toInt(), vx.toInt(), vy.toInt(),
             Int.MIN_VALUE, Int.MAX_VALUE, Int.MIN_VALUE, Int.MAX_VALUE
         )
-        onEndListener = onEnd
+        startNestedScroll(nestedScrollAxes, ViewCompat.TYPE_NON_TOUCH)
         invalidate()
     }
 
+    fun stopScroll() {
+        // 停止当前的所有动画
+        scroller.forceFinished(true)
+        // 停掉嵌套滚动
+        nestedScrollChild?.stopScroll()
+    }
+
     // region layout
+
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
-        minScroll = 0
-        maxScroll = 0
-        when (nestedScrollAxes) {
-            ViewCompat.SCROLL_AXIS_HORIZONTAL -> layoutHorizontal()
-            ViewCompat.SCROLL_AXIS_VERTICAL -> layoutVertical()
-            else -> {}
-        }
+        adjustScrollBounds()
         behavior?.afterLayout()
+    }
 
+    /**
+     * 调整滚动边界
+     */
+    protected fun adjustScrollBounds() {
+        var l = 0; var r = 0; var t = 0; var b = 0
+        for (i in 0 until childCount) {
+            val c = getChildAt(i)
+            if (c.left < l) {
+                l = c.left
+            }
+            if (c.right > r) {
+                r = c.right
+            }
+            if (c.top < t) {
+                t = c.top
+            }
+            if (c.bottom > b) {
+                b = c.bottom
+            }
+        }
+        when (nestedScrollAxes) {
+            ViewCompat.SCROLL_AXIS_HORIZONTAL -> {
+                minScroll = l
+                maxScroll = r - width
+            }
+            ViewCompat.SCROLL_AXIS_VERTICAL -> {
+                minScroll = t
+                maxScroll = b - height
+            }
+            else -> {
+                minScroll = 0
+                maxScroll = 0
+            }
+        }
         // 重新 layout 后，滚动范围可能已经变了，当前的滚动量可能超范围了
         // 需要重新矫正，scrollBy 内部会进行滚动范围的矫正
         scrollBy(0, 0)
     }
 
-    private fun layoutVertical() {
-        // midView 位置不变
-        val t = midView?.top ?: 0
-        val b = midView?.bottom ?: 0
-        // prevView 移动到 midView 之上，bottom 和 midView 的 top 对齐
-        prevView?.also {
-            it.offsetTopAndBottom(t - it.bottom)
-            minScroll = it.top
-        }
-        // nextView 移动到 midView 之下，top 和 midView 的 bottom 对齐
-        nextView?.also {
-            it.offsetTopAndBottom(b - it.top)
-            maxScroll = it.bottom - height
-        }
-    }
-
-    private fun layoutHorizontal() {
-        val l = midView?.left ?: 0
-        val r = midView?.right ?: 0
-        prevView?.also {
-            it.offsetLeftAndRight(l - it.right)
-            minScroll = it.left
-        }
-        nextView?.also {
-            it.offsetLeftAndRight(r - it.left)
-            maxScroll = it.right - width
-        }
-    }
     // endregion
 
     // region touch event
+
     override fun dispatchTouchEvent(e: MotionEvent): Boolean {
         // behavior 优先处理，不处理走默认逻辑
         behavior?.handleDispatchTouchEvent(e)?.also {
@@ -254,9 +230,9 @@ abstract class BehavioralScrollView @JvmOverloads constructor(
         }
         // 在 down 时复位一些标志位，停掉 scroller 的动画
         if (e.action == MotionEvent.ACTION_DOWN) {
-            lastScrollDir = 0
+            stopScroll()
             state = ScrollState.NONE
-            scroller.abortAnimation()
+            lastScrollDir = 0
         }
         return super.dispatchTouchEvent(e)
     }
@@ -356,6 +332,7 @@ abstract class BehavioralScrollView @JvmOverloads constructor(
         }
         return true
     }
+
     // endregion
 
     // region NestedScrollChild
@@ -458,7 +435,7 @@ abstract class BehavioralScrollView @JvmOverloads constructor(
 
     // region NestedScrollParent
     override fun getNestedScrollAxes(): Int {
-        return behavior?.scrollAxis() ?: ViewCompat.SCROLL_AXIS_NONE
+        return scrollAxis
     }
 
     override fun onStartNestedScroll(child: View, target: View, nestedScrollAxes: Int): Boolean {
@@ -549,20 +526,33 @@ abstract class BehavioralScrollView @JvmOverloads constructor(
     }
     // endregion
 
+    // region dispatchScroll
     override fun computeScroll() {
-        // computeScroll 只用于 fling
-        if(scroller.computeScrollOffset()) {
-            val dx = (scroller.currX - lastX).toInt()
-            val dy = (scroller.currY - lastY).toInt()
-            lastX = scroller.currX.toFloat()
-            lastY = scroller.currY.toFloat()
-            dispatchScrollInternal(dx, dy, ViewCompat.TYPE_NON_TOUCH)
-            invalidate()
-        } else {
-            state = ScrollState.NONE
-            stopNestedScroll(ViewCompat.TYPE_NON_TOUCH)
-            onEndListener?.invoke(this)
-            onEndListener = null
+        when {
+            scroller.computeScrollOffset() -> {
+                val dx = (scroller.currX - lastX).toInt()
+                val dy = (scroller.currY - lastY).toInt()
+                lastX = scroller.currX.toFloat()
+                lastY = scroller.currY.toFloat()
+                // 不分发来自动画的滚动
+                if (state == ScrollState.ANIMATION) {
+                    scrollBy(dx, dy)
+                } else {
+                    dispatchScrollInternal(dx, dy, ViewCompat.TYPE_NON_TOUCH)
+                }
+                invalidate()
+            }
+            state == ScrollState.ANIMATION -> {
+                state = ScrollState.NONE
+                onEndListener?.invoke(this)
+                onEndListener = null
+            }
+            state == ScrollState.FLING -> {
+                state = ScrollState.NONE
+                stopNestedScroll(ViewCompat.TYPE_NON_TOUCH)
+                onEndListener?.invoke(this)
+                onEndListener = null
+            }
         }
     }
 
@@ -639,7 +629,7 @@ abstract class BehavioralScrollView @JvmOverloads constructor(
                 }
             }
             ViewCompat.SCROLL_AXIS_VERTICAL ->{
-                val handleFirst =  behavior?.handleNestedPreScrollFirst(dy, type)
+                val handleFirst = behavior?.handleNestedPreScrollFirst(dy, type)
                 log("handleNestedPreScrollFirst = $handleFirst")
                 when (handleFirst) {
                     true -> {
@@ -735,6 +725,10 @@ abstract class BehavioralScrollView @JvmOverloads constructor(
         return consumed
     }
 
+    // endregion
+
+    // region scrollTo scrollBy
+
     /**
      * 根据当前方向判断自身是否可以滚动
      */
@@ -797,6 +791,8 @@ abstract class BehavioralScrollView @JvmOverloads constructor(
         } - scrollY
     }
 
+    // endregion
+
     override fun onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {
         super.onScrollChanged(l, t, oldl, oldt)
 
@@ -850,12 +846,6 @@ annotation class ScrollState {
 interface NestedScrollBehavior {
 
     /**
-     * 当前的可滚动方向
-     */
-    @ViewCompat.ScrollAxis
-    fun scrollAxis(): Int = ViewCompat.SCROLL_AXIS_VERTICAL
-
-    /**
      * 在 layout 之后的回调
      */
     fun afterLayout() {
@@ -894,10 +884,10 @@ interface NestedScrollBehavior {
      * @param type 滚动类型
      * @return true -> 自己优先，false -> 自己不优先，null -> 不处理 onNestedPreScroll
      */
-    fun handleNestedScrollFirst(scroll: Int, @ViewCompat.NestedScrollType type: Int): Boolean? = null
+    fun handleNestedScrollFirst(scroll: Int, @ViewCompat.NestedScrollType type: Int): Boolean? = false
 
     /**
-     * 在需要 自身滚动时，是否需要处理
+     * 在需要自身滚动时，是否处理
      *
      * @param scroll 滚动量
      * @param type 滚动类型

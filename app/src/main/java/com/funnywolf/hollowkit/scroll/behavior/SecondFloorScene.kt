@@ -145,18 +145,6 @@ class SecondFloorLayout @JvmOverloads constructor(
 
     override var behavior: NestedScrollBehavior? = this
 
-    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        if (childCount == 1) {
-            midView = getChildAt(0)
-        } else {
-            prevView = getChildAt(0)
-            midView = getChildAt(1)
-        }
-        super.onLayout(changed, left, top, right, bottom)
-    }
-
-    override fun scrollAxis(): Int = ViewCompat.SCROLL_AXIS_VERTICAL
-
     override fun handleDispatchTouchEvent(e: MotionEvent): Boolean? {
         if ((e.action == MotionEvent.ACTION_CANCEL || e.action == MotionEvent.ACTION_UP)
             && !inStablePosition()) {

@@ -118,6 +118,7 @@ fun RecyclerView.initPictures(enableDelete: Boolean = false) {
                 v.find<View>(R.id.image_view)?.setOnClickListener {
                     v.context.toast("Click picture ${d.res}")
                 }
+                v.find<JellyLayout>(R.id.jelly)?.scrollAxis = ViewCompat.SCROLL_AXIS_HORIZONTAL
                 v.find<JellyLayout>(R.id.jelly)?.onTouchRelease = { jl ->
                     jl.smoothScrollTo(if (jl.lastScrollDir > 0) { jl.maxScroll } else { 0 }) {
                         if (jl.scrollX == jl.maxScroll) {
@@ -144,7 +145,6 @@ fun RecyclerView.initHorizontalPictures() {
                 v.find<View>(R.id.image_view)?.setOnClickListener {
                     v.context.toast("Click picture ${d.res}")
                 }
-                v.find<JellyLayout>(R.id.jelly)?.scrollAxis = ViewCompat.SCROLL_AXIS_VERTICAL
                 v.find<JellyLayout>(R.id.jelly)?.onTouchRelease = { jl ->
                     if (jl.scrollY == jl.maxScroll) {
                         list.remove(d)

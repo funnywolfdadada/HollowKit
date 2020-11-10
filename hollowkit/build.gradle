@@ -39,6 +39,7 @@ dependencies {
     implementation "androidx.appcompat:appcompat:${versions.appcompat}"
     implementation "androidx.core:core-ktx:${versions.core_ktx}"
 
+    implementation "androidx.constraintlayout:constraintlayout:${versions.constraintlayout}"
     implementation "androidx.recyclerview:recyclerview:${versions.recyclerview}"
     implementation "io.reactivex.rxjava2:rxjava:${versions.rxjava}"
     implementation "com.squareup.retrofit2:adapter-rxjava2:2.5.0"

@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.funnywolf.hollowkit.scroll.behavior.SecondFloorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.funnywolf.hollowkit.scroll.behavior.SecondFloorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/second_floor"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <FrameLayout
+        android:id="@+id/second_floor_top"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@id/second_floor_bottom"
+        >
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv1"
@@ -31,6 +34,7 @@
     </FrameLayout>
 
     <FrameLayout
+        android:id="@+id/second_floor_bottom"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 

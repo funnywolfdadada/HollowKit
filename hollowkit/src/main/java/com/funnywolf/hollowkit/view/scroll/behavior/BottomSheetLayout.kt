@@ -31,7 +31,7 @@ class BottomSheetLayout @JvmOverloads constructor(
     /**
      * 内容视图的最低显示高度
      */
-    private var minHeight: Int = 0
+    private var minContentHeight: Int = 0
 
     /**
      * 内容视图中间停留的显示高度，默认等于最低高度
@@ -42,21 +42,16 @@ class BottomSheetLayout @JvmOverloads constructor(
 
     fun setup(initPosition: Int = POSITION_MAX, minHeight: Int = 0, midHeight: Int = minHeight) {
         this.initPosition = initPosition
-        this.minHeight = minHeight
+        this.minContentHeight = minHeight
         this.midHeight = midHeight
         firstLayout = true
         requestLayout()
     }
 
-    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        midView = getChildAt(0)
-        super.onLayout(changed, left, top, right, bottom)
-    }
-
     override fun afterLayout() {
-        minScroll = minHeight - height
+        minScroll = minContentHeight - height
         // 计算中间高度时的 scrollY
-        midScroll = minScroll + midHeight - minHeight
+        midScroll = minScroll + midHeight - minContentHeight
         // 第一次 layout 滚动到初始位置
         if (firstLayout) {
             firstLayout = false
@@ -97,7 +92,7 @@ class BottomSheetLayout @JvmOverloads constructor(
 
     override fun handleTouchEvent(e: MotionEvent): Boolean? {
         // down 事件触点不在 midView 上时不做处理
-        return if (e.action == MotionEvent.ACTION_DOWN && midView?.isUnder(e.rawX, e.rawY) != true) {
+        return if (e.action == MotionEvent.ACTION_DOWN && getChildAt(0)?.isUnder(e.rawX, e.rawY) != true) {
             false
         } else {
             null

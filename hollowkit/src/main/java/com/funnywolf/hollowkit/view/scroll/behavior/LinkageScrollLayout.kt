@@ -2,10 +2,8 @@ package com.funnywolf.hollowkit.view.scroll.behavior
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.MotionEvent
 import android.view.View
 import androidx.core.view.ViewCompat
-import com.funnywolf.hollowkit.view.stopScroll
 
 /**
  * 联动滚动布局
@@ -22,27 +20,10 @@ class LinkageScrollLayout @JvmOverloads constructor(
 
     override var behavior: NestedScrollBehavior? = this
 
-    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        prevView = null
-        midView = getChildAt(0)
-        nextView = getChildAt(1)
-        super.onLayout(changed, left, top, right, bottom)
-    }
-
     override fun onNestedPreFling(target: View, velocityX: Float, velocityY: Float): Boolean {
         // 为了能够将滚动传递下去，需要把 fling 拦截下来
         fling(velocityX, velocityY)
         return true
-    }
-
-    override fun handleDispatchTouchEvent(e: MotionEvent): Boolean? {
-        // down 时需要把之前可能的 fling 停掉
-        if (e.action == MotionEvent.ACTION_DOWN) {
-            prevView?.stopScroll()
-            midView?.stopScroll()
-            nextView?.stopScroll()
-        }
-        return super.handleDispatchTouchEvent(e)
     }
 
     override fun handleNestedPreScrollFirst(scroll: Int, type: Int): Boolean? {
@@ -88,10 +69,6 @@ class LinkageScrollLayout @JvmOverloads constructor(
         if (target != null && target.canScrollVertically(scroll)) {
             target.scrollBy(0, scroll)
             return true
-        }
-        // 滚动到边界时执行弹性滚动
-        if (overScrollMode != View.OVER_SCROLL_NEVER && (scrollY == maxScroll || scrollY == minScroll)) {
-            smoothScroll(intArrayOf(scrollY + scroll, scrollY))
         }
         return false
     }

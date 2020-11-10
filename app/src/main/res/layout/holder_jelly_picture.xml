@@ -3,28 +3,21 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:id="@+id/jelly"
-    >
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/jelly">
 
-    <Space
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        />
-
-    <FrameLayout
+    <ImageView
+        android:id="@+id/image_view"
+        android:src="@drawable/bing0"
+        android:scaleType="centerCrop"
+        android:elevation="5dp"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginVertical="10dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <ImageView
-            android:id="@+id/image_view"
-            android:src="@drawable/bing0"
-            android:scaleType="centerCrop"
-            android:elevation="5dp"
-            android:layout_marginHorizontal="20dp"
-            android:layout_marginVertical="10dp"
-            android:layout_width="match_parent"
-            android:layout_height="250dp"
-            />
-    </FrameLayout>
+        android:layout_height="250dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        />
 
     <TextView
         android:id="@+id/tv_delete"
@@ -34,8 +27,12 @@
         android:textSize="24sp"
         android:textColor="#FFFF"
         android:background="#FF00"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="1000dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="20dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/image_view"
         />
 
 </com.funnywolf.hollowkit.view.scroll.behavior.JellyLayout>
