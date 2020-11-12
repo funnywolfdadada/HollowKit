@@ -12,68 +12,125 @@ import kotlin.math.hypot
  * @author https://github.com/funnywolfdadada
  * @since 2020/7/3
  */
-open class RoundRectDrawable(
-    color: Int,
-    leftTop: Int,
-    rightTop: Int = leftTop,
-    rightBottom: Int = rightTop,
-    leftBottom: Int = rightBottom,
+open class RoundRectDrawable(): Drawable() {
+
+    /**
+     * 填充颜色和缓存的 shader
+     */
+    private var fillColor = 0
+    private var fillShaderProvider: ShaderProvider? = null
+    private var fillShader: Shader? = null
+
+    /**
+     * 圆角参数和缓存的 path
+     */
+    private val radii = FloatArray(8)
+    private val fillPath = Path()
     /**
      * 反向，绘制四个角，中间透明圆角矩形
      */
-    private val inverse: Boolean = false
-): Drawable() {
+    private var inverse = false
 
-    var fillColor = color
-        set(value) {
-            field = value
-            invalidateSelf()
-        }
+    /**
+     * 外环颜色和缓存的 shader
+     */
+    private var ringColor: Int = 0
+    private var ringShaderProvider: ShaderProvider? = null
+    private var ringShader: Shader? = null
 
-    var fillShaderProvider: ShaderProvider? = null
-        set(value) {
-            field = value
-            updateShader()
-            invalidateSelf()
-        }
+    /**
+     * 外环参数和缓存的 path
+     */
+    private var ringSize: Int = 0
+    private val innerRadii = FloatArray(radii.size)
+    private val ringPath = Path()
 
-    var ringColor: Int = 0
-        set(value) {
-            field = value
-            invalidateSelf()
-        }
-
-    var ringShaderProvider: ShaderProvider? = null
-        set(value) {
-            field = value
-            updateShader()
-            invalidateSelf()
-        }
-
-    var ringSize: Int = 0
-        set(value) {
-            field = value
-            updateRingPath()
-            invalidateSelf()
-        }
-
+    /**
+     * 画笔
+     */
     private val paint = Paint().also {
         it.isAntiAlias = true
         it.style = Paint.Style.FILL
     }
 
-    private val radii = floatArrayOf(
-        leftTop.toFloat(), leftTop.toFloat(),
-        rightTop.toFloat(), rightTop.toFloat(),
-        rightBottom.toFloat(), rightBottom.toFloat(),
-        leftBottom.toFloat(), leftBottom.toFloat()
-    )
-    private val fillPath = Path()
-    private var fillShader: Shader? = null
+    constructor(
+            color: Int,
+            leftTop: Int = 0,
+            rightTop: Int = leftTop,
+            rightBottom: Int = rightTop,
+            leftBottom: Int = rightBottom,
+            inverse: Boolean = false
+    ): this() {
+        fillColor(color)
+        radii(leftTop, rightTop, rightBottom, leftBottom)
+        inverse(inverse)
+    }
 
-    private val innerRadii = FloatArray(radii.size)
-    private val ringPath = Path()
-    private var ringShader: Shader? = null
+    fun fillColor(c: Int): RoundRectDrawable {
+        fillColor = c
+        invalidateSelf()
+        return this
+    }
+
+    fun fillShader(shaderProvider: ShaderProvider?): RoundRectDrawable {
+        fillShaderProvider = shaderProvider?.also {
+            // 使用 shader 时，填充颜色不要有 alpha
+            fillColor = 0xFFFFFFFF.toInt()
+        }
+        updateShader()
+        invalidateSelf()
+        return this
+    }
+
+    fun ringColor(c: Int): RoundRectDrawable {
+        ringColor = c
+        invalidateSelf()
+        return this
+    }
+
+    fun ringShader(shaderProvider: ShaderProvider?): RoundRectDrawable {
+        ringShaderProvider = shaderProvider?.also {
+            // 使用 shader 时，填充颜色不要有 alpha
+            ringColor = 0xFFFFFFFF.toInt()
+        }
+        updateShader()
+        invalidateSelf()
+        return this
+    }
+
+    fun radii(
+            leftTop: Int,
+            rightTop: Int = leftTop,
+            rightBottom: Int = rightTop,
+            leftBottom: Int = rightBottom
+    ): RoundRectDrawable {
+        radii[0] = leftTop.toFloat()
+        radii[1] = radii[0]
+        radii[2] = rightTop.toFloat()
+        radii[3] = radii[2]
+        radii[4] = rightBottom.toFloat()
+        radii[5] = radii[4]
+        radii[6] = leftBottom.toFloat()
+        radii[7] = radii[6]
+        updateFillPath()
+        updateRingPath()
+        invalidateSelf()
+        return this
+    }
+
+    fun ringSize(s: Int): RoundRectDrawable {
+        ringSize = s
+        updateRingPath()
+        invalidateSelf()
+        return this
+    }
+
+    fun inverse(inverse: Boolean): RoundRectDrawable {
+        this.inverse = inverse
+        updateFillPath()
+        invalidateSelf()
+        return this
+    }
 
     override fun onBoundsChange(bounds: Rect?) {
         super.onBoundsChange(bounds)
@@ -115,7 +172,7 @@ open class RoundRectDrawable(
         paint.shader = fillShader
         paint.color = fillColor
         canvas.drawPath(fillPath, paint)
-        if (ringColor != 0 && ringSize != 0) {
+        if (ringColor != 0 && ringSize > 0) {
             paint.shader = ringShader
             paint.color = ringColor
             canvas.drawPath(ringPath, paint)
@@ -136,11 +193,11 @@ open class RoundRectDrawable(
 
 }
 
-interface ShaderProvider: Function1<Rect, Shader>
+typealias ShaderProvider = Function1<Rect, Shader>
 
 class LinearGradientProvider(
-    private val orientation: GradientDrawable.Orientation,
     private val colors: IntArray,
+    private val orientation: GradientDrawable.Orientation = GradientDrawable.Orientation.TOP_BOTTOM,
     private val positions: FloatArray? = null,
     private val model: Shader.TileMode = Shader.TileMode.CLAMP
 ): ShaderProvider {
@@ -176,4 +233,3 @@ class LinearGradientProvider(
     }
 
 }
-
