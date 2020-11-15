@@ -4,6 +4,7 @@ import android.app.Activity
 import android.os.Bundle
 import com.bytedance.scene.NavigationSceneUtility
 import com.bytedance.scene.SceneDelegate
+import com.funnywolf.hollowkit.scenes.MainScene
 
 /**
  * App 的壳 Activity，主页在 [MainScene]

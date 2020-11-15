@@ -1,4 +1,4 @@
-package com.funnywolf.hollowkit.douban.view
+package com.funnywolf.hollowkit.scenes.douban.view
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -186,9 +186,9 @@ class JellyLayout : FrameLayout, NestedScrollingParent2 {
     }
 
     fun setProcess(
-        @JellyRegion region: Int,
-        @FloatRange(from = 0.0, to = 1.0) process: Float = 0F,
-        smoothly: Boolean = true
+            @JellyRegion region: Int,
+            @FloatRange(from = 0.0, to = 1.0) process: Float = 0F,
+            smoothly: Boolean = true
     ) {
         var x = 0
         var y = 0

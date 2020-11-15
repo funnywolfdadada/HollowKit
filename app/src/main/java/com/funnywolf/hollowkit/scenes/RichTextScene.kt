@@ -1,4 +1,4 @@
-package com.funnywolf.hollowkit.richtext
+package com.funnywolf.hollowkit.scenes
 
 import android.graphics.Color
 import android.graphics.Paint
@@ -14,6 +14,7 @@ import android.widget.TextView
 import com.bytedance.scene.Scene
 import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.drawable.RoundRectDrawable
+import com.funnywolf.hollowkit.richtext.*
 import com.funnywolf.hollowkit.utils.dp
 
 /**

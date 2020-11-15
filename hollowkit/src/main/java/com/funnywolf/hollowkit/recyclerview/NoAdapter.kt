@@ -22,7 +22,7 @@ import kotlin.collections.HashSet
 /**
  * 生成可用于更新数据的列表，不过更新数据前记得 [addMapper] 添加数据与视图的映射关系
  */
-fun RecyclerView.asList(): MutableList<Any> {
+fun RecyclerView.asList(): LiveList<Any> {
     if (layoutManager == null) {
         layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
     }
@@ -76,7 +76,7 @@ fun RecyclerView.requestNoAdapter(): NoAdapter {
 
 class NoAdapter: RecyclerView.Adapter<NoViewHolder>() {
 
-    val liveList: MutableList<Any> = LiveList<Any>().apply {
+    val liveList = LiveList<Any>().apply {
         bind(this@NoAdapter)
     }
 

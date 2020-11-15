@@ -16,6 +16,11 @@ class LiveList<E>: ArrayList<E>() {
 
     var listener: Listener? = null
 
+    fun move(from: Int, to: Int) {
+        super.add(if (from < to) { to - 1 } else { to }, super.removeAt(from))
+        listener?.onMove(from, to)
+    }
+
     override fun set(index: Int, element: E): E {
         val ret = super.set(index, element)
         listener?.onRangeChanged(index, 1)
@@ -112,6 +117,10 @@ class LiveList<E>: ArrayList<E>() {
             // do nothing
         }
 
+        fun onMove(from: Int, to: Int) {
+            // do nothing
+        }
+
     }
 
 }
@@ -121,6 +130,7 @@ class LiveListObserver: Observable<LiveList.Listener>(), LiveList.Listener {
     override fun onRangeChanged(start: Int, count: Int) { mObservers.forEach { it.onRangeChanged(start, count) } }
     override fun onRangeInserted(start: Int, count: Int) { mObservers.forEach { it.onRangeInserted(start, count) } }
     override fun onRangeRemoved(start: Int, count: Int) { mObservers.forEach { it.onRangeRemoved(start, count) } }
+    override fun onMove(from: Int, to: Int) { mObservers.forEach { it.onMove(from, to) } }
 }
 
 class AdapterListener(adapter: RecyclerView.Adapter<*>): LiveList.Listener {
@@ -143,6 +153,9 @@ class AdapterListener(adapter: RecyclerView.Adapter<*>): LiveList.Listener {
         adapterRef.get()?.notifyItemRangeRemoved(start, count)
     }
 
+    override fun onMove(from: Int, to: Int) {
+        adapterRef.get()?.notifyItemMoved(from, to)
+    }
 }
 
 fun LiveList<*>.bind(adapter: RecyclerView.Adapter<*>? = null) {

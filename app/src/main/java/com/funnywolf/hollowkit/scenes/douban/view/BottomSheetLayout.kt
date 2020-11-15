@@ -1,4 +1,4 @@
-package com.funnywolf.hollowkit.douban.view
+package com.funnywolf.hollowkit.scenes.douban.view
 
 import android.annotation.SuppressLint
 import android.content.Context

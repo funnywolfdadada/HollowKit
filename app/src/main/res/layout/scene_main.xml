@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:fitsSystemWindows="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -21,15 +19,6 @@
         />
 
     <Button
-        android:id="@+id/bt_douban"
-        android:text="豆瓣详情页"
-        android:background="#8FFF"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        />
-
-    <Button
         android:id="@+id/bt_nested_scroll_behavior"
         android:text="嵌套滚动"
         android:background="#8FFF"
@@ -41,6 +30,24 @@
     <Button
         android:id="@+id/bt_rich_text"
         android:text="富文本测试"
+        android:background="#8FFF"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        />
+
+    <Button
+        android:id="@+id/stateful_layout"
+        android:text="stateful_layout"
+        android:background="#8FFF"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        />
+
+    <Button
+        android:id="@+id/bt_douban"
+        android:text="豆瓣详情页"
         android:background="#8FFF"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -1,4 +1,4 @@
-package com.funnywolf.hollowkit.scroll.behavior
+package com.funnywolf.hollowkit.scenes.behavior
 
 import android.os.Bundle
 import android.view.LayoutInflater

@@ -1,4 +1,4 @@
-package com.funnywolf.hollowkit
+package com.funnywolf.hollowkit.scenes
 
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
 import com.bytedance.scene.Scene
+import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.drawable.LinearGradientProvider
 import com.funnywolf.hollowkit.drawable.RoundRectDrawable
 import com.funnywolf.hollowkit.utils.dp
@@ -20,19 +21,19 @@ import kotlinx.coroutines.launch
 
 /**
  * @author https://github.com/funnywolfdadada
- * @since 2020/5/9
+ * @since 2020/11/15
  */
-class TestScene: Scene() {
+class StatefulLayoutScene: Scene() {
 
     @Volatile
     var state = 1
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup,
+            savedInstanceState: Bundle?
     ): View {
-        return inflater.inflate(R.layout.scene_test, container, false)
+        return inflater.inflate(R.layout.scene_stateful_layout, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

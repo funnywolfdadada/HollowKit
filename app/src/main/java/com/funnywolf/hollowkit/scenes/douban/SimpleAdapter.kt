@@ -1,4 +1,4 @@
-package com.funnywolf.hollowkit.douban
+package com.funnywolf.hollowkit.scenes.douban
 
 import android.util.SparseArray
 import android.view.LayoutInflater

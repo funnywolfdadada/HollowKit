@@ -1,4 +1,4 @@
-package com.funnywolf.hollowkit.douban
+package com.funnywolf.hollowkit.scenes.douban
 
 import android.view.View
 import android.view.ViewGroup
@@ -9,10 +9,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import coil.api.load
 import com.funnywolf.hollowkit.R
-import com.funnywolf.hollowkit.douban.view.JellyLayout
+import com.funnywolf.hollowkit.scenes.douban.view.JellyLayout
 import com.funnywolf.hollowkit.recyclerview.LiveList
 import com.funnywolf.hollowkit.utils.dp
-import com.funnywolf.hollowkit.douban.view.RightDragToOpenView
+import com.funnywolf.hollowkit.scenes.douban.view.RightDragToOpenView
 import com.funnywolf.hollowkit.recyclerview.bind
 
 /**

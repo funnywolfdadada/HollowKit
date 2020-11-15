@@ -1,4 +1,4 @@
-package com.funnywolf.hollowkit.douban
+package com.funnywolf.hollowkit.scenes.douban
 
 import android.content.Context
 import android.graphics.Color
@@ -15,9 +15,9 @@ import androidx.viewpager.widget.PagerAdapter
 import androidx.viewpager.widget.ViewPager
 import com.bytedance.scene.group.GroupScene
 import com.funnywolf.hollowkit.R
-import com.funnywolf.hollowkit.douban.view.BOTTOM_SHEET_STATE_EXTENDED
+import com.funnywolf.hollowkit.scenes.douban.view.BOTTOM_SHEET_STATE_EXTENDED
 import com.funnywolf.hollowkit.utils.*
-import com.funnywolf.hollowkit.douban.view.DoubanDetailView
+import com.funnywolf.hollowkit.scenes.douban.view.DoubanDetailView
 
 /**
  * 豆瓣详情页

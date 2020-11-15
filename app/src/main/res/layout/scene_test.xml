@@ -6,91 +6,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <com.funnywolf.hollowkit.view.StatefulLayout
-        android:id="@+id/stateful"
-        android:minWidth="100dp"
-        android:minHeight="100dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        />
-
-    <View
-        android:background="#03A9F4"
-        android:layout_width="50dp"
-        android:layout_height="0dp"
-        app:layout_constraintTop_toTopOf="@id/stateful"
-        app:layout_constraintBottom_toBottomOf="@id/stateful"
-        app:layout_constraintEnd_toStartOf="@id/stateful"
-        />
-
-    <View
-        android:background="#03A9F4"
-        android:layout_width="0dp"
-        android:layout_height="50dp"
-        app:layout_constraintBottom_toTopOf="@id/stateful"
-        app:layout_constraintStart_toStartOf="@id/stateful"
-        app:layout_constraintEnd_toEndOf="@id/stateful"
-        />
-
-    <View
-        android:background="#03A9F4"
-        android:layout_width="50dp"
-        android:layout_height="0dp"
-        app:layout_constraintTop_toTopOf="@id/stateful"
-        app:layout_constraintBottom_toBottomOf="@id/stateful"
-        app:layout_constraintStart_toEndOf="@id/stateful"
-        />
-
-    <View
-        android:background="#03A9F4"
-        android:layout_width="0dp"
-        android:layout_height="50dp"
-        app:layout_constraintTop_toBottomOf="@id/stateful"
-        app:layout_constraintStart_toStartOf="@id/stateful"
-        app:layout_constraintEnd_toEndOf="@id/stateful"
-        />
-
-    <Button
-        android:id="@+id/next"
-        android:text="NEXT"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_height="match_parent"
         />
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:orientation="vertical"
-        app:layout_constraintTop_toBottomOf="@id/next"
-        android:layout_width="match_parent"
-        android:layout_height="2000dp">
-
-        <View
-            android:id="@+id/v1"
-            android:background="#F00F"
-            android:layout_width="match_parent"
-            android:layout_height="500dp"
-            app:layout_constraintTop_toTopOf="parent"
-            />
-
-        <View
-            android:id="@+id/v2"
-            android:background="#FF00"
-            android:layout_width="match_parent"
-            android:layout_height="500dp"
-            app:layout_constraintTop_toBottomOf="@id/v1"
-            />
-
-        <View
-            android:background="#F0F0"
-            android:layout_width="match_parent"
-            android:layout_height="500dp"
-            app:layout_constraintTop_toBottomOf="@id/v2"
-            />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollView>
