@@ -5,8 +5,8 @@ import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
-import android.view.VelocityTracker
 import android.view.View
+import android.view.ViewConfiguration
 import android.widget.Scroller
 import androidx.annotation.IntDef
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -86,19 +86,21 @@ open class BehavioralScrollView @JvmOverloads constructor(
 
     protected open var behavior: NestedScrollBehavior? = object: NestedScrollBehavior {}
 
-    /**
-     * 上次触摸事件的 x 值，或者 scroller.currX，用于处理自身的滑动事件或动画
-     */
-    private var lastX = 0F
-    /**
-     * 上次触摸事件的 y 值，或者 scroller.currY，用于处理自身的滑动事件或动画
-     */
-    private var lastY = 0F
+    // region 一些辅助变量
 
     /**
      * 拦截事件的最小位移量
      */
-    private val touchInterceptSlop = 8
+    private val touchInterceptSlop: Int
+
+    /**
+     * fling 的最小速度
+     */
+    private val minFlingVelocity: Float
+    /**
+     * fling 的最大速度
+     */
+    private val maxFlingVelocity: Float
 
     /**
      * 用来处理松手时的连续滚动和动画
@@ -111,18 +113,44 @@ open class BehavioralScrollView @JvmOverloads constructor(
     private var onEndListener: ((BehavioralScrollView)->Unit)? = null
 
     /**
-     * 用于计算抬手时的速度
-     */
-    private val velocityTracker by lazy { VelocityTracker.obtain() }
-
-    /**
      * 嵌套滚动帮助类
      */
     private val parentHelper by lazy { NestedScrollingParentHelper(this) }
     private val childHelper by lazy { NestedScrollingChildHelper(this) }
 
+    /**
+     * 上次触摸事件的 x 值，或者 scroller.currX，用于处理自身的滑动事件或动画
+     */
+    private var lastX = 0F
+    /**
+     * 上次触摸事件的 y 值，或者 scroller.currY，用于处理自身的滑动事件或动画
+     */
+    private var lastY = 0F
+    /**
+     * 上次触摸事件的时间戳
+     */
+    private var lastEventTime = 0L
+    /**
+     * 上次 move 事件的 x 变化量
+     */
+    private var moveDx = 0
+    /**
+     * 上次 move 事件的 y 变化量
+     */
+    private var moveDy = 0
+    /**
+     * 上次 move 事件的时间间隔
+     */
+    private var moveDuration = 0L
+
+    // endregion
+
     init {
         isNestedScrollingEnabled = true
+        val vc = ViewConfiguration.get(context)
+        touchInterceptSlop = vc.scaledTouchSlop
+        minFlingVelocity = vc.scaledMinimumFlingVelocity.toFloat()
+        maxFlingVelocity = vc.scaledMaximumFlingVelocity.toFloat()
     }
 
     /**
@@ -148,8 +176,8 @@ open class BehavioralScrollView @JvmOverloads constructor(
     /**
      * 以某个速度进行惯性滚动，fling 过程中滚动量会进行分发
      */
-    fun fling(vx: Float, vy: Float, onEnd: ((BehavioralScrollView)->Unit)? = null) {
-        log("fling $vx $vy")
+    fun fling(velocity: Float, onEnd: ((BehavioralScrollView)->Unit)? = null) {
+        log("fling $velocity")
         stopScroll()
         state = ScrollState.FLING
         lastX = 0F
@@ -157,7 +185,7 @@ open class BehavioralScrollView @JvmOverloads constructor(
         onEndListener = onEnd
         // 这里不区分滚动方向，在分发滚动量的时候会处理
         scroller.fling(
-            lastX.toInt(), lastY.toInt(), vx.toInt(), vy.toInt(),
+            lastX.toInt(), lastY.toInt(), velocity.toInt(), velocity.toInt(),
             Int.MIN_VALUE, Int.MAX_VALUE, Int.MIN_VALUE, Int.MAX_VALUE
         )
         startNestedScroll(nestedScrollAxes, ViewCompat.TYPE_NON_TOUCH)
@@ -290,21 +318,21 @@ open class BehavioralScrollView @JvmOverloads constructor(
         }
         when (e.action) {
             MotionEvent.ACTION_DOWN -> {
-                velocityTracker.addMovement(e)
                 lastX = e.rawX
                 lastY = e.rawY
             }
             MotionEvent.ACTION_MOVE -> {
-                velocityTracker.addMovement(e)
-                val dx = (lastX - e.rawX).toInt()
-                val dy = (lastY - e.rawY).toInt()
+                moveDuration = e.eventTime - lastEventTime
+                moveDx = (lastX - e.rawX).toInt()
+                moveDy = (lastY - e.rawY).toInt()
+                lastEventTime = e.eventTime
                 lastX = e.rawX
                 lastY = e.rawY
                 // 不再 dragging 状态时判断是否要进行拖拽
                 if (state != ScrollState.DRAGGING) {
                     val canDrag = when (nestedScrollAxes) {
-                        ViewCompat.SCROLL_AXIS_HORIZONTAL -> abs(dx) > abs(dy)
-                        ViewCompat.SCROLL_AXIS_VERTICAL -> abs(dx) < abs(dy)
+                        ViewCompat.SCROLL_AXIS_HORIZONTAL -> abs(moveDx) > abs(moveDy)
+                        ViewCompat.SCROLL_AXIS_VERTICAL -> abs(moveDx) < abs(moveDy)
                         else -> false
                     }
                     if (canDrag) {
@@ -315,20 +343,16 @@ open class BehavioralScrollView @JvmOverloads constructor(
                 }
                 // dragging 时计算并分发滚动量
                 if (state == ScrollState.DRAGGING) {
-                    dispatchScrollInternal(dx, dy, ViewCompat.TYPE_TOUCH)
+                    dispatchScrollInternal(moveDx, moveDy, ViewCompat.TYPE_TOUCH)
                 }
             }
             MotionEvent.ACTION_UP -> {
                 stopNestedScroll(ViewCompat.TYPE_TOUCH)
-                velocityTracker.addMovement(e)
-                velocityTracker.computeCurrentVelocity(1000)
-                val vx = -velocityTracker.xVelocity
-                val vy = -velocityTracker.yVelocity
+                val vx = moveDx / (moveDuration / 1000F)
+                val vy = moveDy / (moveDuration / 1000F)
                 if (!dispatchNestedPreFling(vx, vy)) {
-                    dispatchNestedFling(vx, vy, true)
-                    fling(vx, vy)
+                    handleFling(vx, vy)
                 }
-                velocityTracker.clear()
             }
         }
         return true
@@ -509,12 +533,7 @@ open class BehavioralScrollView @JvmOverloads constructor(
         velocityY: Float,
         consumed: Boolean
     ): Boolean {
-        if (!consumed) {
-            dispatchNestedFling(velocityX, velocityY, true)
-            fling(velocityX, velocityY)
-            return true
-        }
-        return false
+        return !consumed && handleFling(velocityX, velocityY)
     }
 
     override fun onStopNestedScroll(target: View) {
@@ -528,6 +547,27 @@ open class BehavioralScrollView @JvmOverloads constructor(
     // endregion
 
     // region dispatchScroll
+
+    protected open fun handleFling(vx: Float, vy: Float): Boolean {
+        val handled = when(nestedScrollAxes) {
+            ViewCompat.SCROLL_AXIS_HORIZONTAL -> if (abs(vx) > minFlingVelocity) {
+                fling(vx.constrains(-maxFlingVelocity, maxFlingVelocity))
+                true
+            } else {
+                false
+            }
+            ViewCompat.SCROLL_AXIS_VERTICAL -> if (abs(vy) > minFlingVelocity) {
+                fling(vy.constrains(-maxFlingVelocity, maxFlingVelocity))
+                true
+            } else {
+                false
+            }
+            else -> false
+        }
+        dispatchNestedFling(vx, vy, handled)
+        return handled
+    }
+
     override fun computeScroll() {
         when {
             scroller.computeScrollOffset() -> {

@@ -22,7 +22,7 @@ class LinkageScrollLayout @JvmOverloads constructor(
 
     override fun onNestedPreFling(target: View, velocityX: Float, velocityY: Float): Boolean {
         // 为了能够将滚动传递下去，需要把 fling 拦截下来
-        fling(velocityX, velocityY)
+        fling(velocityY)
         return true
     }
 

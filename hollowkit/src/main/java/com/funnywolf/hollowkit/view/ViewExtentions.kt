@@ -136,8 +136,8 @@ fun View.stopScroll() {
     e.recycle()
 }
 
-fun Int.constrains(min: Int, max: Int): Int = when {
-    this < min -> min
-    this > max -> max
+fun <T: Number> T.constrains(min: T, max: T): T = when {
+    this.toDouble() < min.toDouble() -> min
+    this.toDouble() > max.toDouble() -> max
     else -> this
 }
