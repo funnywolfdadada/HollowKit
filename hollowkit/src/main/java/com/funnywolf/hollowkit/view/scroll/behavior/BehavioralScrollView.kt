@@ -164,11 +164,13 @@ open class BehavioralScrollView @JvmOverloads constructor(
         invalidate()
     }
 
-    fun stopScroll() {
+    fun stopScroll(stopNestedScroll: Boolean = true) {
         // 停止当前的所有动画
         scroller.forceFinished(true)
-        // 停掉嵌套滚动
-        nestedScrollChild?.stopScroll()
+        if (stopNestedScroll) {
+            // 停掉嵌套滚动
+            nestedScrollChild?.stopScroll()
+        }
     }
 
     // region layout
@@ -230,7 +232,7 @@ open class BehavioralScrollView @JvmOverloads constructor(
         }
         // 在 down 时复位一些标志位，停掉 scroller 的动画
         if (e.action == MotionEvent.ACTION_DOWN) {
-            stopScroll()
+            stopScroll(nestedScrollChild?.isUnder(e.rawX, e.rawY) == false)
             state = ScrollState.NONE
             lastScrollDir = 0
         }
