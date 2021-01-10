@@ -2,4 +2,7 @@
 <resources>
     <item name="recycler_view_boundary_callback_id" type="id"/>
     <item name="view_find_cache_id" type="id"/>
+
+    <item name="provider_in_view_id" type="id"/>
+
 </resources>
