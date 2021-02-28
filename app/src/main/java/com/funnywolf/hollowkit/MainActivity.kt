@@ -1,7 +1,7 @@
 package com.funnywolf.hollowkit
 
-import android.app.Activity
 import android.os.Bundle
+import androidx.fragment.app.FragmentActivity
 import com.bytedance.scene.NavigationSceneUtility
 import com.bytedance.scene.SceneDelegate
 import com.funnywolf.hollowkit.scenes.MainScene
@@ -12,7 +12,7 @@ import com.funnywolf.hollowkit.scenes.MainScene
  * @author https://github.com/funnywolfdadada
  * @since 2020/3/21
  */
-class MainActivity : Activity() {
+class MainActivity : FragmentActivity() {
     private var delegate: SceneDelegate? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -32,6 +32,8 @@ class MainScene: Scene() {
         bind(R.id.bt_nested_scroll_behavior, ScrollBehaviorScene::class.java)
         bind(R.id.bt_rich_text, RichTextScene::class.java)
         bind(R.id.stateful_layout, StatefulLayoutScene::class.java)
+        bind(R.id.bt_activity_result, ActivityResultScene::class.java)
+        bind(R.id.bt_permission, PermissionRequestScene::class.java)
         bind(R.id.bt_douban, DoubanDetailScene::class.java)
     }
 
