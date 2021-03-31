@@ -66,9 +66,9 @@ class StatefulLayoutScene: Scene() {
 
         val btn = view.findViewById<Button>(R.id.next)
         btn.setOnClickListener {
-            GlobalScope.launch(Dispatchers.IO) {
-                val s = state++ % 5
-                btn.text = s.toString()
+            val s = state++ % 5
+            btn.text = s.toString()
+            GlobalScope.launch {
                 sl.state = s
             }
         }

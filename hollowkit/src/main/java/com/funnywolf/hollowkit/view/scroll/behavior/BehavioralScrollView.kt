@@ -178,13 +178,15 @@ open class BehavioralScrollView @JvmOverloads constructor(
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
         adjustScrollBounds()
-        behavior?.afterLayout()
+        // 重新 layout 后，滚动范围可能已经变了，当前的滚动量可能超范围了
+        // 需要重新矫正，scrollBy 内部会进行滚动范围的矫正
+        scrollBy(0, 0)
     }
 
     /**
-     * 调整滚动边界
+     * 调整默认的滚动边界
      */
-    protected fun adjustScrollBounds() {
+    protected open fun adjustScrollBounds() {
         var l = 0; var r = 0; var t = 0; var b = 0
         for (i in 0 until childCount) {
             val c = getChildAt(i)
@@ -215,9 +217,6 @@ open class BehavioralScrollView @JvmOverloads constructor(
                 maxScroll = 0
             }
         }
-        // 重新 layout 后，滚动范围可能已经变了，当前的滚动量可能超范围了
-        // 需要重新矫正，scrollBy 内部会进行滚动范围的矫正
-        scrollBy(0, 0)
     }
 
     // endregion
@@ -846,13 +845,6 @@ annotation class ScrollState {
 }
 
 interface NestedScrollBehavior {
-
-    /**
-     * 在 layout 之后的回调
-     */
-    fun afterLayout() {
-        // do nothing
-    }
 
     /**
      * 在 dispatchTouchEvent 时是否处理 touch 事件

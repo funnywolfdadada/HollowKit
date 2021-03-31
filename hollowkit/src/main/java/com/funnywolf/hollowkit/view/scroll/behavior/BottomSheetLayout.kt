@@ -48,7 +48,7 @@ class BottomSheetLayout @JvmOverloads constructor(
         requestLayout()
     }
 
-    override fun afterLayout() {
+    override fun adjustScrollBounds() {
         minScroll = minContentHeight - height
         // 计算中间高度时的 scrollY
         midScroll = minScroll + midHeight - minContentHeight
