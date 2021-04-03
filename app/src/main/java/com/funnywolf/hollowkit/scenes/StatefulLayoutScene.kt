@@ -15,7 +15,6 @@ import com.funnywolf.hollowkit.drawable.LinearGradientProvider
 import com.funnywolf.hollowkit.drawable.RoundRectDrawable
 import com.funnywolf.hollowkit.utils.dp
 import com.funnywolf.hollowkit.view.StatefulLayout
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
