@@ -143,6 +143,13 @@ open class BehavioralScrollView @JvmOverloads constructor(
      */
     private var moveDuration = 0L
 
+    /**
+     * down 事件的坐标和滚动状态
+     */
+    private var downX = 0F
+    private var downY = 0F
+    private var downState = ScrollState.NONE
+
     // endregion
 
     init {
@@ -252,16 +259,11 @@ open class BehavioralScrollView @JvmOverloads constructor(
     // region touch event
 
     override fun dispatchTouchEvent(e: MotionEvent): Boolean {
+        // TODO: dispatchTouchEvent 里面干了很多事，直接拦截不太好，之后会去掉
         // behavior 优先处理，不处理走默认逻辑
         behavior?.handleDispatchTouchEvent(e)?.also {
             log("handleDispatchTouchEvent $it")
             return it
-        }
-        // 在 down 时复位一些标志位，停掉 scroller 的动画
-        if (e.action == MotionEvent.ACTION_DOWN) {
-            stopScroll(nestedScrollChild?.isUnder(e.rawX, e.rawY) == false)
-            state = ScrollState.NONE
-            lastScrollDir = 0
         }
         return super.dispatchTouchEvent(e)
     }
@@ -270,8 +272,19 @@ open class BehavioralScrollView @JvmOverloads constructor(
         return when (e.action) {
             // down 时不拦截，但需要记录触点位置，寻找触点位置的 child 和支持嵌套滚动的 target
             MotionEvent.ACTION_DOWN -> {
+                // 记录 down 时坐标和滚动状态
                 lastX = e.rawX
                 lastY = e.rawY
+                downX = e.rawX
+                downY = e.rawY
+                downState = state
+
+                // 在 down 时复位一些标志位，停掉 scroller 的动画
+                stopScroll(nestedScrollChild?.isUnder(e.rawX, e.rawY) == false)
+                state = ScrollState.NONE
+                lastScrollDir = 0
+
+                // 寻找可以嵌套滚动的子 view
                 nestedScrollChild = findChildUnder(e.rawX, e.rawY)
                 // 如果子 view 有重叠的情况，这里记录的 target 并不完全准确，不过这里只做为是否拦截事件的判断
                 nestedScrollTarget = when (nestedScrollAxes) {
@@ -304,6 +317,13 @@ open class BehavioralScrollView @JvmOverloads constructor(
                     false
                 }
                 else -> false
+            }
+            MotionEvent.ACTION_UP -> {
+                // down 的时候不是空闲状态（fling 或动画），down 会停止相关滚动
+                // up 之前手指几乎未移动，为了避免触发子 view 的点击事件，拦截 up 事件
+                downState != ScrollState.NONE
+                    && abs(lastX - downX) < touchInterceptSlop
+                    && abs(lastY - downY) < touchInterceptSlop
             }
             else -> super.onInterceptTouchEvent(e)
         }
@@ -347,6 +367,7 @@ open class BehavioralScrollView @JvmOverloads constructor(
                 }
             }
             MotionEvent.ACTION_UP -> {
+                state = ScrollState.NONE
                 stopNestedScroll(ViewCompat.TYPE_TOUCH)
                 val vx = moveDx / (moveDuration / 1000F)
                 val vy = moveDy / (moveDuration / 1000F)
