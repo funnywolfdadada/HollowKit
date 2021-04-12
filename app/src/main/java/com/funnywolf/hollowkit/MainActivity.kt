@@ -110,7 +110,6 @@ class FpsWindow(private val activity: Activity): PopupWindow() {
                 textView.post {
                     textView.text = fpsText
                 }
-                Log.d("zdl", fpsText)
             }
         }
     }

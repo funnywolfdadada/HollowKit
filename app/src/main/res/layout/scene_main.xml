@@ -46,6 +46,15 @@
         />
 
     <Button
+        android:id="@+id/okhttp_progress"
+        android:text="OkHttp 进度监听"
+        android:background="#8FFF"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        />
+
+    <Button
         android:id="@+id/bt_activity_result"
         android:text="activity_result"
         android:background="#8FFF"

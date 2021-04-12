@@ -35,14 +35,14 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${versions.kotlin}"
-    implementation "androidx.appcompat:appcompat:${versions.appcompat}"
-    implementation "androidx.core:core-ktx:${versions.core_ktx}"
+    api "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${versions.kotlin}"
+    api "androidx.appcompat:appcompat:${versions.appcompat}"
+    api "androidx.core:core-ktx:${versions.core_ktx}"
 
-    implementation "androidx.constraintlayout:constraintlayout:${versions.constraintlayout}"
-    implementation "androidx.recyclerview:recyclerview:${versions.recyclerview}"
-    implementation "io.reactivex.rxjava2:rxjava:${versions.rxjava}"
-    implementation "com.squareup.retrofit2:adapter-rxjava2:2.5.0"
+    api "androidx.constraintlayout:constraintlayout:${versions.constraintlayout}"
+    api "androidx.recyclerview:recyclerview:${versions.recyclerview}"
+
+    api "com.squareup.okhttp3:okhttp:${versions.okhttp}"
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
