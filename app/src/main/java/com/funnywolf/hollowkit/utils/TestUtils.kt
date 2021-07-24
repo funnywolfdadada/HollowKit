@@ -9,7 +9,6 @@ import androidx.recyclerview.widget.RecyclerView
 import coil.api.load
 import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.recyclerview.*
-import com.funnywolf.hollowkit.view.find
 import com.funnywolf.hollowkit.view.scroll.behavior.JellyLayout
 import com.funnywolf.hollowkit.view.setRoundRect
 import kotlin.math.round
@@ -23,16 +22,15 @@ import kotlin.random.Random
 var defaultHolderBackgroundColor = 0xFFF89798.toInt()
 var westWorldHolderBackgroundColor = 0xFF9E7D6D.toInt()
 
-fun createSimpleStringMapper(color: Int = 0xFFF89798.toInt()) = NoAdapterMapperImpl(
-        String::class.java, null,
-        resViewCreator(R.layout.holder_simple_view),
-        { d, v ->
-            v.setBackgroundColor(color)
-            v.setOnClickListener {
-                it.context.toast("Clicked $d")
-            }
-            v.find<TextView>(R.id.content)?.text = d
+fun SimpleAdapter.addSimpleStringMapper(color: Int = 0xFFF89798.toInt()) = addMapper(
+    HolderMapInfo(String::class.java, R.layout.holder_simple_view),
+    onBindListener = { vh, d ->
+        vh.itemView.setBackgroundColor(color)
+        vh.itemView.setOnClickListener {
+            it.context.toast("Clicked $d")
         }
+        vh.find<TextView>(R.id.content)?.text = d
+    }
 )
 
 fun getRandomString(length: Int = (Math.random() * 3 + 7).toInt()): String {
@@ -59,8 +57,12 @@ fun getRandomInt(n: Int, start: Int = 0, end: Int = Int.MAX_VALUE): MutableList<
 }
 
 fun RecyclerView.simpleInit(count: Int = 30, color: Int = defaultHolderBackgroundColor) {
-    addMapper(createSimpleStringMapper(color))
-    val list = asList()
+    if (layoutManager == null) {
+        layoutManager = LinearLayoutManager(context)
+    }
+    val list = AdapterList<Any>()
+    adapter = SimpleAdapter(list).addSimpleStringMapper(color)
+        .also { list.bind(it) }
     list.clear()
     list.addAll(getRandomStrings(count))
 }
@@ -108,58 +110,65 @@ val higherPictures = listOf(
     Picture(R.drawable.poster_westworld_season_3)
 )
 
-fun RecyclerView.initPictures(enableDelete: Boolean = false) {
-    val list = asList()
-    addMapper<Picture>(
-            null,
-            resViewCreator(if (enableDelete) { R.layout.holder_jelly_picture } else { R.layout.holder_picture }),
-            { d, v ->
-                v.find<View>(R.id.image_view)?.setRoundRect(10.dp.toFloat())
-                v.find<View>(R.id.image_view)?.setOnClickListener {
-                    v.context.toast("Click picture ${d.res}")
+fun RecyclerView.initPictures(enableDelete: Boolean = false): AdapterList<Any> {
+    if (layoutManager == null) {
+        layoutManager = LinearLayoutManager(context)
+    }
+    val list = AdapterList<Any>()
+    adapter = SimpleAdapter(list).addMapper(
+            HolderMapInfo(Picture::class.java, if (enableDelete) { R.layout.holder_jelly_picture } else { R.layout.holder_picture }),
+            onBindListener = { vh, d ->
+                vh.find<View>(R.id.image_view)?.setRoundRect(10.dp.toFloat())
+                vh.find<View>(R.id.image_view)?.setOnClickListener {
+                    vh.itemView.context.toast("Click picture ${d.res}")
                 }
-                v.find<JellyLayout>(R.id.jelly)?.scrollAxis = ViewCompat.SCROLL_AXIS_HORIZONTAL
-                v.find<JellyLayout>(R.id.jelly)?.onTouchRelease = { jl ->
+                vh.find<JellyLayout>(R.id.jelly)?.scrollAxis = ViewCompat.SCROLL_AXIS_HORIZONTAL
+                vh.find<JellyLayout>(R.id.jelly)?.onTouchRelease = { jl ->
                     jl.smoothScrollTo(if (jl.lastScrollDir > 0) { jl.maxScroll } else { 0 }) {
                         if (jl.scrollX == jl.maxScroll) {
                             d.also { list.remove(it) }
                         }
                     }
                 }
-                v.find<JellyLayout>(R.id.jelly)?.smoothScrollTo(0, 0)
-                v.find<ImageView>(R.id.image_view)?.load(d.res)
+                vh.find<JellyLayout>(R.id.jelly)?.smoothScrollTo(0, 0)
+                vh.find<ImageView>(R.id.image_view)?.load(d.res)
             }
-    )
+    ).also { list.bind(it) }
     list.clear()
     list.addAll(widerPictures)
+    return list
 }
 
-fun RecyclerView.initHorizontalPictures() {
-    layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false)
-    val list = asList()
-    addMapper<Picture>(
-            null,
-            resViewCreator(R.layout.holder_jelly_higher_picture),
-            { d, v ->
-                v.find<View>(R.id.image_view)?.setRoundRect(10.dp.toFloat())
-                v.find<View>(R.id.image_view)?.setOnClickListener {
-                    v.context.toast("Click picture ${d.res}")
-                }
-                v.find<JellyLayout>(R.id.jelly)?.onTouchRelease = { jl ->
-                    if (jl.scrollY == jl.maxScroll) {
-                        list.remove(d)
-                    } else {
-                        jl.smoothScrollTo(if (jl.lastScrollDir > 0) { jl.maxScroll } else { 0 }) {
-                            if (jl.scrollY == jl.maxScroll) {
-                                list.remove(d)
-                            }
+fun RecyclerView.initHorizontalPictures(): AdapterList<Any> {
+    if (layoutManager == null) {
+        layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false)
+    }
+    val list = AdapterList<Any>()
+    adapter = SimpleAdapter(list).addMapper(
+        HolderMapInfo(Picture::class.java, R.layout.holder_jelly_higher_picture),
+        onBindListener = { vh, d ->
+            vh.find<View>(R.id.image_view)?.setRoundRect(10.dp.toFloat())
+            vh.find<View>(R.id.image_view)?.setOnClickListener {
+                vh.itemView.context.toast("Click picture ${d.res}")
+            }
+            vh.find<JellyLayout>(R.id.jelly)?.onTouchRelease = { jl ->
+                if (jl.scrollY == jl.maxScroll) {
+                    list.remove(d)
+                } else {
+                    jl.smoothScrollTo(if (jl.lastScrollDir > 0) { jl.maxScroll } else { 0 }) {
+                        if (jl.scrollY == jl.maxScroll) {
+                            list.remove(d)
                         }
                     }
                 }
-                v.find<JellyLayout>(R.id.jelly)?.smoothScrollTo(0, 0)
-                v.find<ImageView>(R.id.image_view)?.load(d.res)
             }
-    )
+            vh.find<JellyLayout>(R.id.jelly)?.smoothScrollTo(0, 0)
+            vh.find<ImageView>(R.id.image_view)?.load(d.res)
+        }
+    ).also {
+        list.bind(it)
+    }
     list.clear()
     list.addAll(higherPictures)
+    return list
 }

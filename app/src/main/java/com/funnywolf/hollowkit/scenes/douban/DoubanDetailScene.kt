@@ -7,14 +7,14 @@ import android.util.SparseArray
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
-import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.PagerAdapter
 import androidx.viewpager.widget.ViewPager
 import com.bytedance.scene.group.GroupScene
 import com.funnywolf.hollowkit.R
+import com.funnywolf.hollowkit.recyclerview.HolderMapInfo
+import com.funnywolf.hollowkit.recyclerview.SimpleAdapter
 import com.funnywolf.hollowkit.scenes.douban.view.BOTTOM_SHEET_STATE_EXTENDED
 import com.funnywolf.hollowkit.utils.*
 import com.funnywolf.hollowkit.scenes.douban.view.DoubanDetailView
@@ -98,55 +98,55 @@ class DoubanDetailScene : GroupScene() {
         doubanDetailView.topRecyclerView.adapter = SimpleAdapter(
             list
         )
-            .addHolderInfo(
-                HolderInfo(
+            .addMapper(
+                HolderMapInfo(
                     DoubanHeader::class.java,
                     R.layout.holder_douban_header,
                     DoubanHeaderHolder::class.java
                 )
             )
-            .addHolderInfo(
-                HolderInfo(
+            .addMapper(
+                HolderMapInfo(
                     DoubanRating::class.java,
                     R.layout.holder_douban_rating,
                     RatingHolder::class.java
                 )
             )
-            .addHolderInfo(
-                HolderInfo(
+            .addMapper(
+                HolderMapInfo(
                     DoubanTags::class.java,
                     R.layout.holder_douban_tags
                 )
             )
-            .addHolderInfo(
-                HolderInfo(
+            .addMapper(
+                HolderMapInfo(
                     TitleModel::class.java,
                     R.layout.holder_douban_title,
                     TitleHolder::class.java
                 )
             )
-            .addHolderInfo(
-                HolderInfo(
+            .addMapper(
+                HolderMapInfo(
                     Brief::class.java,
                     R.layout.holder_douban_brief,
                     BriefHolder::class.java
                 )
             )
-            .addHolderInfo(
-                HolderInfo(
+            .addMapper(
+                HolderMapInfo(
                     Actors::class.java,
                     R.layout.holder_douban_inner_list,
                     ActorsViewHolder::class.java
                 )
             )
-            .addHolderInfo(
-                HolderInfo(
+            .addMapper(
+                HolderMapInfo(
                     Pictures::class.java,
                     R.layout.holder_douban_inner_list,
                     PicturesViewHolder::class.java
                 )
             )
-            .addHolderInfo(createSimpleStringHolderInfo(0   ))
+            .addSimpleStringMapper()
         doubanDetailView.topRecyclerView.layoutManager = LinearLayoutManager(view.context)
     }
 
@@ -206,18 +206,4 @@ class DoubanDetailScene : GroupScene() {
         }
     }
 
-}
-
-fun createSimpleStringHolderInfo(color: Int = 0xFFF89798.toInt()): HolderInfo<String> {
-    return HolderInfo(String::class.java,
-            R.layout.holder_simple_view,
-            onCreate = { holder ->
-                holder.itemView.setBackgroundColor(color)
-                holder.itemView.setOnClickListener {
-                    Toast.makeText(it.context, "Clicked ${holder.data}", Toast.LENGTH_SHORT).show()
-                }
-            },
-            onBind = { holder, data ->
-                holder.v<TextView>(R.id.content)?.text = data
-            })
 }

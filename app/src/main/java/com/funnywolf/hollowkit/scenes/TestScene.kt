@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.bytedance.scene.Scene
 import com.funnywolf.hollowkit.R
-import com.funnywolf.hollowkit.recyclerview.asList
 import com.funnywolf.hollowkit.utils.higherPictures
 import com.funnywolf.hollowkit.utils.initHorizontalPictures
 
@@ -30,14 +29,12 @@ class TestScene: Scene() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val rv = view.findViewById<RecyclerView>(R.id.rv).apply {
-            initHorizontalPictures()
-            asList().addAll(higherPictures)
-            asList().addAll(higherPictures)
-            asList().addAll(higherPictures)
-            layoutManager = GridLayoutManager(context, 4)
-        }
-        val list = rv.asList()
+        val rv = view.findViewById<RecyclerView>(R.id.rv)
+        rv.layoutManager = GridLayoutManager(rv.context, 4)
+        val list = rv.initHorizontalPictures()
+        list.addAll(higherPictures)
+        list.addAll(higherPictures)
+        list.addAll(higherPictures)
         ItemTouchHelper(object: ItemTouchHelper.Callback() {
             override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
                 return makeMovementFlags(ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT, 0)

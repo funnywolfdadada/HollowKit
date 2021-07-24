@@ -9,21 +9,20 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import coil.api.load
 import com.funnywolf.hollowkit.R
+import com.funnywolf.hollowkit.recyclerview.*
 import com.funnywolf.hollowkit.scenes.douban.view.JellyLayout
-import com.funnywolf.hollowkit.recyclerview.LiveList
 import com.funnywolf.hollowkit.utils.dp
 import com.funnywolf.hollowkit.scenes.douban.view.RightDragToOpenView
-import com.funnywolf.hollowkit.recyclerview.bind
 
 /**
  * @author https://github.com/funnywolfdadada
  * @since 2020/4/11
  */
 class DoubanHeaderHolder(v: View): SimpleHolder<DoubanHeader>(v) {
-    private val ivPoster = v<ImageView>(R.id.iv_poster)
-    private val tvTitle = v<TextView>(R.id.tv_title)
-    private val tvSubtitle = v<TextView>(R.id.tv_subtitle)
-    private val tvInfo = v<TextView>(R.id.tv_info)
+    private val ivPoster = this.find<ImageView>(R.id.iv_poster)
+    private val tvTitle = this.find<TextView>(R.id.tv_title)
+    private val tvSubtitle = this.find<TextView>(R.id.tv_subtitle)
+    private val tvInfo = this.find<TextView>(R.id.tv_info)
 
     override fun onBind(data: DoubanHeader) {
         super.onBind(data)
@@ -35,9 +34,9 @@ class DoubanHeaderHolder(v: View): SimpleHolder<DoubanHeader>(v) {
 }
 
 class RatingHolder(v: View): SimpleHolder<DoubanRating>(v) {
-    private val tvRating = v<TextView>(R.id.tv_rating)
-    private val ratingBar = v<RatingBar>(R.id.rating_bar)
-    private val tvInfo = v<TextView>(R.id.tv_info)
+    private val tvRating = this.find<TextView>(R.id.tv_rating)
+    private val ratingBar = this.find<RatingBar>(R.id.rating_bar)
+    private val tvInfo = this.find<TextView>(R.id.tv_info)
 
     override fun onBind(data: DoubanRating) {
         super.onBind(data)
@@ -48,8 +47,8 @@ class RatingHolder(v: View): SimpleHolder<DoubanRating>(v) {
 }
 
 class TitleHolder(v: View): SimpleHolder<TitleModel>(v) {
-    private val tvTitle = v<TextView>(R.id.tv_title)
-    private val tvInfo = v<TextView>(R.id.tv_info)
+    private val tvTitle = this.find<TextView>(R.id.tv_title)
+    private val tvInfo = this.find<TextView>(R.id.tv_info)
 
     override fun onBind(data: TitleModel) {
         super.onBind(data)
@@ -59,7 +58,7 @@ class TitleHolder(v: View): SimpleHolder<TitleModel>(v) {
 }
 
 class BriefHolder(v: View): SimpleHolder<Brief>(v) {
-    private val textView = v<TextView>(R.id.text_view)
+    private val textView = this.find<TextView>(R.id.text_view)
 
     override fun onBind(data: Brief) {
         super.onBind(data)
@@ -68,9 +67,9 @@ class BriefHolder(v: View): SimpleHolder<Brief>(v) {
 }
 
 class ActorViewHolder(v: View): SimpleHolder<Actor>(v) {
-    private val ivAvatar = v<ImageView>(R.id.iv_avatar)!!
-    private val tvName = v<TextView>(R.id.tv_name)
-    private val tvInfo = v<TextView>(R.id.tv_info)
+    private val ivAvatar = this.find<ImageView>(R.id.iv_avatar)!!
+    private val tvName = this.find<TextView>(R.id.tv_name)
+    private val tvInfo = this.find<TextView>(R.id.tv_info)
 
     override fun onBind(data: Actor) {
         super.onBind(data)
@@ -81,13 +80,13 @@ class ActorViewHolder(v: View): SimpleHolder<Actor>(v) {
 }
 
 class ActorsViewHolder(v: View): SimpleHolder<Actors>(v) {
-    private val jelly = v<JellyLayout>(R.id.jelly)
-    private val recyclerView = v<RecyclerView>(R.id.recycler)
+    private val jelly = this.find<JellyLayout>(R.id.jelly)
+    private val recyclerView = this.find<RecyclerView>(R.id.recycler)
 
     private val dragView =
         RightDragToOpenView(v.context)
 
-    private val liveList = LiveList<Any>()
+    private val list = AdapterList<Any>()
 
     init {
         dragView.layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
@@ -100,14 +99,14 @@ class ActorsViewHolder(v: View): SimpleHolder<Actors>(v) {
         jelly?.onScrollChangedListener = {
             dragView.process = it.currProcess
         }
-        recyclerView?.adapter = SimpleAdapter(liveList)
-            .addHolderInfo(
-                HolderInfo(
+        recyclerView?.adapter = SimpleAdapter(list)
+            .addMapper(
+                HolderMapInfo(
                     Actor::class.java,
                     R.layout.holder_douban_actor,
                     ActorViewHolder::class.java
                 )
-            ).also { liveList.bind(it) }
+            ).also { list.bind(it) }
         recyclerView?.layoutManager = LinearLayoutManager(v.context).also {
             it.orientation = LinearLayoutManager.HORIZONTAL
         }
@@ -115,13 +114,13 @@ class ActorsViewHolder(v: View): SimpleHolder<Actors>(v) {
 
     override fun onBind(data: Actors) {
         super.onBind(data)
-        liveList.clear()
-        liveList.addAll(data)
+        list.clear()
+        list.addAll(data)
     }
 }
 
 class PictureViewHolder(v: View): SimpleHolder<Picture>(v) {
-    private val imageView = v<ImageView>(R.id.image_view)!!
+    private val imageView = this.find<ImageView>(R.id.image_view)!!
 
     override fun onBind(data: Picture) {
         super.onBind(data)
@@ -131,13 +130,13 @@ class PictureViewHolder(v: View): SimpleHolder<Picture>(v) {
 }
 
 class PicturesViewHolder(v: View): SimpleHolder<Pictures>(v) {
-    private val jelly = v<JellyLayout>(R.id.jelly)
-    private val recyclerView = v<RecyclerView>(R.id.recycler)
+    private val jelly = this.find<JellyLayout>(R.id.jelly)
+    private val recyclerView = this.find<RecyclerView>(R.id.recycler)
 
     private val dragView =
         RightDragToOpenView(v.context)
 
-    private val liveList = LiveList<Any>()
+    private val list = AdapterList<Any>()
 
     init {
         dragView.layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
@@ -150,14 +149,14 @@ class PicturesViewHolder(v: View): SimpleHolder<Pictures>(v) {
         jelly?.onScrollChangedListener = {
             dragView.process = it.currProcess
         }
-        recyclerView?.adapter = SimpleAdapter(liveList)
-            .addHolderInfo(
-                HolderInfo(
+        recyclerView?.adapter = SimpleAdapter(list)
+            .addMapper(
+                HolderMapInfo(
                     Picture::class.java,
                     R.layout.holder_douban_picture,
                     PictureViewHolder::class.java
                 )
-            ).also { liveList.bind(it) }
+            ).also { list.bind(it) }
         recyclerView?.layoutManager = LinearLayoutManager(v.context).also {
             it.orientation = LinearLayoutManager.HORIZONTAL
         }
@@ -165,7 +164,7 @@ class PicturesViewHolder(v: View): SimpleHolder<Pictures>(v) {
 
     override fun onBind(data: Pictures) {
         super.onBind(data)
-        liveList.clear()
-        liveList.addAll(data)
+        list.clear()
+        list.addAll(data)
     }
 }
