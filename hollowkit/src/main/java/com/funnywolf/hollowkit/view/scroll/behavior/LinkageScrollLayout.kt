@@ -13,12 +13,10 @@ import androidx.core.view.ViewCompat
  */
 class LinkageScrollLayout @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-) : BehavioralScrollView(context, attrs, defStyleAttr), NestedScrollBehavior {
+) : BehavioralScrollView(context, attrs, defStyleAttr) {
 
     var topScrollTarget: (()-> View?)? = null
     var bottomScrollTarget: (()-> View?)? = null
-
-    override var behavior: NestedScrollBehavior? = this
 
     override fun onNestedPreFling(target: View, velocityX: Float, velocityY: Float): Boolean {
         // 为了能够将滚动传递下去，需要把 fling 拦截下来

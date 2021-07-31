@@ -13,9 +13,7 @@ import androidx.core.view.ViewCompat
  */
 class JellyLayout @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-) : BehavioralScrollView(context, attrs, defStyleAttr), NestedScrollBehavior {
-
-    override var behavior: NestedScrollBehavior? = this
+) : BehavioralScrollView(context, attrs, defStyleAttr) {
 
     /**
      * 滚动阻尼，参数为当前的滚动量，返回值未阻尼系数

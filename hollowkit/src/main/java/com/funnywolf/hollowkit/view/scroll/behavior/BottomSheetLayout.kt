@@ -14,7 +14,7 @@ import com.funnywolf.hollowkit.view.isUnder
  */
 class BottomSheetLayout @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-) : BehavioralScrollView(context, attrs, defStyleAttr), NestedScrollBehavior {
+) : BehavioralScrollView(context, attrs, defStyleAttr) {
 
     private var firstLayout = true
 
@@ -37,8 +37,6 @@ class BottomSheetLayout @JvmOverloads constructor(
      * 内容视图中间停留的显示高度，默认等于最低高度
      */
     private var midHeight: Int = 0
-
-    override var behavior: NestedScrollBehavior? = this
 
     fun setup(initPosition: Int = POSITION_MAX, minHeight: Int = 0, midHeight: Int = minHeight) {
         this.initPosition = initPosition

@@ -81,7 +81,7 @@ class SecondFloorScene: UserVisibleHintGroupScene() {
 
 class SecondFloorLayout @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-) : BehavioralScrollView(context, attrs, defStyleAttr), NestedScrollBehavior {
+) : BehavioralScrollView(context, attrs, defStyleAttr) {
 
     val None = 0
     /**
@@ -138,8 +138,6 @@ class SecondFloorLayout @JvmOverloads constructor(
                 }
             }
         }
-
-    override var behavior: NestedScrollBehavior? = this
 
     override fun handleDispatchTouchEvent(e: MotionEvent): Boolean? {
         if ((e.action == MotionEvent.ACTION_CANCEL || e.action == MotionEvent.ACTION_UP)

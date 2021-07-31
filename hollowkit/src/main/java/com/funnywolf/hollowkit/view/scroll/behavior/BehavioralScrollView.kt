@@ -29,7 +29,7 @@ import kotlin.math.abs
  */
 open class BehavioralScrollView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-): ConstraintLayout(context, attrs, defStyleAttr), NestedScrollingParent3, NestedScrollingChild3 {
+): ConstraintLayout(context, attrs, defStyleAttr), NestedScrollingParent3, NestedScrollingChild3, NestedScrollBehavior {
 
     @ViewCompat.ScrollAxis
     var scrollAxis: Int = ViewCompat.SCROLL_AXIS_VERTICAL
@@ -83,8 +83,6 @@ open class BehavioralScrollView @JvmOverloads constructor(
         private set
 
     var enableLog = false
-
-    protected open var behavior: NestedScrollBehavior? = object: NestedScrollBehavior {}
 
     // region 一些辅助变量
 
@@ -260,8 +258,8 @@ open class BehavioralScrollView @JvmOverloads constructor(
 
     override fun dispatchTouchEvent(e: MotionEvent): Boolean {
         // TODO: dispatchTouchEvent 里面干了很多事，直接拦截不太好，之后会去掉
-        // behavior 优先处理，不处理走默认逻辑
-        behavior?.handleDispatchTouchEvent(e)?.also {
+        // 优先处理 behavior，不处理走默认逻辑
+        handleDispatchTouchEvent(e)?.also {
             log("handleDispatchTouchEvent $it")
             return it
         }
@@ -331,8 +329,8 @@ open class BehavioralScrollView @JvmOverloads constructor(
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(e: MotionEvent): Boolean {
-        // behavior 优先处理，不处理时自己处理 touch 事件
-        behavior?.handleTouchEvent(e)?.also {
+        // 优先处理 behavior，不处理时自己处理 touch 事件
+        handleTouchEvent(e)?.also {
             log("handleTouchEvent $it")
             return it
         }
@@ -674,7 +672,7 @@ open class BehavioralScrollView @JvmOverloads constructor(
         log("dispatchNestedPreScrollInternal: type=$type, x=$dx, y=$dy")
         when (nestedScrollAxes) {
             ViewCompat.SCROLL_AXIS_HORIZONTAL -> {
-                val handleFirst = behavior?.handleNestedPreScrollFirst(dx, type)
+                val handleFirst = handleNestedPreScrollFirst(dx, type)
                 log("handleNestedPreScrollFirst = $handleFirst")
                 when (handleFirst) {
                     true -> {
@@ -691,7 +689,7 @@ open class BehavioralScrollView @JvmOverloads constructor(
                 }
             }
             ViewCompat.SCROLL_AXIS_VERTICAL ->{
-                val handleFirst = behavior?.handleNestedPreScrollFirst(dy, type)
+                val handleFirst = handleNestedPreScrollFirst(dy, type)
                 log("handleNestedPreScrollFirst = $handleFirst")
                 when (handleFirst) {
                     true -> {
@@ -725,7 +723,7 @@ open class BehavioralScrollView @JvmOverloads constructor(
         log("dispatchNestedScrollInternal: type=$type, x=$dxUnconsumed, y=$dyUnconsumed")
         when (nestedScrollAxes) {
             ViewCompat.SCROLL_AXIS_HORIZONTAL -> {
-                val handleFirst = behavior?.handleNestedScrollFirst(dxUnconsumed, type)
+                val handleFirst = handleNestedScrollFirst(dxUnconsumed, type)
                 log("handleNestedScrollFirst = $handleFirst")
                 when (handleFirst) {
                     true -> {
@@ -742,7 +740,7 @@ open class BehavioralScrollView @JvmOverloads constructor(
                 }
             }
             ViewCompat.SCROLL_AXIS_VERTICAL -> {
-                val handleFirst = behavior?.handleNestedScrollFirst(dyUnconsumed, type)
+                val handleFirst = handleNestedScrollFirst(dyUnconsumed, type)
                 log("handleNestedScrollFirst = $handleFirst")
                 when (handleFirst) {
                     true -> {
@@ -771,7 +769,7 @@ open class BehavioralScrollView @JvmOverloads constructor(
             return 0
         }
         // behavior 优先决定是否滚动自身
-        val handle = behavior?.handleScrollSelf(scroll, type)
+        val handle = handleScrollSelf(scroll, type)
         val consumed = when(handle) {
             true -> scroll
             false -> 0
