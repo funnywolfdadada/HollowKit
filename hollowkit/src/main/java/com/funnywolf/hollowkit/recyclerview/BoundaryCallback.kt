@@ -1,6 +1,5 @@
 package com.funnywolf.hollowkit.recyclerview
 
-import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 
 
@@ -12,11 +11,10 @@ import androidx.recyclerview.widget.RecyclerView
  */
 class BoundaryCallback(
     private val rv: RecyclerView
-): RecyclerView.OnScrollListener(), View.OnLayoutChangeListener, Runnable {
+): RecyclerView.OnScrollListener(), Runnable {
 
     init {
         rv.addOnScrollListener(this)
-        rv.addOnLayoutChangeListener(this)
     }
 
     /**
@@ -26,6 +24,9 @@ class BoundaryCallback(
     var thresholdCount = 5
     private var onReachStart: (()->Unit)? = null
     private var onReachEnd: (()->Unit)? = null
+
+    private var pending = false
+    private var lastDirection = 0
 
     fun onReachStart(callback: (()->Unit)?): BoundaryCallback {
         onReachStart = callback
@@ -39,18 +40,28 @@ class BoundaryCallback(
 
     override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
         super.onScrollStateChanged(recyclerView, newState)
-        rv.post(this)
+        lastDirection = 0
+        tryInvoke()
     }
 
     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-        rv.post(this)
+        lastDirection = when {
+            dy != 0 -> dy
+            dx != 0 -> dx
+            else -> return
+        }
+        tryInvoke()
     }
 
-    override fun onLayoutChange(v: View?, left: Int, top: Int, right: Int, bottom: Int, oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
-        rv.post(this)
+    private fun tryInvoke() {
+        if (!pending) {
+            pending = true
+            rv.postDelayed(this, 100)
+        }
     }
 
     override fun run() {
+        pending = false
         val size = rv.adapter?.itemCount ?: return
         var minPosition = Int.MAX_VALUE
         var maxPosition = Int.MIN_VALUE
@@ -63,10 +74,18 @@ class BoundaryCallback(
                 maxPosition = p
             }
         }
-        if (maxPosition > size - thresholdCount) {
-            onReachEnd?.invoke()
-        } else if (minPosition < thresholdCount) {
-            onReachStart?.invoke()
+        when {
+            lastDirection < 0 -> if (minPosition < thresholdCount) {
+                onReachStart?.invoke()
+            }
+            lastDirection > 0 -> if (maxPosition > size - thresholdCount) {
+                onReachEnd?.invoke()
+            }
+            lastDirection == 0 -> if (maxPosition > size - thresholdCount) {
+                onReachEnd?.invoke()
+            } else if (minPosition < thresholdCount) {
+                onReachStart?.invoke()
+            }
         }
     }
 
