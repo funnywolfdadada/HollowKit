@@ -1,18 +1,15 @@
 package com.funnywolf.hollowkit.permission
 
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
 import android.util.Log
 import android.util.SparseArray
 import androidx.annotation.MainThread
 import androidx.core.util.isEmpty
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
-import com.funnywolf.hollowkit.results.ResultFragment
-import com.funnywolf.hollowkit.results.startActivityForResult
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * @author https://github.com/funnywolfdadada
@@ -33,19 +30,6 @@ fun FragmentActivity.requestPermissions(
     return this
 }
 
-fun FragmentActivity.requestPermissionsInSettings(
-        permissions: Array<String>, callback: PermissionCallback
-): FragmentActivity {
-    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-            .setData(Uri.fromParts("package", packageName, null))
-    startActivityForResult(intent, null) { _, _ ->
-        val granted = grantedPermissions(permissions)
-        val denied = permissions.toMutableList().also { it.removeAll(granted) }
-        callback(granted, denied)
-    }
-    return this
-}
-
 fun Context.isAllPermissionGranted(permissions: Array<String>): Boolean {
     return permissions.find { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED } == null
 }
@@ -60,7 +44,8 @@ typealias PermissionCallback = (granted: List<String>, denied: List<String>)->Un
 
 private const val PERMISSION_FRAGMENT_TAG = "PERMISSION_FRAGMENT_TAG"
 
-class PermissionFragment: ResultFragment() {
+class PermissionFragment: Fragment() {
+    private val requestCode = AtomicInteger()
 
     private var requestingPermissions: PermissionRequest? = null
     private val pendingRequests = SparseArray<PermissionRequest>(2)
@@ -91,6 +76,15 @@ class PermissionFragment: ResultFragment() {
             }
         }
         requestNextPermission()
+    }
+
+    private fun generateRequestCode(): Int {
+        var code = requestCode.incrementAndGet()
+        if (code < 0 || code > 0x0000FFFF) {
+            code = 0
+            requestCode.set(code)
+        }
+        return code
     }
 
     private fun requestNextPermission() {

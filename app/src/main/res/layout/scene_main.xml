@@ -55,15 +55,6 @@
         />
 
     <Button
-        android:id="@+id/bt_activity_result"
-        android:text="activity_result"
-        android:background="#8FFF"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        />
-
-    <Button
         android:id="@+id/bt_permission"
         android:text="权限申请"
         android:background="#8FFF"
@@ -75,6 +66,15 @@
     <Button
         android:id="@+id/bt_douban"
         android:text="豆瓣详情页"
+        android:background="#8FFF"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        />
+
+    <Button
+        android:id="@+id/bt_expandable_text"
+        android:text="带展开的 TextView"
         android:background="#8FFF"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

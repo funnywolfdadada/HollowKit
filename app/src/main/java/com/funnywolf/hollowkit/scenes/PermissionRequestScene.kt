@@ -10,7 +10,6 @@ import androidx.fragment.app.FragmentActivity
 import com.bytedance.scene.Scene
 import com.funnywolf.hollowkit.R
 import com.funnywolf.hollowkit.permission.requestPermissions
-import com.funnywolf.hollowkit.permission.requestPermissionsInSettings
 
 /**
  * @author https://github.com/funnywolfdadada

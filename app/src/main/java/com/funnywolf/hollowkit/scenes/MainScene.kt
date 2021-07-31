@@ -33,9 +33,9 @@ class MainScene: Scene() {
         bind(R.id.bt_rich_text, RichTextScene::class.java)
         bind(R.id.stateful_layout, StatefulLayoutScene::class.java)
         bind(R.id.okhttp_progress, OkHttpProgressScene::class.java)
-        bind(R.id.bt_activity_result, ActivityResultScene::class.java)
         bind(R.id.bt_permission, PermissionRequestScene::class.java)
         bind(R.id.bt_douban, DoubanDetailScene::class.java)
+        bind(R.id.bt_expandable_text, ExpandableTextScene::class.java)
     }
 
     private fun bind(id: Int, clazz: Class<out Scene>) {

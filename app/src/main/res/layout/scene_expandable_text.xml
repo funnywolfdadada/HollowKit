@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <com.funnywolf.hollowkit.view.ExpandableTextView
+        android:id="@+id/text_view"
+        android:text="发付款计划司机会就开始放发付款计划司机会就开始放发付款计划司机会就开始放发付款计划司机会就开始放发付款计划司机会就开始放发付款计划司机会就开始放发付款计划司机会就开始放发付款计划司机会就开始放发付款计划司机会就开始放发付款计划司机会就开始放"
+        android:textSize="20sp"
+        android:textColor="#FFFFFFFF"
+        android:maxLines="5"
+        android:ellipsize="end"
+        android:background="#80000000"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="200dp"
+        app:layout_constraintTop_toTopOf="parent"
+        />
+
+    <Button
+        android:id="@+id/add_max_lines"
+        android:text="add_max_lines"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+
+    <Button
+        android:id="@+id/minus_max_lines"
+        android:text="minus_max_lines"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+
+    <Button
+        android:id="@+id/add_padding"
+        android:text="add_padding"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+
+    <Button
+        android:id="@+id/minus_padding"
+        android:text="minus_padding"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+
+    <Button
+        android:id="@+id/add_text"
+        android:text="add_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+
+    <Button
+        android:id="@+id/minus_text"
+        android:text="minus_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+
+    <androidx.constraintlayout.helper.widget.Flow
+        app:flow_wrapMode="chain"
+        app:constraint_referenced_ids="add_max_lines,minus_max_lines,add_padding,minus_padding,add_text,minus_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
