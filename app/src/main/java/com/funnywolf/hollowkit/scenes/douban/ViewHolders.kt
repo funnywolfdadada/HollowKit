@@ -19,10 +19,10 @@ import com.funnywolf.hollowkit.scenes.douban.view.RightDragToOpenView
  * @since 2020/4/11
  */
 class DoubanHeaderHolder(v: View): SimpleHolder<DoubanHeader>(v) {
-    private val ivPoster = this.find<ImageView>(R.id.iv_poster)
-    private val tvTitle = this.find<TextView>(R.id.tv_title)
-    private val tvSubtitle = this.find<TextView>(R.id.tv_subtitle)
-    private val tvInfo = this.find<TextView>(R.id.tv_info)
+    private val ivPoster = v.findViewById<ImageView>(R.id.iv_poster)
+    private val tvTitle = v.findViewById<TextView>(R.id.tv_title)
+    private val tvSubtitle = v.findViewById<TextView>(R.id.tv_subtitle)
+    private val tvInfo = v.findViewById<TextView>(R.id.tv_info)
 
     override fun onBind(data: DoubanHeader) {
         super.onBind(data)
@@ -34,9 +34,9 @@ class DoubanHeaderHolder(v: View): SimpleHolder<DoubanHeader>(v) {
 }
 
 class RatingHolder(v: View): SimpleHolder<DoubanRating>(v) {
-    private val tvRating = this.find<TextView>(R.id.tv_rating)
-    private val ratingBar = this.find<RatingBar>(R.id.rating_bar)
-    private val tvInfo = this.find<TextView>(R.id.tv_info)
+    private val tvRating = v.findViewById<TextView>(R.id.tv_rating)
+    private val ratingBar = v.findViewById<RatingBar>(R.id.rating_bar)
+    private val tvInfo = v.findViewById<TextView>(R.id.tv_info)
 
     override fun onBind(data: DoubanRating) {
         super.onBind(data)
@@ -47,8 +47,8 @@ class RatingHolder(v: View): SimpleHolder<DoubanRating>(v) {
 }
 
 class TitleHolder(v: View): SimpleHolder<TitleModel>(v) {
-    private val tvTitle = this.find<TextView>(R.id.tv_title)
-    private val tvInfo = this.find<TextView>(R.id.tv_info)
+    private val tvTitle = v.findViewById<TextView>(R.id.tv_title)
+    private val tvInfo = v.findViewById<TextView>(R.id.tv_info)
 
     override fun onBind(data: TitleModel) {
         super.onBind(data)
@@ -58,7 +58,7 @@ class TitleHolder(v: View): SimpleHolder<TitleModel>(v) {
 }
 
 class BriefHolder(v: View): SimpleHolder<Brief>(v) {
-    private val textView = this.find<TextView>(R.id.text_view)
+    private val textView = v.findViewById<TextView>(R.id.text_view)
 
     override fun onBind(data: Brief) {
         super.onBind(data)
@@ -67,9 +67,9 @@ class BriefHolder(v: View): SimpleHolder<Brief>(v) {
 }
 
 class ActorViewHolder(v: View): SimpleHolder<Actor>(v) {
-    private val ivAvatar = this.find<ImageView>(R.id.iv_avatar)!!
-    private val tvName = this.find<TextView>(R.id.tv_name)
-    private val tvInfo = this.find<TextView>(R.id.tv_info)
+    private val ivAvatar = v.findViewById<ImageView>(R.id.iv_avatar)!!
+    private val tvName = v.findViewById<TextView>(R.id.tv_name)
+    private val tvInfo = v.findViewById<TextView>(R.id.tv_info)
 
     override fun onBind(data: Actor) {
         super.onBind(data)
@@ -80,8 +80,8 @@ class ActorViewHolder(v: View): SimpleHolder<Actor>(v) {
 }
 
 class ActorsViewHolder(v: View): SimpleHolder<Actors>(v) {
-    private val jelly = this.find<JellyLayout>(R.id.jelly)
-    private val recyclerView = this.find<RecyclerView>(R.id.recycler)
+    private val jelly = v.findViewById<JellyLayout>(R.id.jelly)
+    private val recyclerView = v.findViewById<RecyclerView>(R.id.recycler)
 
     private val dragView =
         RightDragToOpenView(v.context)
@@ -120,7 +120,7 @@ class ActorsViewHolder(v: View): SimpleHolder<Actors>(v) {
 }
 
 class PictureViewHolder(v: View): SimpleHolder<Picture>(v) {
-    private val imageView = this.find<ImageView>(R.id.image_view)!!
+    private val imageView = v.findViewById<ImageView>(R.id.image_view)!!
 
     override fun onBind(data: Picture) {
         super.onBind(data)
@@ -130,8 +130,8 @@ class PictureViewHolder(v: View): SimpleHolder<Picture>(v) {
 }
 
 class PicturesViewHolder(v: View): SimpleHolder<Pictures>(v) {
-    private val jelly = this.find<JellyLayout>(R.id.jelly)
-    private val recyclerView = this.find<RecyclerView>(R.id.recycler)
+    private val jelly = v.findViewById<JellyLayout>(R.id.jelly)
+    private val recyclerView = v.findViewById<RecyclerView>(R.id.recycler)
 
     private val dragView =
         RightDragToOpenView(v.context)

@@ -28,32 +28,24 @@ open class SimpleAdapter(list: List<Any>): RecyclerView.Adapter<SimpleHolder<Any
 
     private val infoByDataClass = HashMap<Class<Any>, MutableList<HolderMapper<Any>>>()
     private val infoByType = SparseArray<HolderMapper<Any>?>()
-    private val onCreateListenerByHolderMapper = HashMap<HolderMapper<Any>, OnCreateHolder<Any>?>()
-    private val onBindListenerByHolderMapper = HashMap<HolderMapper<Any>, OnBindHolder<Any>?>()
 
     /**
      * 监听 onCreateViewHolder
      */
-    private val onCreateListeners = ArrayList<OnCreateHolder<Any>>(2)
+    private val onCreateListeners = ArrayList<OnCreateHolder>(2)
 
     /**
      * 监听 onBindViewHolder
      */
-    private val onBindListeners = ArrayList<OnBindHolder<Any>>(2)
+    private val onBindListeners = ArrayList<OnBindHolder>(2)
 
-    fun <T: Any> addMapper(
-        holderMapper: HolderMapper<T>,
-        onCreateListener: OnCreateHolder<T>? = null,
-        onBindListener: OnBindHolder<T>? = null
-    ): SimpleAdapter {
+    fun <T: Any> addMapper(holderMapper: HolderMapper<T>): SimpleAdapter {
         // HolderMapper 泛型上界是 Any，因此这里强转是安全的
         val info = holderMapper as HolderMapper<Any>
         val list = infoByDataClass[info.dataClass]
             ?: ArrayList<HolderMapper<Any>>().also { infoByDataClass[info.dataClass] = it }
         list.add(holderMapper)
         infoByType.append(info.viewType, info)
-        onCreateListenerByHolderMapper[holderMapper] = onCreateListener as? OnCreateHolder<Any>
-        onBindListenerByHolderMapper[holderMapper] = onBindListener as? OnBindHolder<Any>
         return this
     }
 
@@ -77,22 +69,22 @@ open class SimpleAdapter(list: List<Any>): RecyclerView.Adapter<SimpleHolder<Any
         return supportHolderMapper ?: throw IllegalArgumentException("Unsupported data $data at $position")
     }
 
-    fun addOnCreateHolderListener(listener: OnCreateHolder<Any>): SimpleAdapter {
+    fun addOnCreateHolderListener(listener: OnCreateHolder): SimpleAdapter {
         onCreateListeners.add(listener)
         return this
     }
 
-    fun removeOnCreateHolderListener(listener: OnCreateHolder<Any>): SimpleAdapter {
+    fun removeOnCreateHolderListener(listener: OnCreateHolder): SimpleAdapter {
         onCreateListeners.remove(listener)
         return this
     }
 
-    fun addOnBindHolderListener(listener: OnBindHolder<Any>): SimpleAdapter {
+    fun addOnBindHolderListener(listener: OnBindHolder): SimpleAdapter {
         onBindListeners.add(listener)
         return this
     }
 
-    fun removeOnBindHolderListener(listener: OnBindHolder<Any>): SimpleAdapter {
+    fun removeOnBindHolderListener(listener: OnBindHolder): SimpleAdapter {
         onBindListeners.remove(listener)
         return this
     }
@@ -106,11 +98,7 @@ open class SimpleAdapter(list: List<Any>): RecyclerView.Adapter<SimpleHolder<Any
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SimpleHolder<Any> {
         val info = infoByType[viewType] ?: throw IllegalArgumentException("Unknown viewType: $viewType")
         val view = LayoutInflater.from(parent.context).inflate(info.layoutRes, parent, false)
-        val holder = (info.holderClass ?: SimpleHolder::class.java)
-            .getConstructor(View::class.java)
-            // SimpleHolder 泛型上界是 Any，因此这里强转是安全的
-            .newInstance(view) as SimpleHolder<Any>
-        onCreateListenerByHolderMapper[info]?.invoke(holder)
+        val holder = info.holderClass.getConstructor(View::class.java).newInstance(view)
         onCreateListeners.forEach { it.invoke(holder) }
         return holder
     }
@@ -118,19 +106,16 @@ open class SimpleAdapter(list: List<Any>): RecyclerView.Adapter<SimpleHolder<Any
     override fun onBindViewHolder(holder: SimpleHolder<Any>, position: Int) {
         val data = list[position]
         holder.onBind(data)
-        infoByType[holder.itemViewType]?.also {
-            onBindListenerByHolderMapper[it]?.invoke(holder, data)
-        }
         onBindListeners.forEach { it.invoke(holder, list[position]) }
     }
 
 }
 
-typealias OnCreateHolder<T> = (SimpleHolder<T>)->Unit
+typealias OnCreateHolder = (SimpleHolder<out Any>)->Unit
 
-typealias OnBindHolder<T> = (SimpleHolder<T>, T)->Unit
+typealias OnBindHolder = (SimpleHolder<out Any>, Any)->Unit
 
-open class SimpleHolder<T: Any>(v: View) : RecyclerView.ViewHolder(v) {
+abstract class SimpleHolder<T: Any>(v: View) : RecyclerView.ViewHolder(v) {
 
     /**
      * holder 的当前数据
@@ -143,7 +128,6 @@ open class SimpleHolder<T: Any>(v: View) : RecyclerView.ViewHolder(v) {
         this.data = data
     }
 
-    fun <V: View> find(id: Int): V? = itemView.findViewById(id)
 }
 
 interface HolderMapper<T: Any> {
@@ -160,7 +144,7 @@ interface HolderMapper<T: Any> {
     /**
      * 自定义的 SimpleHolder 类型
      */
-    val holderClass: Class<out SimpleHolder<T>>?
+    val holderClass: Class<out SimpleHolder<in T>>
 
     /**
      * 是否支持该数据，用于同一数据类型的区分，不设置就默认支持
@@ -176,7 +160,7 @@ interface HolderMapper<T: Any> {
 class HolderMapInfo<T: Any>(
     override val dataClass: Class<T>,
     override val layoutRes: Int,
-    override val holderClass: Class<out SimpleHolder<T>>? = null,
+    override val holderClass: Class<out SimpleHolder<in T>>,
     override val isSupport: (T)->Boolean = { true },
-    override val viewType: Int = Objects.hash(dataClass, layoutRes, holderClass)
+    override val viewType: Int = layoutRes
 ) : HolderMapper<T>

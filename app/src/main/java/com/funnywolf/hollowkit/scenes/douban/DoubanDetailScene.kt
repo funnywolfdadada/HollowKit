@@ -115,7 +115,8 @@ class DoubanDetailScene : GroupScene() {
             .addMapper(
                 HolderMapInfo(
                     DoubanTags::class.java,
-                    R.layout.holder_douban_tags
+                    R.layout.holder_douban_tags,
+                    SimpleAnyHolder::class.java
                 )
             )
             .addMapper(
