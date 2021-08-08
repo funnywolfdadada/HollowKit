@@ -2,7 +2,7 @@ ext.versions = [:]
 
 versions.compileSdk = 29
 versions.targetSdk = 29
-versions.minSdk = 24
+versions.minSdk = 21
 
 versions.appcompat = '1.1.0'
 versions.kotlin = '1.3.72'
