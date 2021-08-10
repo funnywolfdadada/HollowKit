@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.bytedance.scene.Scene
-import com.funnywolf.hollowkit.R
+import com.funnywolf.hollowkit.databinding.SceneTestBinding
 import com.funnywolf.hollowkit.utils.higherPictures
 import com.funnywolf.hollowkit.utils.initHorizontalPictures
 
@@ -24,12 +24,8 @@ class TestScene: Scene() {
         container: ViewGroup,
         savedInstanceState: Bundle?
     ): View {
-        return inflater.inflate(R.layout.scene_test, container, false)
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        val rv = view.findViewById<RecyclerView>(R.id.rv)
+        val binding = SceneTestBinding.inflate(inflater, container, false)
+        val rv = binding.rv
         rv.layoutManager = GridLayoutManager(rv.context, 4)
         val list = rv.initHorizontalPictures()
         list.addAll(higherPictures)
@@ -54,6 +50,7 @@ class TestScene: Scene() {
             }
 
         }).attachToRecyclerView(rv)
+        return binding.root
     }
 
 }

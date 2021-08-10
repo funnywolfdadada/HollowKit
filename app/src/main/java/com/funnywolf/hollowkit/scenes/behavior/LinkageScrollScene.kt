@@ -4,16 +4,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import androidx.recyclerview.widget.RecyclerView
 import com.bytedance.scene.group.UserVisibleHintGroupScene
-import com.funnywolf.hollowkit.R
+import com.funnywolf.hollowkit.databinding.SceneLinkageScrollBinding
 import com.funnywolf.hollowkit.drawable.RoundRectDrawable
 import com.funnywolf.hollowkit.utils.*
 import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollListener
 import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollView
 import com.funnywolf.hollowkit.view.scroll.behavior.BottomSheetLayout
-import com.funnywolf.hollowkit.view.scroll.behavior.LinkageScrollLayout
 
 /**
  * @author https://github.com/funnywolfdadada
@@ -21,15 +18,7 @@ import com.funnywolf.hollowkit.view.scroll.behavior.LinkageScrollLayout
  */
 class LinkageScrollScene: UserVisibleHintGroupScene() {
 
-    private lateinit var layoutTop: FrameLayout
-    private lateinit var rvTop: RecyclerView
-
-    private lateinit var layoutBottom: FrameLayout
-    private lateinit var rvBottom: RecyclerView
-
-    private lateinit var bottomSheet: BottomSheetLayout
-
-    private lateinit var linkageScroll: LinkageScrollLayout
+    private lateinit var binding: SceneLinkageScrollBinding
 
     private val floatingHeight = 100.dp
 
@@ -38,53 +27,44 @@ class LinkageScrollScene: UserVisibleHintGroupScene() {
         container: ViewGroup,
         savedInstanceState: Bundle?
     ): ViewGroup {
-        return inflater.inflate(R.layout.scene_linkage_scroll, container, false) as ViewGroup
-    }
+        binding = SceneLinkageScrollBinding.inflate(inflater, container, false)
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        linkageScroll = view.findViewById(R.id.linkageScroll)
-        layoutTop = view.findViewById(R.id.layoutTop)
-        rvTop = view.findViewById(R.id.rvLinkageTop)
-        layoutBottom = view.findViewById(R.id.layoutBottom)
-        rvBottom = view.findViewById(R.id.rvLinkageBottom)
-        bottomSheet = view.findViewById(R.id.bottomSheet)
+        binding.rvLinkageTop.initPictures()
+        binding.rvLinkageBottom.initPictures(true)
+        binding.rvLinkageBottom.background = RoundRectDrawable(0xFF03A9F4.toInt(), 20.dp, 20.dp, 0, 0)
 
-        rvTop.initPictures()
-        rvBottom.initPictures(true)
-        rvBottom.background = RoundRectDrawable(0xFF03A9F4.toInt(), 20.dp, 20.dp, 0, 0)
-
-        linkageScroll.topScrollTarget = { rvTop }
-        linkageScroll.listeners.add(object: BehavioralScrollListener {
+        binding.linkageScroll.topScrollTarget = { binding.rvLinkageTop }
+        binding.linkageScroll.listeners.add(object: BehavioralScrollListener {
             override fun onScrollChanged(v: BehavioralScrollView, from: Int, to: Int) {
                 updateFloatState()
             }
         })
 
-        bottomSheet.setup(BottomSheetLayout.POSITION_MIN, floatingHeight)
+        binding.bottomSheet.setup(BottomSheetLayout.POSITION_MIN, floatingHeight)
         updateFloatState()
+        return binding.root
     }
 
     private fun updateFloatState() {
-        if (bottomSheet.indexOfChild(rvBottom) >= 0) {
-            if (linkageScroll.scrollY >= floatingHeight) {
-                bottomSheet.visibility = View.GONE
-                bottomSheet.removeView(rvBottom)
-                if (layoutBottom.indexOfChild(rvBottom) < 0) {
-                    layoutBottom.addView(rvBottom)
+        if (binding.bottomSheet.indexOfChild(binding.rvLinkageBottom) >= 0) {
+            if (binding.linkageScroll.scrollY >= floatingHeight) {
+                binding.bottomSheet.visibility = View.GONE
+                binding.bottomSheet.removeView(binding.rvLinkageBottom)
+                if (binding.layoutBottom.indexOfChild(binding.rvLinkageBottom) < 0) {
+                    binding.layoutBottom.addView(binding.rvLinkageBottom)
                 }
-                linkageScroll.bottomScrollTarget = { rvBottom }
+                binding.linkageScroll.bottomScrollTarget = { binding.rvLinkageBottom }
             }
         } else {
-            if (linkageScroll.scrollY < floatingHeight) {
-                linkageScroll.bottomScrollTarget = null
-                if (layoutBottom.indexOfChild(rvBottom) >= 0) {
-                    layoutBottom.removeView(rvBottom)
+            if (binding.linkageScroll.scrollY < floatingHeight) {
+                binding.linkageScroll.bottomScrollTarget = null
+                if (binding.layoutBottom.indexOfChild(binding.rvLinkageBottom) >= 0) {
+                    binding.layoutBottom.removeView(binding.rvLinkageBottom)
                 }
-                if (bottomSheet.indexOfChild(rvBottom) < 0) {
-                    bottomSheet.addView(rvBottom)
+                if (binding.bottomSheet.indexOfChild(binding.rvLinkageBottom) < 0) {
+                    binding.bottomSheet.addView(binding.rvLinkageBottom)
                 }
-                bottomSheet.visibility = View.VISIBLE
+                binding.bottomSheet.visibility = View.VISIBLE
             }
         }
     }

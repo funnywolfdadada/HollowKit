@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.bytedance.scene.Scene
-import com.funnywolf.hollowkit.R
+import com.funnywolf.hollowkit.databinding.SceneMainBinding
 import com.funnywolf.hollowkit.scenes.douban.DoubanDetailScene
 import com.funnywolf.hollowkit.scenes.behavior.ScrollBehaviorScene
 
@@ -22,24 +22,20 @@ class MainScene: Scene() {
         container: ViewGroup,
         savedInstanceState: Bundle?
     ): View {
-        return inflater.inflate(R.layout.scene_main, container, false)
+        val binding = SceneMainBinding.inflate(inflater, container, false)
+        bind(binding.btTest, TestScene::class.java)
+        bind(binding.btNestedScrollBehavior, ScrollBehaviorScene::class.java)
+        bind(binding.btRichText, RichTextScene::class.java)
+        bind(binding.statefulLayout, StatefulLayoutScene::class.java)
+        bind(binding.okhttpProgress, OkHttpProgressScene::class.java)
+        bind(binding.btPermission, PermissionRequestScene::class.java)
+        bind(binding.btDouban, DoubanDetailScene::class.java)
+        bind(binding.btExpandableText, ExpandableTextScene::class.java)
+        return binding.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        bind(R.id.bt_test, TestScene::class.java)
-        bind(R.id.bt_nested_scroll_behavior, ScrollBehaviorScene::class.java)
-        bind(R.id.bt_rich_text, RichTextScene::class.java)
-        bind(R.id.stateful_layout, StatefulLayoutScene::class.java)
-        bind(R.id.okhttp_progress, OkHttpProgressScene::class.java)
-        bind(R.id.bt_permission, PermissionRequestScene::class.java)
-        bind(R.id.bt_douban, DoubanDetailScene::class.java)
-        bind(R.id.bt_expandable_text, ExpandableTextScene::class.java)
-    }
-
-    private fun bind(id: Int, clazz: Class<out Scene>) {
-        findViewById<View>(id)?.setOnClickListener {
+    private fun bind(v: View, clazz: Class<out Scene>) {
+        v.setOnClickListener {
             navigationScene?.push(clazz)
         }
     }

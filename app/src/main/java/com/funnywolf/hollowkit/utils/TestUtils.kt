@@ -2,12 +2,13 @@ package com.funnywolf.hollowkit.utils
 
 import android.view.View
 import android.widget.ImageView
-import android.widget.TextView
 import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import coil.api.load
 import com.funnywolf.hollowkit.R
+import com.funnywolf.hollowkit.databinding.HolderJellyHigherPictureBinding
+import com.funnywolf.hollowkit.databinding.HolderSimpleViewBinding
 import com.funnywolf.hollowkit.recyclerview.*
 import com.funnywolf.hollowkit.view.scroll.behavior.JellyLayout
 import com.funnywolf.hollowkit.view.setRoundRect
@@ -37,11 +38,12 @@ inline fun <reified VH: SimpleHolder<in T>, reified T> SimpleAdapter.addOnBindLi
 fun SimpleAdapter.addSimpleStringMapper(color: Int = 0xFFF89798.toInt()) = addMapper(
     HolderMapInfo(String::class.java, R.layout.holder_simple_view, SimpleAnyHolder::class.java)
 ).addOnBindListener<SimpleAnyHolder, String> { vh, d ->
-    vh.itemView.setBackgroundColor(color)
-    vh.itemView.setOnClickListener {
+    val binding = HolderSimpleViewBinding.bind(vh.itemView)
+    binding.root.setBackgroundColor(color)
+    binding.root.setOnClickListener {
         it.context.toast("Clicked $d")
     }
-    vh.itemView.findViewById<TextView>(R.id.content)?.text = d
+    binding.content.text = d
 }
 
 fun getRandomString(length: Int = (Math.random() * 3 + 7).toInt()): String {
@@ -162,11 +164,12 @@ fun RecyclerView.initHorizontalPictures(): AdapterList<Any> {
     adapter = SimpleAdapter(list).addMapper(
         HolderMapInfo(Picture::class.java, R.layout.holder_jelly_higher_picture, SimpleAnyHolder::class.java)
     ).addOnBindListener<SimpleAnyHolder, Picture> { vh, d ->
-        vh.itemView.findViewById<View>(R.id.image_view)?.setRoundRect(10.dp.toFloat())
-        vh.itemView.findViewById<View>(R.id.image_view)?.setOnClickListener {
+        val binding = HolderJellyHigherPictureBinding.bind(vh.itemView)
+        binding.imageView.setRoundRect(10.dp.toFloat())
+        binding.imageView.setOnClickListener {
             vh.itemView.context.toast("Click picture ${d.res}")
         }
-        vh.itemView.findViewById<JellyLayout>(R.id.jelly)?.onTouchRelease = { jl ->
+        binding.jelly.onTouchRelease = { jl ->
             if (jl.scrollY == jl.maxScroll) {
                 list.remove(d)
             } else {
@@ -177,8 +180,8 @@ fun RecyclerView.initHorizontalPictures(): AdapterList<Any> {
                 }
             }
         }
-        vh.itemView.findViewById<JellyLayout>(R.id.jelly)?.smoothScrollTo(0, 0)
-        vh.itemView.findViewById<ImageView>(R.id.image_view)?.load(d.res)
+        binding.jelly.smoothScrollTo(0, 0)
+        binding.imageView.load(d.res)
     }.also {
         list.bind(it)
     }

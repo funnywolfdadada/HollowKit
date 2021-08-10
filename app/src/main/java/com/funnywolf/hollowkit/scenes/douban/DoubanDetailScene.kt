@@ -144,7 +144,8 @@ class DoubanDetailScene : GroupScene() {
                 HolderMapInfo(
                     Pictures::class.java,
                     R.layout.holder_douban_inner_list,
-                    PicturesViewHolder::class.java
+                    PicturesViewHolder::class.java,
+                    viewType = PicturesViewHolder::class.java.hashCode()
                 )
             )
             .addSimpleStringMapper()

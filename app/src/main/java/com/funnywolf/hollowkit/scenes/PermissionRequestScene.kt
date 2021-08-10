@@ -8,7 +8,7 @@ import android.view.ViewGroup
 import android.widget.CheckBox
 import androidx.fragment.app.FragmentActivity
 import com.bytedance.scene.Scene
-import com.funnywolf.hollowkit.R
+import com.funnywolf.hollowkit.databinding.ScenePermissionRequestBinding
 import com.funnywolf.hollowkit.permission.requestPermissions
 
 /**
@@ -20,12 +20,8 @@ class PermissionRequestScene: Scene() {
     private val TAG = "Permission"
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): View {
-        return inflater.inflate(R.layout.scene_permission_request, container, false)
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        val checkBoxes = view.findViewById<ViewGroup>(R.id.layout).let { vg ->
+        val binding = ScenePermissionRequestBinding.inflate(inflater, container, false)
+        val checkBoxes = binding.layout.let { vg ->
             ArrayList<CheckBox>().also { cs ->
                 for (i in 0 until vg.childCount) {
                     (vg.getChildAt(i) as? CheckBox)?.also {
@@ -34,7 +30,7 @@ class PermissionRequestScene: Scene() {
                 }
             }
         }
-        view.findViewById<View>(R.id.request).setOnClickListener { v ->
+        binding.request.setOnClickListener { v ->
             val ps = checkBoxes.filter { it.isChecked }.map { it.text.toString() }.toTypedArray()
             val start = System.currentTimeMillis()
             ps.forEach {
@@ -50,6 +46,7 @@ class PermissionRequestScene: Scene() {
                 }
             }, 200)
         }
+        return binding.root
     }
 
 }

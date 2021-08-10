@@ -7,14 +7,12 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.FrameLayout
 import com.bytedance.scene.Scene
-import com.funnywolf.hollowkit.R
+import com.funnywolf.hollowkit.databinding.SceneStatefulLayoutBinding
 import com.funnywolf.hollowkit.drawable.LinearGradientProvider
 import com.funnywolf.hollowkit.drawable.RoundRectDrawable
 import com.funnywolf.hollowkit.utils.dp
-import com.funnywolf.hollowkit.view.StatefulLayout
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -32,30 +30,25 @@ class StatefulLayoutScene: Scene() {
             container: ViewGroup,
             savedInstanceState: Bundle?
     ): View {
-        return inflater.inflate(R.layout.scene_stateful_layout, container, false)
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        val sl = view.findViewById<StatefulLayout>(R.id.stateful)
-        sl.viewArray.put(1, View(view.context).apply {
+        val binding = SceneStatefulLayoutBinding.inflate(inflater, container, false)
+        val sl = binding.stateful
+        sl.viewArray.put(1, View(sl.context).apply {
             background = RoundRectDrawable(Color.RED, 10.dp, 20.dp, 30.dp, 40.dp)
             layoutParams = FrameLayout.LayoutParams(200.dp, 100.dp, Gravity.CENTER)
         })
-        sl.viewArray.put(2, View(view.context).apply {
+        sl.viewArray.put(2, View(sl.context).apply {
             background = RoundRectDrawable().radii(10.dp)
                     .fillShader(LinearGradientProvider(intArrayOf(Color.RED, Color.GREEN)))
             layoutParams = FrameLayout.LayoutParams(100.dp, 200.dp, Gravity.CENTER)
         })
-        sl.viewArray.put(3, View(view.context).apply {
+        sl.viewArray.put(3, View(sl.context).apply {
             background = RoundRectDrawable().radii(10.dp)
                     .fillShader(LinearGradientProvider(intArrayOf(Color.GREEN, Color.BLUE)))
                     .ringSize(10.dp)
                     .ringColor(Color.RED)
             layoutParams = FrameLayout.LayoutParams(200.dp, 100.dp, Gravity.CENTER)
         })
-        sl.viewArray.put(4, View(view.context).apply {
+        sl.viewArray.put(4, View(sl.context).apply {
             background = RoundRectDrawable().radii(10.dp)
                     .fillShader(LinearGradientProvider(intArrayOf(Color.BLUE, Color.RED)))
                     .ringSize(10.dp)
@@ -63,14 +56,14 @@ class StatefulLayoutScene: Scene() {
             layoutParams = FrameLayout.LayoutParams(100.dp, 200.dp, Gravity.CENTER)
         })
 
-        val btn = view.findViewById<Button>(R.id.next)
-        btn.setOnClickListener {
+        binding.next.setOnClickListener {
             val s = state++ % 5
-            btn.text = s.toString()
+            binding.next.text = s.toString()
             GlobalScope.launch {
                 sl.state = s
             }
         }
+        return binding.root
     }
 
 }

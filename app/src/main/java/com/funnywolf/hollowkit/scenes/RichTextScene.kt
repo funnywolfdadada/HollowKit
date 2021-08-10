@@ -10,9 +10,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
-import android.widget.TextView
 import com.bytedance.scene.Scene
 import com.funnywolf.hollowkit.R
+import com.funnywolf.hollowkit.databinding.SceneRichTextBinding
 import com.funnywolf.hollowkit.drawable.RoundRectDrawable
 import com.funnywolf.hollowkit.richtext.*
 import com.funnywolf.hollowkit.utils.dp
@@ -30,13 +30,8 @@ class RichTextScene: Scene() {
         container: ViewGroup,
         savedInstanceState: Bundle?
     ): View {
-        return LayoutInflater.from(container.context).inflate(R.layout.scene_rich_text, container, false)
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        val tv = view.findViewById<TextView>(R.id.text_view)
+        val binding = SceneRichTextBinding.inflate(inflater, container, false)
+        val tv = binding.textView
         tv.ellipsize = TextUtils.TruncateAt.END
         var textSize = 24.dp
         val tp = object: TextProvider {
@@ -116,7 +111,7 @@ class RichTextScene: Scene() {
             .append("g现在终于接近终盘。在我们进行终局")
         tv.text = richText
 
-        view.findViewById<SeekBar>(R.id.sb_size).setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+        binding.sbSize.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 textSize = progress
                 tv.text = richText
@@ -125,27 +120,27 @@ class RichTextScene: Scene() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
 
-        view.findViewById<View>(R.id.tv_align_baseline).setOnClickListener {
+        binding.tvAlignBaseline.setOnClickListener {
             uds.align = TextAlign.BASELINE
             tv.text = richText
         }
 
-        view.findViewById<View>(R.id.tv_align_ascent).setOnClickListener {
+        binding.tvAlignAscent.setOnClickListener {
             uds.align = TextAlign.ASCENT
             tv.text = richText
         }
 
-        view.findViewById<View>(R.id.tv_align_center).setOnClickListener {
+        binding.tvAlignCenter.setOnClickListener {
             uds.align = TextAlign.CENTER
             tv.text = richText
         }
 
-        view.findViewById<View>(R.id.tv_align_descent).setOnClickListener {
+        binding.tvAlignDescent.setOnClickListener {
             uds.align = TextAlign.DESCENT
             tv.text = richText
         }
 
-        view.findViewById<SeekBar>(R.id.sb_padding_left).setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+        binding.sbPaddingLeft.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 uds.padding.left = progress
                 tv.text = richText
@@ -154,7 +149,7 @@ class RichTextScene: Scene() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
 
-        view.findViewById<SeekBar>(R.id.sb_padding_right).setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+        binding.sbPaddingRight.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 uds.padding.right = progress
                 tv.text = richText
@@ -163,7 +158,7 @@ class RichTextScene: Scene() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
 
-        view.findViewById<SeekBar>(R.id.sb_padding_top).setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+        binding.sbPaddingTop.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 uds.padding.top= progress
                 tv.text = richText
@@ -172,7 +167,7 @@ class RichTextScene: Scene() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
 
-        view.findViewById<SeekBar>(R.id.sb_padding_bottom).setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+        binding.sbPaddingBottom.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 uds.padding.bottom = progress
                 tv.text = richText
@@ -181,7 +176,7 @@ class RichTextScene: Scene() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
 
-        view.findViewById<SeekBar>(R.id.sb_margin_top).setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+        binding.sbMarginTop.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 uds.margin.top = progress
                 tv.text = richText
@@ -190,7 +185,7 @@ class RichTextScene: Scene() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
 
-        view.findViewById<SeekBar>(R.id.sb_margin_bottom).setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+        binding.sbMarginBottom.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 uds.margin.bottom = progress
                 tv.text = richText
@@ -199,7 +194,7 @@ class RichTextScene: Scene() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
 
-        view.findViewById<SeekBar>(R.id.sb_margin_left).setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+        binding.sbMarginLeft.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 uds.margin.left = progress
                 tv.text = richText
@@ -208,7 +203,7 @@ class RichTextScene: Scene() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
 
-        view.findViewById<SeekBar>(R.id.sb_margin_right).setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+        binding.sbMarginRight.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 uds.margin.right = progress
                 tv.text = richText
@@ -217,6 +212,7 @@ class RichTextScene: Scene() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
 
+        return binding.root
     }
 
 }

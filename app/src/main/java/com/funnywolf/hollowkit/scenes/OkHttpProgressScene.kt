@@ -8,7 +8,7 @@ import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
 import com.bytedance.scene.Scene
-import com.funnywolf.hollowkit.R
+import com.funnywolf.hollowkit.databinding.SceneOkhttpProgressBinding
 import com.funnywolf.hollowkit.http.*
 import okhttp3.*
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -27,19 +27,14 @@ class OkHttpProgressScene: Scene() {
             .build()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): View {
-        return inflater.inflate(R.layout.scene_okhttp_progress, container, false)
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        val progressBar = view.findViewById<ProgressBar>(R.id.progress_bar)
-        val progressText = view.findViewById<TextView>(R.id.progress_text)
-        view.findViewById<View>(R.id.download).setOnClickListener {
-            download(progressBar, progressText)
+        val binding = SceneOkhttpProgressBinding.inflate(inflater, container, false)
+        binding.download.setOnClickListener {
+            download(binding.progressBar, binding.progressText)
         }
-        view.findViewById<View>(R.id.upload).setOnClickListener {
-            upload(progressBar, progressText)
+        binding.upload.setOnClickListener {
+            upload(binding.progressBar, binding.progressText)
         }
+        return binding.root
     }
 
     private fun download(progressBar: ProgressBar, progressText: TextView) {

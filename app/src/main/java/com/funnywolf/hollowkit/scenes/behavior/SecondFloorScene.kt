@@ -8,17 +8,14 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.core.view.ViewCompat
-import androidx.recyclerview.widget.RecyclerView
 
 import com.bytedance.scene.group.UserVisibleHintGroupScene
 
-import com.funnywolf.hollowkit.R
+import com.funnywolf.hollowkit.databinding.SceneSecondFloorBinding
 import com.funnywolf.hollowkit.recyclerview.BoundaryCallback
 import com.funnywolf.hollowkit.utils.*
 import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollView
-import com.funnywolf.hollowkit.view.scroll.behavior.NestedScrollBehavior
 import com.funnywolf.hollowkit.view.scroll.behavior.inStablePosition
 import com.funnywolf.hollowkit.view.scroll.behavior.isScrollChildTotalShowing
 
@@ -33,14 +30,9 @@ class SecondFloorScene: UserVisibleHintGroupScene() {
         container: ViewGroup,
         savedInstanceState: Bundle?
     ): ViewGroup {
-        return inflater.inflate(R.layout.scene_second_floor, container, false) as ViewGroup
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        val rv1 = view.findViewById<RecyclerView>(R.id.rv1)
-        val rv2 = view.findViewById<RecyclerView>(R.id.rv2)
+        val binding = SceneSecondFloorBinding.inflate(inflater, container, false)
+        val rv1 = binding.rv1
+        val rv2 = binding.rv2
 
         rv2.overScrollMode = View.OVER_SCROLL_NEVER
         BoundaryCallback(rv2)
@@ -50,8 +42,8 @@ class SecondFloorScene: UserVisibleHintGroupScene() {
         rv1.initPictures(true)
         rv2.initPictures()
 
-        val tips = view.findViewById<TextView>(R.id.tips)
-        view.findViewById<SecondFloorLayout>(R.id.second_floor).apply {
+        val tips = binding.tips
+        binding.secondFloor.apply {
             minRefreshHeight = 50.dp
             refreshHeight = 100.dp
             onOpenStateChanged = {
@@ -75,6 +67,7 @@ class SecondFloorScene: UserVisibleHintGroupScene() {
                 openState = Closed
             }
         }
+        return binding.root
     }
 
 }
