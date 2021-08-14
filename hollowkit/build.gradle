@@ -39,6 +39,8 @@ dependencies {
     api "androidx.appcompat:appcompat:${versions.appcompat}"
     api "androidx.core:core-ktx:${versions.core_ktx}"
 
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-android:${versions.coroutines}"
+
     api "androidx.constraintlayout:constraintlayout:${versions.constraintlayout}"
     api "androidx.recyclerview:recyclerview:${versions.recyclerview}"
 

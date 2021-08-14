@@ -19,3 +19,8 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# we need this constructor to instantiate ViewHoldes
+-keepclassmembers class * extends com.funnywolf.hollowkit.recyclerview.SimpleHolder {
+    public <init>(android.view.View);
+}

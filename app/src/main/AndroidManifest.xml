@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.funnywolf.hollowkit">
+    package="com.funnywolf.hollowkit.app">
 
     <uses-permission android:name="android.permission-group.ACTIVITY_RECOGNITION"/>
     <uses-permission android:name="android.permission.WRITE_CALENDAR"/>
@@ -40,8 +40,6 @@
             </intent-filter>
 
         </activity>
-
-        <activity android:name=".scenes.TestResultActivity" />
 
     </application>
 
