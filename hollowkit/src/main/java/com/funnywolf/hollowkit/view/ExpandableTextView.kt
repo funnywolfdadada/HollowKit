@@ -6,7 +6,6 @@ import android.text.Layout
 import android.text.SpannableStringBuilder
 import android.text.StaticLayout
 import android.text.TextUtils
-import android.text.style.ForegroundColorSpan
 import android.util.AttributeSet
 import android.util.Log
 import androidx.appcompat.widget.AppCompatTextView
@@ -28,18 +27,14 @@ class ExpandableTextView @JvmOverloads constructor(
     private var rawText: CharSequence? = text
 
     /**
-     * 展开的文本和颜色
+     * 展开的文本
      */
-    private var expandText: CharSequence? = null
-    private var expandTextColor: Int = 0
-
-    fun setExpandText(text: CharSequence?, color: Int): ExpandableTextView {
-        expandText = text
-        expandTextColor = color
-        // 展开文本和颜色变更，需要更新下
-        update()
-        return this
-    }
+    var expandText: CharSequence? = null
+        set(value) {
+            field = value
+            // 展开文本变更，需要更新下
+            update()
+        }
 
     override fun setText(text: CharSequence?, type: BufferType?) {
         rawText = text
@@ -122,7 +117,7 @@ class ExpandableTextView @JvmOverloads constructor(
         // 判断最后一行文本是否被省略，省略的话加上展开文本
         if (ellipsizedLastLine != lastLine) {
             // 添加上展开文本
-            newText.append(expandText, ForegroundColorSpan(expandTextColor), SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE)
+            newText.append(expandText)
         }
         return newText
     }

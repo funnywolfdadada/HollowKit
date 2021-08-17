@@ -28,11 +28,17 @@ class BoundaryCallback(
     private var pending = false
     private var lastDirection = 0
 
+    /**
+     * 到达列表开始的回调
+     */
     fun onReachStart(callback: (()->Unit)?): BoundaryCallback {
         onReachStart = callback
         return this
     }
 
+    /**
+     * 到达列表最后的回调
+     */
     fun onReachEnd(callback: (()->Unit)?): BoundaryCallback {
         onReachEnd = callback
         return this

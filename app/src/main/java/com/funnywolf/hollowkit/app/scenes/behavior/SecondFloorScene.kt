@@ -13,9 +13,9 @@ import androidx.core.view.ViewCompat
 import com.bytedance.scene.group.UserVisibleHintGroupScene
 
 import com.funnywolf.hollowkit.app.databinding.SceneSecondFloorBinding
+import com.funnywolf.hollowkit.utils.dp
 import com.funnywolf.hollowkit.app.utils.initPictures
 import com.funnywolf.hollowkit.recyclerview.BoundaryCallback
-import com.funnywolf.hollowkit.utils.*
 import com.funnywolf.hollowkit.view.scroll.behavior.BehavioralScrollView
 import com.funnywolf.hollowkit.view.scroll.behavior.inStablePosition
 import com.funnywolf.hollowkit.view.scroll.behavior.isScrollChildTotalShowing

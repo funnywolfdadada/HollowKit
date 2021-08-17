@@ -106,6 +106,9 @@ open class StatefulLayout @JvmOverloads constructor(
 
 }
 
+/**
+ * 起止视图的动画
+ */
 fun StatefulLayout.animator(from: View?, to: View?): Animator? {
     val l = ArrayList<Animator>(2)
     sizeAnimator(from, to)?.also { l.add(it) }
@@ -117,6 +120,9 @@ fun StatefulLayout.animator(from: View?, to: View?): Animator? {
     }
 }
 
+/**
+ * 起止视图的尺寸动画
+ */
 fun StatefulLayout.sizeAnimator(from: View?, to: View?): Animator? {
     // 记录起止尺寸
     val fromWidth = from?.width ?: 0
@@ -157,6 +163,9 @@ fun StatefulLayout.sizeAnimator(from: View?, to: View?): Animator? {
     }
 }
 
+/**
+ * 起止视图的透明度动画
+ */
 fun StatefulLayout.alphaAnimator(from: View?, to: View?): Animator? {
     if (from == null && to == null) {
         return null

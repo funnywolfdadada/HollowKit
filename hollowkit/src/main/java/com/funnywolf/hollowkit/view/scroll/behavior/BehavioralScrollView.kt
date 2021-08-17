@@ -10,8 +10,17 @@ import android.view.ViewConfiguration
 import android.widget.Scroller
 import androidx.annotation.IntDef
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.*
-import com.funnywolf.hollowkit.view.*
+import androidx.core.view.NestedScrollingChild3
+import androidx.core.view.NestedScrollingChildHelper
+import androidx.core.view.NestedScrollingParent3
+import androidx.core.view.NestedScrollingParentHelper
+import androidx.core.view.ViewCompat
+import com.funnywolf.hollowkit.view.constrains
+import com.funnywolf.hollowkit.view.findChildUnder
+import com.funnywolf.hollowkit.view.findHorizontalNestedScrollingTarget
+import com.funnywolf.hollowkit.view.findVerticalNestedScrollingTarget
+import com.funnywolf.hollowkit.view.isUnder
+import com.funnywolf.hollowkit.view.stopScroll
 import kotlin.math.abs
 
 /**
@@ -31,6 +40,9 @@ open class BehavioralScrollView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ): ConstraintLayout(context, attrs, defStyleAttr), NestedScrollingParent3, NestedScrollingChild3, NestedScrollBehavior {
 
+    /**
+     * 滚动方向，水平 or 垂直
+     */
     @ViewCompat.ScrollAxis
     var scrollAxis: Int = ViewCompat.SCROLL_AXIS_VERTICAL
 
@@ -82,6 +94,9 @@ open class BehavioralScrollView @JvmOverloads constructor(
     var nestedScrollTarget: View? = null
         private set
 
+    /**
+     * 使能日志
+     */
     var enableLog = false
 
     // region 一些辅助变量
@@ -197,6 +212,9 @@ open class BehavioralScrollView @JvmOverloads constructor(
         invalidate()
     }
 
+    /**
+     * 停止滚动，[stopNestedScroll] 表示是否停止内部嵌套视图的滚动
+     */
     fun stopScroll(stopNestedScroll: Boolean = true) {
         // 停止当前的所有动画
         scroller.forceFinished(true)
@@ -903,6 +921,9 @@ annotation class ScrollState {
     }
 }
 
+/**
+ * 嵌套滚动的优先级
+ */
 interface NestedScrollBehavior {
 
     /**
@@ -950,6 +971,9 @@ interface NestedScrollBehavior {
 
 }
 
+/**
+ * 嵌套滚动回调
+ */
 interface BehavioralScrollListener {
 
     /**

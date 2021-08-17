@@ -8,7 +8,6 @@ import androidx.annotation.CallSuper
 import androidx.annotation.LayoutRes
 import androidx.recyclerview.widget.RecyclerView
 import java.lang.IllegalArgumentException
-import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
@@ -20,6 +19,9 @@ import kotlin.collections.HashMap
  */
 open class SimpleAdapter(list: List<Any>): RecyclerView.Adapter<SimpleHolder<Any>>() {
 
+    /**
+     * 列表数据
+     */
     var list = list
         set(value) {
             field = value
@@ -39,6 +41,9 @@ open class SimpleAdapter(list: List<Any>): RecyclerView.Adapter<SimpleHolder<Any
      */
     private val onBindListeners = ArrayList<OnBindHolder>(2)
 
+    /**
+     * 添加 view holder 的映射信息
+     */
     fun <T: Any> addMapper(holderMapper: HolderMapper<T>): SimpleAdapter {
         // HolderMapper 泛型上界是 Any，因此这里强转是安全的
         val info = holderMapper as HolderMapper<Any>
@@ -49,6 +54,9 @@ open class SimpleAdapter(list: List<Any>): RecyclerView.Adapter<SimpleHolder<Any
         return this
     }
 
+    /**
+     * 根据位置获取映射信息
+     */
     fun getMapperByPosition(position: Int): HolderMapper<Any> {
         val data = list[position]
         val dataClass = data.javaClass
@@ -69,21 +77,33 @@ open class SimpleAdapter(list: List<Any>): RecyclerView.Adapter<SimpleHolder<Any
         return supportHolderMapper ?: throw IllegalArgumentException("Unsupported data $data at $position")
     }
 
+    /**
+     * 添加 [onCreateViewHolder] 时的回调
+     */
     fun addOnCreateHolderListener(listener: OnCreateHolder): SimpleAdapter {
         onCreateListeners.add(listener)
         return this
     }
 
+    /**
+     * 移除 [onCreateViewHolder] 时的回调
+     */
     fun removeOnCreateHolderListener(listener: OnCreateHolder): SimpleAdapter {
         onCreateListeners.remove(listener)
         return this
     }
 
+    /**
+     * 添加 [onBindViewHolder] 时的回调
+     */
     fun addOnBindHolderListener(listener: OnBindHolder): SimpleAdapter {
         onBindListeners.add(listener)
         return this
     }
 
+    /**
+     * 移除 [onBindViewHolder] 时的回调
+     */
     fun removeOnBindHolderListener(listener: OnBindHolder): SimpleAdapter {
         onBindListeners.remove(listener)
         return this
@@ -111,10 +131,19 @@ open class SimpleAdapter(list: List<Any>): RecyclerView.Adapter<SimpleHolder<Any
 
 }
 
+/**
+ * [RecyclerView.Adapter.onCreateViewHolder] 时的回调
+ */
 typealias OnCreateHolder = (SimpleHolder<out Any>)->Unit
 
+/**
+ * [RecyclerView.Adapter.onBindViewHolder] 时的回调
+ */
 typealias OnBindHolder = (SimpleHolder<out Any>, Any)->Unit
 
+/**
+ * 基础的 view holder
+ */
 abstract class SimpleHolder<T: Any>(v: View) : RecyclerView.ViewHolder(v) {
 
     /**
@@ -123,6 +152,9 @@ abstract class SimpleHolder<T: Any>(v: View) : RecyclerView.ViewHolder(v) {
     var data: T? = null
         private set
 
+    /**
+     * 绑定数据
+     */
     @CallSuper
     open fun onBind(data: T) {
         this.data = data
@@ -130,6 +162,9 @@ abstract class SimpleHolder<T: Any>(v: View) : RecyclerView.ViewHolder(v) {
 
 }
 
+/**
+ * view holder 的映射关系
+ */
 interface HolderMapper<T: Any> {
     /**
      * 所支持的数据类型
@@ -157,7 +192,10 @@ interface HolderMapper<T: Any> {
     val viewType: Int
 }
 
-class HolderMapInfo<T: Any>(
+/**
+ * view holder 的映射关系实现
+ */
+open class HolderMapInfo<T: Any>(
     override val dataClass: Class<T>,
     override val layoutRes: Int,
     override val holderClass: Class<out SimpleHolder<in T>>,

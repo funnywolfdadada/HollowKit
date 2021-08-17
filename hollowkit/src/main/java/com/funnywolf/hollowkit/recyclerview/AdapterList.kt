@@ -9,6 +9,9 @@ import java.lang.ref.WeakReference
 open class AdapterList<T>: AbstractList<T>() {
     protected open val rawList: MutableList<T> = ArrayList()
 
+    /**
+     * [RecyclerView.Adapter] 引用，用于 notify
+     */
     protected var adapterRef: WeakReference<RecyclerView.Adapter<*>>? = null
 
     override val size: Int
@@ -23,6 +26,9 @@ open class AdapterList<T>: AbstractList<T>() {
         adapterRef = WeakReference(adapter)
     }
 
+    /**
+     * 取消 [adapterRef] 绑定
+     */
     fun unbind() {
         adapterRef?.clear()
         adapterRef = null
@@ -146,6 +152,9 @@ open class AdapterList<T>: AbstractList<T>() {
         adapterRef?.get()?.notifyDataSetChanged()
     }
 
+    /**
+     * 将 [from] 处的数据移动到下标 [to]
+     */
     fun move(from: Int, to: Int) {
         rawList.add(if (from < to) { to - 1 } else { to }, rawList.removeAt(from))
         adapterRef?.get()?.notifyItemMoved(from, to)

@@ -1,6 +1,14 @@
 package com.funnywolf.hollowkit.drawable
 
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.ColorFilter
+import android.graphics.LinearGradient
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.PixelFormat
+import android.graphics.Rect
+import android.graphics.RectF
+import android.graphics.Shader
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import kotlin.math.hypot
@@ -53,6 +61,9 @@ open class RoundRectDrawable(): Drawable() {
         it.style = Paint.Style.FILL
     }
 
+    /**
+     * 构造圆角矩形 drawable
+     */
     constructor(
             color: Int,
             leftTop: Int = 0,
@@ -66,12 +77,18 @@ open class RoundRectDrawable(): Drawable() {
         inverse(inverse)
     }
 
+    /**
+     * 设置填充颜色
+     */
     fun fillColor(c: Int): RoundRectDrawable {
         fillColor = c
         invalidateSelf()
         return this
     }
 
+    /**
+     * 设置填充颜色的着色器
+     */
     fun fillShader(shaderProvider: ShaderProvider?): RoundRectDrawable {
         fillShaderProvider = shaderProvider?.also {
             // 使用 shader 时，填充颜色不要有 alpha
@@ -82,12 +99,18 @@ open class RoundRectDrawable(): Drawable() {
         return this
     }
 
+    /**
+     * 设置外环颜色
+     */
     fun ringColor(c: Int): RoundRectDrawable {
         ringColor = c
         invalidateSelf()
         return this
     }
 
+    /**
+     * 设置外环颜色的着色器
+     */
     fun ringShader(shaderProvider: ShaderProvider?): RoundRectDrawable {
         ringShaderProvider = shaderProvider?.also {
             // 使用 shader 时，填充颜色不要有 alpha
@@ -98,6 +121,9 @@ open class RoundRectDrawable(): Drawable() {
         return this
     }
 
+    /**
+     * 设置圆角
+     */
     fun radii(
             leftTop: Int,
             rightTop: Int = leftTop,
@@ -118,6 +144,9 @@ open class RoundRectDrawable(): Drawable() {
         return this
     }
 
+    /**
+     * 设置圆环大小
+     */
     fun ringSize(s: Int): RoundRectDrawable {
         ringSize = s
         updateRingPath()
@@ -125,6 +154,9 @@ open class RoundRectDrawable(): Drawable() {
         return this
     }
 
+    /**
+     * 设置是否绘制到矩形外部，而不是内部
+     */
     fun inverse(inverse: Boolean): RoundRectDrawable {
         this.inverse = inverse
         updateFillPath()
@@ -193,8 +225,14 @@ open class RoundRectDrawable(): Drawable() {
 
 }
 
+/**
+ * 根据矩形范围提供着色器，由于 [Shader] 一般时固定的，而 [Drawable] 的尺寸时会变得，因此需要尺寸变化时重新生成 [Shader]
+ */
 typealias ShaderProvider = Function1<Rect, Shader>
 
+/**
+ * 提供简化的线性渐变着色器，比 [LinearGradient] 设置起来更简便
+ */
 class LinearGradientProvider(
     private val colors: IntArray,
     private val orientation: GradientDrawable.Orientation = GradientDrawable.Orientation.TOP_BOTTOM,

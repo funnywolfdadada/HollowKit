@@ -27,6 +27,9 @@ fun BehavioralScrollView.currProcess(): Float {
     }
 }
 
+/**
+ * 是否发生了滚动
+ */
 fun BehavioralScrollView.isScrolled(): Boolean = when (nestedScrollAxes) {
     ViewCompat.SCROLL_AXIS_VERTICAL -> scrollY != 0
     ViewCompat.SCROLL_AXIS_HORIZONTAL -> scrollX != 0

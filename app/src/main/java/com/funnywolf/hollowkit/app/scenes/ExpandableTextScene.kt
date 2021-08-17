@@ -2,6 +2,8 @@ package com.funnywolf.hollowkit.app.scenes
 
 import android.graphics.Color
 import android.os.Bundle
+import android.text.SpannableStringBuilder
+import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,7 +23,9 @@ class ExpandableTextScene: Scene() {
         savedInstanceState: Bundle?
     ): View {
         val binding = SceneExpandableTextBinding.inflate(inflater, container, false)
-        val tv = binding.textView.setExpandText("展开", Color.RED)
+        val tv = binding.textView
+        tv.expandText = SpannableStringBuilder()
+            .append("展开", ForegroundColorSpan(Color.RED), SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE)
         tv.setOnClickListener {
             if (tv.maxLines <= 0 || tv.maxLines == Int.MAX_VALUE) {
                 tv.maxLines = 5
