@@ -19,12 +19,13 @@ import androidx.appcompat.widget.AppCompatTextView
  */
 class ExpandableTextView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-): AppCompatTextView(context, attrs, defStyleAttr) {
+): AppCompatTextView(context, attrs, defStyleAttr), Runnable {
 
     /**
      * 保存原始文本
      */
     private var rawText: CharSequence? = text
+    private var lastWidth = 0
 
     /**
      * 展开的文本
@@ -55,21 +56,28 @@ class ExpandableTextView @JvmOverloads constructor(
         update()
     }
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
         // 宽度变时需要更新
-        if (measuredWidth != width) {
+        if (lastWidth != width) {
+            lastWidth = width
             update()
         }
     }
 
     private fun update() {
-        // post 一下防止还没 layout 完，拿不到宽高
-        post {
-            val start = System.currentTimeMillis()
-            super.setText(generateCurrentText(), BufferType.NORMAL)
-            Log.d("ExpandableTextView", "update cost ${System.currentTimeMillis() - start}")
+        if (width > 0) {
+            run()
+        } else {
+            // post 一下防止还没 layout 完，拿不到宽高
+            post(this)
         }
+    }
+
+    override fun run() {
+        val start = System.currentTimeMillis()
+        super.setText(generateCurrentText(), BufferType.NORMAL)
+        Log.d("ExpandableTextView", "update cost ${System.currentTimeMillis() - start}")
     }
 
     private fun generateCurrentText(): CharSequence? {
