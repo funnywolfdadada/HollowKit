@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.funnywolf.hollowkit.view.scroll.behavior.JellyLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/jelly_layout">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_jelly_top"
+        android:background="#4CAF50"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        app:layout_constraintBottom_toTopOf="@id/rv_jelly_bottom"
+        />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_jelly_bottom"
+        android:background="#8BC34A"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        />
+
+</com.funnywolf.hollowkit.view.scroll.behavior.JellyLayout>

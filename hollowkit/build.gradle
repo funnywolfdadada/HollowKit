@@ -1,8 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
-apply from: '../version.gradle'
-apply plugin: 'com.github.dcendents.android-maven'
+apply from: '../versions.gradle'
 
 group='com.github.funnywolfdadada'
 

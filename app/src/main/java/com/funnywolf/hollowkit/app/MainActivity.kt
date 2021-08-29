@@ -1,6 +1,5 @@
 package com.funnywolf.hollowkit.app
 
-import android.app.Activity
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -10,30 +9,40 @@ import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.core.view.setPadding
 import androidx.fragment.app.FragmentActivity
-import com.bytedance.scene.NavigationSceneUtility
-import com.bytedance.scene.SceneDelegate
+import androidx.lifecycle.lifecycleScope
+import com.funnywolf.hollowkit.app.fragments.MainFragment
 import com.funnywolf.hollowkit.drawable.RoundRectDrawable
 import com.funnywolf.hollowkit.monitor.MainThreadWatchDog
 import com.funnywolf.hollowkit.monitor.VsyncTick
-import com.funnywolf.hollowkit.app.scenes.MainScene
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 /**
- * App 的壳 Activity，主页在 [MainScene]
+ * App 的壳 Activity，主页在 [MainFragment]
  *
  * @author https://github.com/funnywolfdadada
  * @since 2020/3/21
  */
 class MainActivity : FragmentActivity() {
-    private var delegate: SceneDelegate? = null
     private var fpsWindow: FpsWindow? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         startWatchDog()
-        delegate = NavigationSceneUtility.setupWithActivity(this, MainScene::class.java)
-            .supportRestore(true)
-            .build()
+
+        MainFragment().also {
+            it.open = { clazz ->
+                supportFragmentManager.beginTransaction()
+                    .replace(android.R.id.content, clazz, null)
+                    .addToBackStack(null)
+                    .commitAllowingStateLoss()
+            }
+            supportFragmentManager.beginTransaction()
+                .add(android.R.id.content, it, null)
+                .commitAllowingStateLoss()
+        }
         fpsWindow = FpsWindow(this).show()
     }
 
@@ -47,12 +56,6 @@ class MainActivity : FragmentActivity() {
             Log.d("MainThreadWatchDog", "end -----------------------------")
         }
         MainThreadWatchDog.enable = true
-    }
-
-    override fun onBackPressed() {
-        if (delegate?.onBackPressed() != true) {
-            super.onBackPressed()
-        }
     }
 
     override fun onStart() {
@@ -69,7 +72,7 @@ class MainActivity : FragmentActivity() {
 
 }
 
-class FpsWindow(private val activity: Activity): PopupWindow() {
+class FpsWindow(private val activity: FragmentActivity): PopupWindow() {
 
     private val textView: TextView = TextView(activity).also {
         it.textSize = 16F
@@ -78,7 +81,7 @@ class FpsWindow(private val activity: Activity): PopupWindow() {
         it.setPadding(16)
         val lock = Object()
         it.setOnClickListener {
-            GlobalScope.launch {
+            activity.lifecycleScope.launch {
                 delay(1000)
                 synchronized(lock) { lock.notifyAll() }
             }
@@ -102,7 +105,7 @@ class FpsWindow(private val activity: Activity): PopupWindow() {
 
     fun start() {
         job?.cancel()
-        job = GlobalScope.launch {
+        job = activity.lifecycleScope.launch {
             while (isActive) {
                 val last = VsyncTick.count
                 delay(1000)

@@ -2,9 +2,7 @@ apply plugin: 'com.android.application'
 
 apply plugin: 'kotlin-android'
 
-apply plugin: 'kotlin-android-extensions'
-
-apply from: '../version.gradle'
+apply from: '../versions.gradle'
 
 android {
     compileSdkVersion versions.compileSdk
@@ -35,6 +33,15 @@ android {
     viewBinding {
         enabled = true
     }
+
+    buildFeatures {
+        // Enables Jetpack Compose for this module
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion '1.0.1'
+    }
 }
 
 dependencies {
@@ -44,21 +51,22 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${versions.kotlin}"
     implementation "androidx.appcompat:appcompat:${versions.appcompat}"
     implementation "androidx.core:core-ktx:${versions.core_ktx}"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:${versions.lifecycle}"
 
     implementation "com.google.android.material:material:${versions.material}"
     implementation "androidx.recyclerview:recyclerview:${versions.recyclerview}"
     implementation "androidx.constraintlayout:constraintlayout:${versions.constraintlayout}"
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:${versions.swiperefreshlayout}"
 
-    implementation "io.reactivex.rxjava2:rxjava:${versions.rxjava}"
-    implementation "io.reactivex.rxjava2:rxandroid:${versions.rxandroid}"
-    implementation "com.bytedance.scene:scene:${versions.scene}"
-    implementation "com.bytedance.scene:scene-ui:${versions.scene}"
-    implementation "com.bytedance.scene:scene-shared-element-animation:${versions.scene}"
-    implementation "com.bytedance.scene:scene-ktx:${versions.scene}"
     implementation "io.coil-kt:coil:${versions.coil}"
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${versions.coroutines}"
+
+    // jetpack compose
+    implementation "androidx.compose.ui:ui-tooling:${versions.compose}"
+    implementation "androidx.compose.material:material:${versions.compose}"
+    implementation "androidx.compose.animation:animation:${versions.compose}"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07"
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.0'

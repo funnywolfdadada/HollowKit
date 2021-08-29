@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/layout"
+    >
+
+    <CheckBox
+        android:id="@+id/ACTIVITY_RECOGNITION"
+        android:text="android.permission-group.ACTIVITY_RECOGNITION"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <CheckBox
+        android:id="@+id/CALENDAR"
+        android:text="android.permission.WRITE_CALENDAR"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <CheckBox
+        android:id="@+id/CALL_LOG"
+        android:text="android.permission-group.CALL_LOG"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <CheckBox
+        android:id="@+id/CAMERA"
+        android:text="android.permission.CAMERA"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <CheckBox
+        android:id="@+id/CONTACTS"
+        android:text="android.permission.WRITE_CONTACTS"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <CheckBox
+        android:id="@+id/LOCATION"
+        android:text="android.permission.ACCESS_FINE_LOCATION"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <CheckBox
+        android:id="@+id/MICROPHONE"
+        android:text="android.permission.RECORD_AUDIO"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <CheckBox
+        android:id="@+id/PHONE"
+        android:text="android.permission.CALL_PHONE"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <CheckBox
+        android:id="@+id/SENSORS"
+        android:text="android.permission.BODY_SENSORS"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <CheckBox
+        android:id="@+id/SMS"
+        android:text="android.permission.SEND_SMS"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <CheckBox
+        android:id="@+id/STORAGE"
+        android:text="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <androidx.constraintlayout.helper.widget.Flow
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:constraint_referenced_ids="ACTIVITY_RECOGNITION,CALL_LOG,CONTACTS,PHONE,CALENDAR,CAMERA,SENSORS,LOCATION,STORAGE,MICROPHONE,SMS"
+        app:flow_wrapMode="aligned"
+        />
+
+    <Button
+        android:id="@+id/request"
+        android:text="申请权限"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

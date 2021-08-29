@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.funnywolf.hollowkit.app.fragments.behavior.SecondFloorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/second_floor"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <FrameLayout
+        android:id="@+id/second_floor_top"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@id/second_floor_bottom"
+        >
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv1"
+            android:background="#03A9F4"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+        <TextView
+            android:id="@+id/tips"
+            android:text="下拉展开二楼"
+            android:textSize="24sp"
+            android:textColor="#FFFF"
+            android:textStyle="bold"
+            android:gravity="center_horizontal|bottom"
+            android:background="#4000"
+            android:layout_gravity="bottom"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            />
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/second_floor_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv2"
+            android:background="#3F51B5"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+    </FrameLayout>
+
+</com.funnywolf.hollowkit.app.fragments.behavior.SecondFloorLayout>
