@@ -48,17 +48,6 @@
 
         </activity>
 
-        <activity-alias
-            android:name="entry2"
-            android:label="entry2"
-            android:targetActivity=".MainActivity">
-
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-
-        </activity-alias>
     </application>
 
 </manifest>
