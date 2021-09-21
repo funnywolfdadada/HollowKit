@@ -3,6 +3,7 @@ package com.funnywolf.hollowkit.rxstate
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Observer
 import io.reactivex.rxjava3.disposables.Disposable
+import io.reactivex.rxjava3.observers.SafeObserver
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -19,10 +20,11 @@ abstract class RxEvent<V: Any>: Observable<V>() {
     private val observers = CopyOnWriteArrayList<ObserverDisposable>()
 
     override fun subscribeActual(observer: Observer<in V>) {
-        val od = ObserverDisposable(observer)
-        od.onSubscribe(od)
-        if (!od.isDisposed) {
-            add(od)
+        ObserverDisposable(SafeObserver(observer)).also {
+            it.onSubscribe()
+            if (!it.isDisposed) {
+                add(it)
+            }
         }
     }
 
@@ -40,7 +42,7 @@ abstract class RxEvent<V: Any>: Observable<V>() {
 
     protected inner class ObserverDisposable(
         private val downstream: Observer<in V>
-    ): AtomicBoolean(false), Observer<V>, Disposable {
+    ): AtomicBoolean(false), Disposable {
 
         override fun isDisposed(): Boolean = get()
 
@@ -50,21 +52,14 @@ abstract class RxEvent<V: Any>: Observable<V>() {
             }
         }
 
-        override fun onSubscribe(d: Disposable) {
-            downstream.onSubscribe(d)
+        fun onSubscribe() {
+            downstream.onSubscribe(this)
         }
 
-        override fun onNext(v: V) {
+        fun onNext(v: V) {
             downstream.onNext(v)
         }
 
-        override fun onError(e: Throwable) {
-            downstream.onError(e)
-        }
-
-        override fun onComplete() {
-            downstream.onComplete()
-        }
     }
 }
 
@@ -73,8 +68,8 @@ class RxMutableEvent<V: Any>(
 ): RxEvent<V>() {
 
     public override fun emit(v: V) {
-        super.emit(v)
         onEmit?.invoke(v)
+        super.emit(v)
     }
 
 }
@@ -85,11 +80,6 @@ abstract class RxState<V: Any>: RxEvent<V>() {
      */
     abstract val value: V
 
-    override fun add(observer: ObserverDisposable) {
-        super.add(observer)
-        // 状态需要在观察者添加时，发送当前最新的值
-        observer.onNext(value)
-    }
 }
 
 class RxMutableState<V: Any>(
@@ -100,9 +90,15 @@ class RxMutableState<V: Any>(
     override var value: V = initValue
         set(value) {
             field = value
-            emit(value)
             onChanged?.invoke(value)
+            emit(value)
         }
+
+    override fun add(observer: ObserverDisposable) {
+        super.add(observer)
+        // 状态需要在观察者添加时，发送当前最新的值
+        observer.onNext(value)
+    }
 
 }
 
