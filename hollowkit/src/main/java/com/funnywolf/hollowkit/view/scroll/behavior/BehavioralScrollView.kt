@@ -8,7 +8,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import android.widget.Scroller
-import androidx.annotation.IntDef
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.NestedScrollingChild3
 import androidx.core.view.NestedScrollingChildHelper
@@ -20,6 +19,7 @@ import com.funnywolf.hollowkit.view.findChildUnder
 import com.funnywolf.hollowkit.view.findHorizontalNestedScrollingTarget
 import com.funnywolf.hollowkit.view.findVerticalNestedScrollingTarget
 import com.funnywolf.hollowkit.view.isUnder
+import com.funnywolf.hollowkit.view.scroll.ScrollState
 import com.funnywolf.hollowkit.view.stopScroll
 import kotlin.math.abs
 
@@ -893,32 +893,6 @@ open class BehavioralScrollView @JvmOverloads constructor(
         }
     }
 
-}
-
-/**
- * 用于描述正处于的嵌套滚动状态，和滚动类型 [ViewCompat.NestedScrollType] 共同描述滚动量
- */
-@IntDef(ScrollState.NONE, ScrollState.DRAGGING, ScrollState.ANIMATION, ScrollState.FLING)
-@Retention(AnnotationRetention.SOURCE)
-annotation class ScrollState {
-    companion object {
-        /**
-         * 无状态
-         */
-        const val NONE = 0
-        /**
-         * 正在拖拽
-         */
-        const val DRAGGING = 1
-        /**
-         * 正在动画，动画产生的滚动不会被分发
-         */
-        const val ANIMATION = 2
-        /**
-         * 正在 fling
-         */
-        const val FLING = 3
-    }
 }
 
 /**

@@ -61,6 +61,7 @@ private fun MainUi(open: ((fragmentClass: Class<out Fragment>)->Unit)? = null) {
         "权限申请" to PermissionRequestFragment::class.java,
         "豆瓣详情页" to DoubanDetailFragment::class.java,
         "带展开的 TextView" to ExpandableTextFragment::class.java,
+        "TouchScroll" to TouchScrollFragment::class.java,
     )
     LazyColumn(
         Modifier.fillMaxHeight(),
